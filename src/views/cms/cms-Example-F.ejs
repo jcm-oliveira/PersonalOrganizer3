@@ -1,0 +1,41 @@
+<div class="modal fade" id="filterModal" tabindex="-1" role="dialog" aria-labelledby="filterModalTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form class="modal-content" method="get" action="/cms-Example-Q">
+            <div class="modal-header">
+                <h5 class="modal-title" id="filterModalTitle">Filtrar · Exemplos</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="filterSearch">Nome ou código</label>
+                    <input type="text" class="form-control" id="filterSearch" name="search" maxlength="150"
+                        value="<%= filter.search %>">
+                </div>
+                <div class="form-row">
+                    <div class="form-group col">
+                        <label for="filterStatus">Status</label>
+                        <select class="form-control" id="filterStatus" name="status">
+                            <option value="1" <%= filter.status === "1" ? "selected" : "" %>>Ativos</option>
+                            <option value="0" <%= filter.status === "0" ? "selected" : "" %>>Inativos</option>
+                            <option value="all" <%= filter.status === "all" ? "selected" : "" %>>Todos</option>
+                        </select>
+                    </div>
+                    <div class="form-group col">
+                        <label for="filterPerPage">Itens por página</label>
+                        <select class="form-control" id="filterPerPage" name="perPage">
+                            <% pageSizes.forEach((size) => { %>
+                                <option value="<%= size %>" <%= filter.perPage === size ? "selected" : "" %>><%= size %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-link" href="/cms-Example-Q">Limpar</a>
+                <button type="submit" class="btn btn-primary">Aplicar</button>
+            </div>
+        </form>
+    </div>
+</div>

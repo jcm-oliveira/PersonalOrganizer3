@@ -1,0 +1,36 @@
+{
+  "name": "novo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Base do projeto novo, estruturada a partir de docs/ARQUITETURA.md",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=20.17"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "db:migrate": "node scripts/migrate.js",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "node --test",
+    "check": "npm run lint && npm run format:check && npm test"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.5",
+    "ejs": "^7.0.1",
+    "express": "^5.2.1",
+    "helmet": "^8.3.0",
+    "mysql2": "^3.24.5",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.9",
+    "supertest": "^7.3.1"
+  }
+}

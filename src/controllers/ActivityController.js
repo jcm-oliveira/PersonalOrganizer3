@@ -1,4 +1,13 @@
 const Activity = require("../model/ActivityModel");
+const {
+    LifeSphereModel,
+    RelevanceModel,
+    DayPeriodModel,
+    PeriodicityModel,
+    ActionTypeModel,
+    ThemeOrganizationModel,
+    ActivityStatusModel,
+} = require("../model/LookupModels");
 const { HttpError } = require("../errors/HttpError");
 const {
     PAGE_SIZES,
@@ -7,6 +16,7 @@ const {
     DAY_PERIODS,
     PERIODICITY_OPTIONS,
     ACTION_TYPES,
+    THEME_ORGANIZATIONS,
     activityListQuerySchema,
     activityFormSchema,
     idParamSchema,
@@ -48,6 +58,59 @@ function listUrl(filter, page) {
     return `${LIST_URL}?${params}`;
 }
 
+async function loadLookupOptions() {
+    try {
+        const [spheres, relevances, periods, periodicities, actionTypes, themes, statuses] =
+            await Promise.all([
+                LifeSphereModel.selectActiveOptions(),
+                RelevanceModel.selectActiveOptions(),
+                DayPeriodModel.selectActiveOptions(),
+                PeriodicityModel.selectActiveOptions(),
+                ActionTypeModel.selectActiveOptions(),
+                ThemeOrganizationModel.selectActiveOptions(),
+                ActivityStatusModel.selectActiveOptionsWithStyle(),
+            ]);
+
+        const formattedThemes =
+            themes.length > 0
+                ? themes
+                : THEME_ORGANIZATIONS.map((name, idx) => ({
+                      id: idx + 1,
+                      name,
+                      life_sphere_name: null,
+                  }));
+
+        return {
+            lifeSpheres: spheres.length ? spheres.map((s) => s.name) : LIFE_SPHERES,
+            relevanceOptions: relevances.length ? relevances.map((r) => r.name) : RELEVANCE_OPTIONS,
+            dayPeriods: periods.length ? periods.map((p) => p.name) : DAY_PERIODS,
+            periodicityOptions: periodicities.length
+                ? periodicities.map((p) => p.name)
+                : PERIODICITY_OPTIONS,
+            actionTypes: actionTypes.length ? actionTypes.map((a) => a.name) : ACTION_TYPES,
+            themeOrganizations: formattedThemes,
+            activityStatuses: statuses,
+        };
+    } catch {
+        return {
+            lifeSpheres: LIFE_SPHERES,
+            relevanceOptions: RELEVANCE_OPTIONS,
+            dayPeriods: DAY_PERIODS,
+            periodicityOptions: PERIODICITY_OPTIONS,
+            actionTypes: ACTION_TYPES,
+            themeOrganizations: THEME_ORGANIZATIONS.map((name, idx) => ({
+                id: idx + 1,
+                name,
+                life_sphere_name: null,
+            })),
+            activityStatuses: [
+                { id: 1, name: "Ativo", visibility: 1, color_code: "#28a745" },
+                { id: 0, name: "Inativo", visibility: 0, color_code: "#343a40" },
+            ],
+        };
+    }
+}
+
 function getTodayString() {
     return new Date().toISOString().slice(0, 10);
 }
@@ -76,22 +139,38 @@ module.exports = {
         const page = Math.min(filter.page, totalPages);
         const offset = (page - 1) * filter.perPage;
 
-        const rawActivities = await Activity.selectActivities({
-            ...criteria,
-            limit: filter.perPage,
-            offset,
-        });
+        const [rawActivities, lookups] = await Promise.all([
+            Activity.selectActivities({
+                ...criteria,
+                limit: filter.perPage,
+                offset,
+            }),
+            loadLookupOptions(),
+        ]);
 
-        const activities = rawActivities.map((act) => enrichActivity(act));
+        const statusMap = new Map((lookups.activityStatuses || []).map((s) => [s.id, s]));
+
+        const activities = rawActivities.map((act) => {
+            const enriched = enrichActivity(act);
+            const statusObj = statusMap.get(act.status);
+            return {
+                ...enriched,
+                status_name: statusObj?.name || (act.status === 1 ? "Ativo" : "Inativo"),
+                status_color_code:
+                    statusObj?.color_code || (act.status === 1 ? "#28a745" : "#6c757d"),
+            };
+        });
 
         return res.render("cms/cms-Activity-Q", {
             title: "Atividades",
             activities,
             filter,
             pageSizes: PAGE_SIZES,
-            lifeSpheres: LIFE_SPHERES,
-            relevanceOptions: RELEVANCE_OPTIONS,
-            actionTypes: ACTION_TYPES,
+            lifeSpheres: lookups.lifeSpheres,
+            relevanceOptions: lookups.relevanceOptions,
+            actionTypes: lookups.actionTypes,
+            themeOrganizations: lookups.themeOrganizations,
+            activityStatuses: lookups.activityStatuses,
             pagination: {
                 page,
                 totalPages,
@@ -111,12 +190,23 @@ module.exports = {
 
     async loadViewPage(req, res) {
         const id = parseId(req.params.id);
-        const rawActivity = await Activity.selectActivityById(id);
+        const [rawActivity, lookups] = await Promise.all([
+            Activity.selectActivityById(id),
+            loadLookupOptions(),
+        ]);
         if (!rawActivity) {
             throw new HttpError(404, "Atividade não encontrada.");
         }
 
-        const activity = enrichActivity(rawActivity);
+        const statusMap = new Map((lookups.activityStatuses || []).map((s) => [s.id, s]));
+        const enriched = enrichActivity(rawActivity);
+        const statusObj = statusMap.get(rawActivity.status);
+        const activity = {
+            ...enriched,
+            status_name: statusObj?.name || (rawActivity.status === 1 ? "Ativo" : "Inativo"),
+            status_color_code:
+                statusObj?.color_code || (rawActivity.status === 1 ? "#28a745" : "#6c757d"),
+        };
 
         return res.render("cms/cms-Activity-V", {
             title: `Visualizar Atividade nº ${id}`,
@@ -130,6 +220,7 @@ module.exports = {
 
     async loadInsertPage(req, res) {
         const todayStr = getTodayString();
+        const lookups = await loadLookupOptions();
         return res.render("cms/cms-Activity-C", {
             title: "Nova Atividade",
             values: {
@@ -137,11 +228,13 @@ module.exports = {
                 relevance: "Prioridade",
                 next_activity_date: todayStr,
             },
-            lifeSpheres: LIFE_SPHERES,
-            relevanceOptions: RELEVANCE_OPTIONS,
-            dayPeriods: DAY_PERIODS,
-            periodicityOptions: PERIODICITY_OPTIONS,
-            actionTypes: ACTION_TYPES,
+            lifeSpheres: lookups.lifeSpheres,
+            relevanceOptions: lookups.relevanceOptions,
+            dayPeriods: lookups.dayPeriods,
+            periodicityOptions: lookups.periodicityOptions,
+            actionTypes: lookups.actionTypes,
+            themeOrganizations: lookups.themeOrganizations,
+            activityStatuses: lookups.activityStatuses,
             errors: {},
         });
     },
@@ -149,14 +242,17 @@ module.exports = {
     async insertActivityPage(req, res) {
         const parsed = activityFormSchema.safeParse(req.body ?? {});
         if (!parsed.success) {
+            const lookups = await loadLookupOptions();
             return res.status(422).render("cms/cms-Activity-C", {
                 title: "Nova Atividade",
                 values: req.body ?? {},
-                lifeSpheres: LIFE_SPHERES,
-                relevanceOptions: RELEVANCE_OPTIONS,
-                dayPeriods: DAY_PERIODS,
-                periodicityOptions: PERIODICITY_OPTIONS,
-                actionTypes: ACTION_TYPES,
+                lifeSpheres: lookups.lifeSpheres,
+                relevanceOptions: lookups.relevanceOptions,
+                dayPeriods: lookups.dayPeriods,
+                periodicityOptions: lookups.periodicityOptions,
+                actionTypes: lookups.actionTypes,
+                themeOrganizations: lookups.themeOrganizations,
+                activityStatuses: lookups.activityStatuses,
                 errors: toFieldErrors(parsed.error),
             });
         }
@@ -171,7 +267,10 @@ module.exports = {
 
     async loadUpdatePage(req, res) {
         const id = parseId(req.params.id);
-        const activity = await Activity.selectActivityById(id);
+        const [activity, lookups] = await Promise.all([
+            Activity.selectActivityById(id),
+            loadLookupOptions(),
+        ]);
         if (!activity) {
             throw new HttpError(404, "Atividade não encontrada.");
         }
@@ -207,11 +306,13 @@ module.exports = {
                 notes: activity.notes || "",
                 status: String(activity.status),
             },
-            lifeSpheres: LIFE_SPHERES,
-            relevanceOptions: RELEVANCE_OPTIONS,
-            dayPeriods: DAY_PERIODS,
-            periodicityOptions: PERIODICITY_OPTIONS,
-            actionTypes: ACTION_TYPES,
+            lifeSpheres: lookups.lifeSpheres,
+            relevanceOptions: lookups.relevanceOptions,
+            dayPeriods: lookups.dayPeriods,
+            periodicityOptions: lookups.periodicityOptions,
+            actionTypes: lookups.actionTypes,
+            themeOrganizations: lookups.themeOrganizations,
+            activityStatuses: lookups.activityStatuses,
             errors: {},
         });
     },
@@ -220,15 +321,17 @@ module.exports = {
         const id = parseId(req.params.id);
         const parsed = activityFormSchema.safeParse(req.body ?? {});
         if (!parsed.success) {
+            const lookups = await loadLookupOptions();
             return res.status(422).render("cms/cms-Activity-U", {
                 title: `Editar Atividade nº ${id}`,
                 activityId: id,
                 values: req.body ?? {},
-                lifeSpheres: LIFE_SPHERES,
-                relevanceOptions: RELEVANCE_OPTIONS,
-                dayPeriods: DAY_PERIODS,
-                periodicityOptions: PERIODICITY_OPTIONS,
-                actionTypes: ACTION_TYPES,
+                lifeSpheres: lookups.lifeSpheres,
+                relevanceOptions: lookups.relevanceOptions,
+                dayPeriods: lookups.dayPeriods,
+                periodicityOptions: lookups.periodicityOptions,
+                actionTypes: lookups.actionTypes,
+                themeOrganizations: lookups.themeOrganizations,
                 errors: toFieldErrors(parsed.error),
             });
         }

@@ -1,0 +1,88 @@
+<%- include('../parts/head') %>
+
+<main class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Organização por Tema nº <%= item.id %></h1>
+            <span class="badge badge-pill <%= item.status === 1 ? 'badge-success' : 'badge-secondary' %>">
+                <%= item.status === 1 ? 'Ativo' : 'Inativo' %>
+            </span>
+            <% if (item.life_sphere_name) { %>
+                <span class="badge badge-pill ml-1" style="background-color: <%= item.life_sphere_color || '#007bff' %>; color: #fff;">
+                    <%= item.life_sphere_name %>
+                </span>
+            <% } %>
+        </div>
+        <div class="d-flex align-items-center">
+            <button type="button" class="btn btn-sm btn-outline-danger mr-1" data-toggle="modal" data-target="#deleteModal"
+                title="Excluir" aria-label="Excluir">
+                <i class="fas fa-trash-alt mr-1" aria-hidden="true"></i> Excluir
+            </button>
+            <a class="btn btn-sm btn-outline-primary mr-1" href="/cms-ThemeOrganization-U/<%= item.id %>"
+                title="Editar" aria-label="Editar">
+                <i class="fas fa-pen mr-1" aria-hidden="true"></i> Editar
+            </a>
+            <a class="btn btn-sm btn-outline-secondary" href="/cms-ThemeOrganization-Q"
+                title="Voltar à Lista" aria-label="Voltar à Lista">
+                <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Voltar
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light font-weight-bold">
+            <i class="fas fa-info-circle text-primary mr-1" aria-hidden="true"></i> Informações do Registro
+        </div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3 text-muted">ID:</dt>
+                <dd class="col-sm-9"><%= item.id %></dd>
+
+                <dt class="col-sm-3 text-muted">Tema:</dt>
+                <dd class="col-sm-9 font-weight-bold"><%= item.name %></dd>
+
+                <dt class="col-sm-3 text-muted">Esfera da Vida:</dt>
+                <dd class="col-sm-9">
+                    <% if (item.life_sphere_name) { %>
+                        <span class="d-inline-block rounded mr-1"
+                            style="width: 12px; height: 12px; background-color: <%= item.life_sphere_color || '#007bff' %>; vertical-align: middle;"></span>
+                        <%= item.life_sphere_name %>
+                    <% } else { %>
+                        <span class="text-muted">–</span>
+                    <% } %>
+                </dd>
+
+                <dt class="col-sm-3 text-muted">Status:</dt>
+                <dd class="col-sm-9">
+                    <%= item.status === 1 ? 'Ativo' : 'Inativo' %>
+                </dd>
+
+                <dt class="col-sm-3 text-muted">Descrição:</dt>
+                <dd class="col-sm-9" style="white-space: pre-wrap;"><%= item.description || 'Nenhuma descrição informada.' %></dd>
+            </dl>
+        </div>
+    </div>
+
+    <!-- Modal Exclusão -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalTitle" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form class="modal-content" method="post" action="/cms-ThemeOrganization-D/<%= item.id %>">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalTitle">Excluir Organização por Tema</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Deseja realmente excluir a organização por tema nº <strong><%= item.id %></strong>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Não</button>
+                    <button type="submit" class="btn btn-danger">Sim, excluir</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<%- include('../parts/footer') %>

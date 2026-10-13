@@ -1,0 +1,103 @@
+<%- include('../parts/head') %>
+
+<main class="container py-4">
+    <form method="post" action="/cms-ThemeOrganization-U/<%= itemId %>">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1 class="h3 mb-0">Editar Organização por Tema nº <%= itemId %></h1>
+            <div class="d-flex align-items-center">
+                <button type="button" class="btn btn-sm btn-outline-danger mr-1" data-toggle="modal" data-target="#deleteModal"
+                    title="Excluir" aria-label="Excluir">
+                    <i class="fas fa-trash-alt mr-1" aria-hidden="true"></i> Excluir
+                </button>
+                <a class="btn btn-sm btn-outline-secondary mr-1" href="/cms-ThemeOrganization-V/<%= itemId %>"
+                    title="Visualizar" aria-label="Visualizar">
+                    <i class="fas fa-search mr-1" aria-hidden="true"></i> Visualizar
+                </a>
+                <button type="submit" class="btn btn-sm btn-primary mr-1"
+                    title="Salvar" aria-label="Salvar">
+                    <i class="fas fa-save mr-1" aria-hidden="true"></i> Salvar
+                </button>
+                <a class="btn btn-sm btn-outline-secondary" href="/cms-ThemeOrganization-Q"
+                    title="Voltar à Lista" aria-label="Voltar à Lista">
+                    <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Voltar
+                </a>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="form-row">
+                    <div class="form-group col-md-5">
+                        <label for="name">
+                            <i class="fas fa-folder text-muted mr-1" aria-hidden="true"></i> Tema <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control <%= errors.name ? 'is-invalid' : '' %>"
+                            id="name" name="name" value="<%= values.name || '' %>" required autofocus
+                            placeholder="Ex: [TI] - Projetos...">
+                        <% if (errors.name) { %><div class="invalid-feedback"><%= errors.name %></div><% } %>
+                    </div>
+
+                    <div class="form-group col-md-4">
+                        <label for="life_sphere_id">
+                            <i class="fas fa-heart text-muted mr-1" aria-hidden="true"></i> Esfera da Vida
+                        </label>
+                        <select class="form-control <%= errors.life_sphere_id ? 'is-invalid' : '' %>"
+                            id="life_sphere_id" name="life_sphere_id">
+                            <option value="">(Nenhuma)</option>
+                            <% lifeSpheres.forEach((ls) => { %>
+                                <option value="<%= ls.id %>" <%= String(values.life_sphere_id) === String(ls.id) ? 'selected' : '' %>>
+                                    <%= ls.name %>
+                                </option>
+                            <% }) %>
+                        </select>
+                        <% if (errors.life_sphere_id) { %><div class="invalid-feedback"><%= errors.life_sphere_id %></div><% } %>
+                    </div>
+
+                    <div class="form-group col-md-3">
+                        <label for="status">
+                            <i class="fas fa-toggle-on text-muted mr-1" aria-hidden="true"></i> Status
+                        </label>
+                        <select class="form-control <%= errors.status ? 'is-invalid' : '' %>" id="status" name="status">
+                            <option value="1" <%= values.status === "1" ? "selected" : "" %>>Ativo</option>
+                            <option value="0" <%= values.status === "0" ? "selected" : "" %>>Inativo</option>
+                        </select>
+                        <% if (errors.status) { %><div class="invalid-feedback"><%= errors.status %></div><% } %>
+                    </div>
+                </div>
+
+                <div class="form-group mb-0">
+                    <label for="description">
+                        <i class="fas fa-align-left text-muted mr-1" aria-hidden="true"></i> Descrição
+                    </label>
+                    <textarea class="form-control <%= errors.description ? 'is-invalid' : '' %>"
+                        id="description" name="description" rows="3"
+                        placeholder="Detalhes sobre a organização por tema..."><%= values.description || '' %></textarea>
+                    <% if (errors.description) { %><div class="invalid-feedback"><%= errors.description %></div><% } %>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- Modal Exclusão -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalTitle" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form class="modal-content" method="post" action="/cms-ThemeOrganization-D/<%= itemId %>">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalTitle">Excluir Organização por Tema</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Deseja realmente excluir a organização por tema nº <strong><%= itemId %></strong>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Não</button>
+                    <button type="submit" class="btn btn-danger">Sim, excluir</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<%- include('../parts/footer') %>

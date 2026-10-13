@@ -74,6 +74,18 @@ Implementado cobrindo inserção, edição, visualização e exclusão com indic
 | `POST /cms-Activity-U/:id`                             | `updateActivityPage` | redirect 303 → lista                   |
 | `POST /cms-Activity-D/:id`                             | `deleteActivityPage` | redirect 303 → lista                   |
 
+## Menu Cadastros (CRUDs de Apoio)
+
+Cadastros auxiliares alimentados dinamicamente nos formulários e filtros de Atividades:
+
+- **Esferas da Vida** (`/cms-LifeSphere-Q`): Nome, Descrição, Cor da linha (código hexadecimal) e Status.
+- **Relevâncias** (`/cms-Relevance-Q`): Nome, Descrição e Status.
+- **Períodos do Dia** (`/cms-DayPeriod-Q`): Nome, Descrição e Status.
+- **Periodicidades** (`/cms-Periodicity-Q`): Nome, Descrição e Status.
+- **Tipos de Ação** (`/cms-ActionType-Q`): Nome, Descrição e Status.
+- **Organizações por Tema** (`/cms-ThemeOrganization-Q`): Nome, Esfera da Vida (FK), Descrição e Status.
+- **Status de Atividade** (`/cms-ActivityStatus-Q`): Nome, Descrição, Visibilidade padrão na consulta e Cor do texto (código hexadecimal).
+
 ### Diferenças em relação ao projeto de referência
 
 - **Filtro e paginação** usam `GET` com query string. Saem os POSTs `-Q`/`-F` com campos ocultos.

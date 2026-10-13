@@ -1,37 +1,17 @@
 <%- include('parts/head') %>
 
 <main class="container py-5">
-    <%# Cabeçalho: logo da Congregação Cristã no Brasil e o nome do departamento %>
+    <%# Cabeçalho: logo Personal Organizer %>
     <header class="home-header">
-        <img class="home-logo" src="/images/logo-ccb.png" alt="Congregação Cristã no Brasil"
-            width="1114" height="576">
+        <img class="home-logo" src="/images/logo-personal-organizer.svg" alt="Personal Organizer 3.0"
+            width="88" height="88">
         <div>
-            <h1 class="home-title">DSA - Departamento de Suporte Administrativo</h1>
-            <p class="lead text-muted mb-0">Planejamento Estratégico e Gestão para Brasil e Exterior</p>
+            <h1 class="home-title">Personal Organizer 3.0</h1>
+            <p class="lead text-muted mb-0">Vida organizada, mente saudável.</p>
         </div>
     </header>
 
-    <%# Aviso de uso: plataforma restrita e com informações sigilosas %>
-    <aside class="home-disclaimer" role="note" aria-label="Aviso de uso da plataforma">
-        <i class="fas fa-lock home-disclaimer-icon" aria-hidden="true"></i>
-        <div>
-            <p>
-                Esta plataforma é de uso exclusivo e tem como objetivo oferecer ao corpo diretivo da
-                Congregação visibilidade sobre a execução do planejamento e a gestão dos projetos
-                estratégicos que a norteiam.
-            </p>
-            <p>
-                Ela contém informações sigilosas, e o acesso é restrito aos grupos de trabalho
-                responsáveis por definir normas e diretrizes aplicáveis a todo o Brasil e ao exterior.
-            </p>
-            <p>
-                Grupos estaduais, regionais ou locais devem consultar as informações disponíveis na
-                Intranet.
-            </p>
-        </div>
-    </aside>
-
-    <%# Acesso rápido aos módulos (Gestão) %>
+    <%# Acesso rápido aos módulos (Gestão e Cadastros) %>
     <nav class="mt-5" aria-label="Acesso rápido">
         <h2 class="dashboard-section-title">Gestão</h2>
         <div class="row">
@@ -59,6 +39,87 @@
                         <span class="dashboard-shortcut-text">
                             Veja os indicadores e o quadrante com status e prazos das atividades.
                         </span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <h2 class="dashboard-section-title mt-4">Cadastros de Apoio</h2>
+        <div class="row">
+            <div class="col-md-4 col-sm-6 mb-3">
+                <a class="card dashboard-shortcut h-100" href="/cms-LifeSphere-Q">
+                    <div class="card-body">
+                        <span class="dashboard-shortcut-icon" aria-hidden="true">
+                            <i class="fas fa-heart"></i>
+                        </span>
+                        <span class="dashboard-shortcut-title">Esferas da Vida</span>
+                        <span class="dashboard-shortcut-text">Áreas da vida e cores de destaque.</span>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-3">
+                <a class="card dashboard-shortcut h-100" href="/cms-Relevance-Q">
+                    <div class="card-body">
+                        <span class="dashboard-shortcut-icon" aria-hidden="true">
+                            <i class="fas fa-flag"></i>
+                        </span>
+                        <span class="dashboard-shortcut-title">Relevâncias</span>
+                        <span class="dashboard-shortcut-text">Níveis de prioridade das tarefas.</span>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-3">
+                <a class="card dashboard-shortcut h-100" href="/cms-DayPeriod-Q">
+                    <div class="card-body">
+                        <span class="dashboard-shortcut-icon" aria-hidden="true">
+                            <i class="fas fa-sun"></i>
+                        </span>
+                        <span class="dashboard-shortcut-title">Períodos do Dia</span>
+                        <span class="dashboard-shortcut-text">Manhã, tarde ou noite.</span>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-3">
+                <a class="card dashboard-shortcut h-100" href="/cms-Periodicity-Q">
+                    <div class="card-body">
+                        <span class="dashboard-shortcut-icon" aria-hidden="true">
+                            <i class="fas fa-redo-alt"></i>
+                        </span>
+                        <span class="dashboard-shortcut-title">Periodicidades</span>
+                        <span class="dashboard-shortcut-text">Frequência e repetição.</span>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-3">
+                <a class="card dashboard-shortcut h-100" href="/cms-ActionType-Q">
+                    <div class="card-body">
+                        <span class="dashboard-shortcut-icon" aria-hidden="true">
+                            <i class="fas fa-layer-group"></i>
+                        </span>
+                        <span class="dashboard-shortcut-title">Tipos de Ação</span>
+                        <span class="dashboard-shortcut-text">Natureza de execução da atividade.</span>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-3">
+                <a class="card dashboard-shortcut h-100" href="/cms-ThemeOrganization-Q">
+                    <div class="card-body">
+                        <span class="dashboard-shortcut-icon" aria-hidden="true">
+                            <i class="fas fa-folder"></i>
+                        </span>
+                        <span class="dashboard-shortcut-title">Organização por Tema</span>
+                        <span class="dashboard-shortcut-text">Agrupadores vinculados às esferas.</span>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-3">
+                <a class="card dashboard-shortcut h-100" href="/cms-ActivityStatus-Q">
+                    <div class="card-body">
+                        <span class="dashboard-shortcut-icon" aria-hidden="true">
+                            <i class="fas fa-toggle-on"></i>
+                        </span>
+                        <span class="dashboard-shortcut-title">Status de Atividade</span>
+                        <span class="dashboard-shortcut-text">Situações de fluxo, cores e visibilidade padrão.</span>
                     </div>
                 </a>
             </div>

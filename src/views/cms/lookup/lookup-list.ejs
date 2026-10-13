@@ -1,0 +1,203 @@
+<%- include('../../parts/head') %>
+
+<main class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="h3 mb-0 text-dark"><%= entityTitle %></h1>
+            <% if (filter.search || filter.status !== '1') { %>
+                <span class="badge badge-info mt-1">Filtros aplicados</span>
+                <a href="/<%= routePrefix %>-Q" class="small text-danger ml-2">Limpar</a>
+            <% } %>
+        </div>
+        <div class="d-flex align-items-center">
+            <button type="button" class="btn btn-sm <%= (filter.search || filter.status !== '1') ? 'btn-primary' : 'btn-outline-secondary' %> mr-1"
+                data-toggle="modal" data-target="#filterModal" title="Filtrar" aria-label="Filtrar">
+                <i class="fas fa-filter" aria-hidden="true"></i>
+            </button>
+            <a class="btn btn-sm btn-outline-primary" href="/<%= routePrefix %>-C"
+                title="Novo(a) <%= entityName %>" aria-label="Novo(a) <%= entityName %>">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+            </a>
+        </div>
+    </div>
+
+    <%- include('../../parts/messages') %>
+
+    <div class="table-responsive shadow-sm bg-white rounded">
+        <table class="table table-sm table-bordered table-hover table-activity mb-0">
+            <thead>
+                <tr class="text-center">
+                    <th style="width: 70px;">
+                        <span class="activity-th-content">
+                            <i class="fas fa-hashtag activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">ID</span>
+                        </span>
+                    </th>
+                    <th style="min-width: 200px;" class="text-left">
+                        <span class="activity-th-content activity-th-content--left">
+                            <i class="fas fa-tag activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Nome</span>
+                        </span>
+                    </th>
+                    <% if (routePrefix === 'cms-LifeSphere') { %>
+                        <th style="width: 140px;">
+                            <span class="activity-th-content">
+                                <i class="fas fa-palette activity-th-icon" aria-hidden="true"></i>
+                                <span class="activity-th-label">Cor</span>
+                            </span>
+                        </th>
+                    <% } else if (routePrefix === 'cms-ActivityStatus') { %>
+                        <th style="width: 130px;">
+                            <span class="activity-th-content">
+                                <i class="fas fa-eye activity-th-icon" aria-hidden="true"></i>
+                                <span class="activity-th-label">Visibilidade</span>
+                            </span>
+                        </th>
+                        <th style="width: 140px;">
+                            <span class="activity-th-content">
+                                <i class="fas fa-palette activity-th-icon" aria-hidden="true"></i>
+                                <span class="activity-th-label">Cor do Texto</span>
+                            </span>
+                        </th>
+                    <% } %>
+                    <th style="min-width: 250px;" class="text-left">
+                        <span class="activity-th-content activity-th-content--left">
+                            <i class="fas fa-align-left activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Descrição</span>
+                        </span>
+                    </th>
+                    <th style="width: 90px;">
+                        <span class="activity-th-content">
+                            <i class="fas fa-toggle-on activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Status</span>
+                        </span>
+                    </th>
+                    <th style="width: 95px;">
+                        <span class="activity-th-content">
+                            <i class="fas fa-tools activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Ações</span>
+                        </span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (items.length === 0) { %>
+                    <tr>
+                        <td colspan="<%= routePrefix === 'cms-ActivityStatus' ? 7 : (routePrefix === 'cms-LifeSphere' ? 6 : 5) %>" class="text-center py-4 text-muted">
+                            Nenhum registro encontrado.
+                        </td>
+                    </tr>
+                <% } %>
+                <% items.forEach((it) => { %>
+                    <tr>
+                        <td class="align-middle text-center text-muted"><%= it.id %></td>
+                        <td class="align-middle text-left font-weight-bold">
+                            <a href="/<%= routePrefix %>-V/<%= it.id %>" class="activity-desc-link">
+                                <%= it.name %>
+                            </a>
+                        </td>
+                        <% if (routePrefix === 'cms-LifeSphere') { %>
+                            <td class="align-middle text-center">
+                                <span class="d-inline-block rounded mr-1"
+                                    style="width: 14px; height: 14px; background-color: <%= it.color_code || '#007bff' %>; vertical-align: middle;"></span>
+                                <code><%= it.color_code || '-' %></code>
+                            </td>
+                        <% } else if (routePrefix === 'cms-ActivityStatus') { %>
+                            <td class="align-middle text-center">
+                                <span class="badge <%= it.visibility === 1 ? 'badge-primary' : 'badge-light text-muted' %>">
+                                    <%= it.visibility === 1 ? 'Visível padrão' : 'Oculto padrão' %>
+                                </span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span class="d-inline-block rounded mr-1"
+                                    style="width: 14px; height: 14px; background-color: <%= it.color_code || '#212529' %>; vertical-align: middle;"></span>
+                                <code style="color: <%= it.color_code || '#212529' %>;"><%= it.color_code || '-' %></code>
+                            </td>
+                        <% } %>
+                        <td class="align-middle text-left text-muted">
+                            <%= it.description || '-' %>
+                        </td>
+                        <td class="align-middle text-center">
+                            <span class="badge <%= it.status === 1 ? 'badge-success' : 'badge-secondary' %>">
+                                <%= it.status === 1 ? 'Ativo' : 'Inativo' %>
+                            </span>
+                        </td>
+                        <td class="align-middle text-center text-nowrap">
+                            <a class="btn btn-sm btn-outline-secondary mr-1" href="/<%= routePrefix %>-V/<%= it.id %>"
+                                title="Visualizar" aria-label="Visualizar">
+                                <i class="fas fa-search" aria-hidden="true"></i>
+                            </a>
+                            <a class="btn btn-sm btn-outline-primary" href="/<%= routePrefix %>-C/<%= it.id %>"
+                                title="Editar" aria-label="Editar">
+                                <i class="fas fa-pen" aria-hidden="true"></i>
+                            </a>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginação -->
+    <nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Paginação">
+        <span class="text-muted small">
+            Exibindo <%= pagination.firstItem %>–<%= pagination.lastItem %> de <%= pagination.total %> registros
+        </span>
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item <%= pagination.previousUrl ? '' : 'disabled' %>">
+                <a class="page-link" href="<%= pagination.previousUrl || '#' %>">Anterior</a>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">Página <%= pagination.page %> de <%= pagination.totalPages %></span>
+            </li>
+            <li class="page-item <%= pagination.nextUrl ? '' : 'disabled' %>">
+                <a class="page-link" href="<%= pagination.nextUrl || '#' %>">Próxima</a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Modal Filtro -->
+    <div class="modal fade" id="filterModal" tabindex="-1" role="dialog" aria-labelledby="filterModalTitle" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form class="modal-content" method="get" action="/<%= routePrefix %>-Q">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalTitle">Filtrar <%= entityTitle %></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="filterSearch">Termo de busca</label>
+                        <input type="text" class="form-control" id="filterSearch" name="search"
+                            value="<%= filter.search %>" placeholder="Nome ou descrição...">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="filterStatus">Status</label>
+                            <select class="form-control" id="filterStatus" name="status">
+                                <option value="1" <%= filter.status === "1" ? "selected" : "" %>>Ativos</option>
+                                <option value="0" <%= filter.status === "0" ? "selected" : "" %>>Inativos</option>
+                                <option value="all" <%= filter.status === "all" ? "selected" : "" %>>Todos</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="filterPerPage">Itens por página</label>
+                            <select class="form-control" id="filterPerPage" name="perPage">
+                                <% pageSizes.forEach((sz) => { %>
+                                    <option value="<%= sz %>" <%= filter.perPage === sz ? "selected" : "" %>><%= sz %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-link" href="/<%= routePrefix %>-Q">Limpar</a>
+                    <button type="submit" class="btn btn-primary">Aplicar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<%- include('../../parts/footer') %>

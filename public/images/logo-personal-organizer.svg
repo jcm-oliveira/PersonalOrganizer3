@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="poGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0062cc" />
+      <stop offset="100%" stop-color="#17a2b8" />
+    </linearGradient>
+    <filter id="subtleShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#002752" flood-opacity="0.18" />
+    </filter>
+  </defs>
+
+  <!-- Fundo arredondado elegante -->
+  <rect x="12" y="12" width="176" height="176" rx="36" fill="url(#poGradient)" filter="url(#subtleShadow)" />
+
+  <!-- Base da prancheta / organizador -->
+  <rect x="42" y="48" width="116" height="114" rx="12" fill="#ffffff" />
+
+  <!-- Clipe superior da prancheta -->
+  <rect x="74" y="38" width="52" height="18" rx="6" fill="#004085" />
+  <rect x="85" y="44" width="30" height="6" rx="3" fill="#ffffff" opacity="0.8" />
+
+  <!-- Itens de tarefas organizadas (linhas com checks) -->
+  <!-- Linha 1: Tarefa concluída -->
+  <circle cx="60" cy="74" r="7" fill="#28a745" />
+  <path d="M56.5 74 L59 76.5 L64 71" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  <rect x="74" y="71" width="66" height="6" rx="3" fill="#0062cc" />
+
+  <!-- Linha 2: Tarefa concluída -->
+  <circle cx="60" cy="98" r="7" fill="#28a745" />
+  <path d="M56.5 98 L59 100.5 L64 95" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  <rect x="74" y="95" width="54" height="6" rx="3" fill="#17a2b8" />
+
+  <!-- Linha 3: Tarefa em foco / progresso -->
+  <circle cx="60" cy="122" r="7" fill="#ffc107" />
+  <circle cx="60" cy="122" r="2.5" fill="#ffffff" />
+  <rect x="74" y="119" width="46" height="6" rx="3" fill="#6c757d" opacity="0.75" />
+
+  <!-- Linha 4: Linha de apoio suave -->
+  <rect x="74" y="141" width="34" height="5" rx="2.5" fill="#ced4da" />
+
+  <!-- Indicador de Farol / Sucesso no canto inferior da prancheta -->
+  <circle cx="138" cy="143" r="4" fill="#28a745" />
+</svg>

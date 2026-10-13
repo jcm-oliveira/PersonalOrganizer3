@@ -61,11 +61,11 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.match(res.text, /93/);
     });
 
-    it("renderiza a tela inicial institucional com logotipo e atalhos", async () => {
+    it("renderiza a tela inicial com logotipo e atalhos", async () => {
         const res = await request(app).get("/").expect(200);
 
-        assert.match(res.text, /Congregação Cristã no Brasil/);
-        assert.match(res.text, /Departamento de Suporte Administrativo/);
+        assert.match(res.text, /Personal Organizer 3\.0/);
+        assert.match(res.text, /Vida organizada, mente saudável\./);
         assert.match(res.text, /Atividades/);
         assert.match(res.text, /Gestão/);
     });
@@ -169,6 +169,13 @@ describe("Módulo Activity (Painel de Vôo)", () => {
 
         assert.equal(res.headers.location, "/cms-Activity-Q?msg=updated");
         assert.equal(update.mock.callCount(), 1);
+    });
+
+    it("carrega tela de inserção e renderiza o select de Organização por Tema igual aos demais", async () => {
+        const res = await request(app).get("/cms-Activity-C").expect(200);
+
+        assert.match(res.text, /<select[^>]*id="theme_organization"/);
+        assert.match(res.text, /<option value="">\(Nenhum\)<\/option>/);
     });
 
     it("exclui uma atividade com exclusão lógica", async () => {

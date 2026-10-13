@@ -1,5 +1,6 @@
 const express = require("express");
 const activityRoutes = require("./routes/activityRoutes");
+const lookupRoutes = require("./routes/lookupRoutes");
 const Activity = require("./model/ActivityModel");
 
 const routes = express.Router();
@@ -21,5 +22,6 @@ routes.get("/dashboard", async (req, res) => {
 //---------------------------------------------------
 
 routes.use(activityRoutes);
+routes.use(lookupRoutes);
 
 module.exports = routes;

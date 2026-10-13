@@ -1,0 +1,95 @@
+<%- include('../../parts/head') %>
+
+<main class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1"><%= entityName %> nº <%= item.id %></h1>
+            <span class="badge badge-pill <%= item.status === 1 ? 'badge-success' : 'badge-secondary' %>">
+                <%= item.status === 1 ? 'Ativo' : 'Inativo' %>
+            </span>
+            <% if (item.color_code) { %>
+                <span class="badge badge-pill ml-1" style="background-color: <%= item.color_code %>; color: #fff;">
+                    <%= item.color_code %>
+                </span>
+            <% } %>
+        </div>
+        <div class="d-flex align-items-center">
+            <button type="button" class="btn btn-sm btn-outline-danger mr-1" data-toggle="modal" data-target="#deleteModal"
+                title="Excluir" aria-label="Excluir">
+                <i class="fas fa-trash-alt mr-1" aria-hidden="true"></i> Excluir
+            </button>
+            <a class="btn btn-sm btn-outline-primary mr-1" href="/<%= routePrefix %>-U/<%= item.id %>"
+                title="Editar" aria-label="Editar">
+                <i class="fas fa-pen mr-1" aria-hidden="true"></i> Editar
+            </a>
+            <a class="btn btn-sm btn-outline-secondary" href="/<%= routePrefix %>-Q"
+                title="Voltar à Lista" aria-label="Voltar à Lista">
+                <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Voltar
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light font-weight-bold">
+            <i class="fas fa-info-circle text-primary mr-1" aria-hidden="true"></i> Informações do Registro
+        </div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3 text-muted">ID:</dt>
+                <dd class="col-sm-9"><%= item.id %></dd>
+
+                <dt class="col-sm-3 text-muted">Nome:</dt>
+                <dd class="col-sm-9 font-weight-bold"><%= item.name %></dd>
+
+                <% if (item.color_code) { %>
+                    <dt class="col-sm-3 text-muted"><%= routePrefix === 'cms-ActivityStatus' ? 'Cor do Texto:' : 'Cor da Linha:' %></dt>
+                    <dd class="col-sm-9">
+                        <span class="d-inline-block rounded mr-1"
+                            style="width: 14px; height: 14px; background-color: <%= item.color_code %>; vertical-align: middle;"></span>
+                        <code style="color: <%= item.color_code %>;"><%= item.color_code %></code>
+                    </dd>
+                <% } %>
+
+                <% if (routePrefix === 'cms-ActivityStatus') { %>
+                    <dt class="col-sm-3 text-muted">Visibilidade:</dt>
+                    <dd class="col-sm-9">
+                        <span class="badge <%= item.visibility === 1 ? 'badge-primary' : 'badge-light text-muted' %>">
+                            <%= item.visibility === 1 ? 'Aparece por padrão na tela de consulta' : 'Oculto por padrão (acessível via filtro)' %>
+                        </span>
+                    </dd>
+                <% } %>
+
+                <dt class="col-sm-3 text-muted">Status:</dt>
+                <dd class="col-sm-9">
+                    <%= item.status === 1 ? 'Ativo' : 'Inativo' %>
+                </dd>
+
+                <dt class="col-sm-3 text-muted">Descrição:</dt>
+                <dd class="col-sm-9" style="white-space: pre-wrap;"><%= item.description || 'Nenhuma descrição informada.' %></dd>
+            </dl>
+        </div>
+    </div>
+
+    <!-- Modal Exclusão -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalTitle" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form class="modal-content" method="post" action="/<%= routePrefix %>-D/<%= item.id %>">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalTitle">Excluir <%= entityName %></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Deseja realmente excluir o(a) <%= entityName.toLowerCase() %> nº <strong><%= item.id %></strong>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Não</button>
+                    <button type="submit" class="btn btn-danger">Sim, excluir</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<%- include('../../parts/footer') %>

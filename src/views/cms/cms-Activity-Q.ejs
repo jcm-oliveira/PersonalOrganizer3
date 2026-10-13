@@ -43,16 +43,16 @@
                 </tr>
                 <!-- Linha inferior de colunas específicas com ícones acima dos textos -->
                 <tr class="text-center">
-                    <th style="min-width: 130px;">
-                        <span class="activity-th-content">
-                            <i class="fas fa-heart activity-th-icon" aria-hidden="true"></i>
-                            <span class="activity-th-label">Esfera da Vida</span>
-                        </span>
-                    </th>
                     <th style="min-width: 220px;" class="text-left">
                         <span class="activity-th-content activity-th-content--left">
                             <i class="fas fa-align-left activity-th-icon" aria-hidden="true"></i>
                             <span class="activity-th-label">Descrição</span>
+                        </span>
+                    </th>
+                    <th style="min-width: 130px;">
+                        <span class="activity-th-content">
+                            <i class="fas fa-heart activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Esfera da Vida</span>
                         </span>
                     </th>
                     <th style="min-width: 95px;">
@@ -150,16 +150,16 @@
                     const rowClass = isOverdue ? 'table-danger' : '';
                 %>
                     <tr class="<%= rowClass %>">
-                        <!-- Esfera da Vida -->
-                        <td class="align-middle text-center">
-                            <%= act.life_sphere %>
-                        </td>
-
                         <!-- Descrição (destaque em negrito) -->
                         <td class="align-middle text-left">
                             <a href="/cms-Activity-V/<%= act.id %>" class="activity-desc-link">
                                 <%= act.description %>
                             </a>
+                        </td>
+
+                        <!-- Esfera da Vida -->
+                        <td class="align-middle text-center">
+                            <%= act.life_sphere %>
                         </td>
 
                         <!-- Relevância -->
@@ -203,8 +203,8 @@
                         </td>
 
                         <!-- Status -->
-                        <td class="align-middle text-center">
-                            <%= act.status === 1 ? 'Ativo' : 'Inativo' %>
+                        <td class="align-middle text-center font-weight-bold" style="<%= act.status_color_code ? 'color: ' + act.status_color_code + ';' : '' %>">
+                            <%= act.status_name || (act.status === 1 ? 'Ativo' : 'Inativo') %>
                         </td>
 
                         <!-- Dias Próx. Atividade com indicador circular (dot) -->

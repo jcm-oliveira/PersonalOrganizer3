@@ -36,9 +36,24 @@ const ACTION_TYPES = [
     "Estudo / Leitura",
 ];
 
+const THEME_ORGANIZATIONS = [
+    "[TI] - Escritório de Projetos",
+    "[TI] - Sustentação e Suporte",
+    "[Gestão] - Reuniões e Governança",
+    "[Família] - Casa e Família",
+    "[Saúde] - Consultas e Exames",
+    "[Finanças] - Orçamento e Contas",
+    "[Espiritual] - Reuniões e Deveres",
+    "[Estudos] - Cursos e Certificações",
+];
+
 // Filtros da listagem (Q + F)
 const activityListQuerySchema = z.object({
-    status: z.enum(["1", "0", "all"]).catch("1"),
+    status: z
+        .string()
+        .trim()
+        .refine((val) => val === "all" || /^\d+$/.test(val), { message: "Status inválido." })
+        .catch("1"),
     search: z.string().trim().max(150).catch(""),
     lifeSphere: z.string().trim().catch(""),
     relevance: z.string().trim().catch(""),
@@ -123,7 +138,7 @@ const activityFormSchema = z.object({
         .optional()
         .or(z.literal(""))
         .transform((val) => (val && val.trim() !== "" ? val.trim() : null)),
-    status: z.enum(["0", "1"], { error: "Status inválido." }).transform(Number),
+    status: z.coerce.number().int().catch(1),
 });
 
 const idParamSchema = z.coerce.number().int().positive();
@@ -223,6 +238,7 @@ module.exports = {
     DAY_PERIODS,
     PERIODICITY_OPTIONS,
     ACTION_TYPES,
+    THEME_ORGANIZATIONS,
     activityListQuerySchema,
     activityFormSchema,
     idParamSchema,

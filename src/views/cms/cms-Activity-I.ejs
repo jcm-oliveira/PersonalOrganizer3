@@ -7,7 +7,7 @@
     <div class="form-group col-md-4">
         <label for="life_sphere">
             <i class="fas fa-heart text-muted mr-1" aria-hidden="true"></i> Esfera da Vida <span class="text-danger">*</span>
-            <span id="life_sphere_badge" class="badge ml-1 border" style="display: none; vertical-align: middle;"></span>
+            <span id="life_sphere_badge" class="badge ml-1 border d-none"></span>
         </label>
         <select class="form-control <%= errors.life_sphere ? 'is-invalid' : '' %>" id="life_sphere" name="life_sphere" required autofocus>
             <option value="" data-color="">Selecione...</option>
@@ -176,42 +176,6 @@
     </div>
 </div>
 
-<script>
-    (function () {
-        const sphereSelect = document.getElementById('life_sphere');
-        const badge = document.getElementById('life_sphere_badge');
-        if (!sphereSelect || !badge) return;
+<%- include('cms-Activity-I-recurrence') %>
 
-        function contrastTextColor(hex) {
-            const match = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex || '');
-            if (!match) return '';
-            let h = match[1];
-            if (h.length === 3) h = h.split('').map((c) => c + c).join('');
-            const toLinear = (c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
-            const [r, g, b] = [0, 2, 4].map((i) => toLinear(parseInt(h.slice(i, i + 2), 16) / 255));
-            return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.179 ? '#212529' : '#ffffff';
-        }
-
-        function updateSphereBadge() {
-            const selectedOpt = sphereSelect.options[sphereSelect.selectedIndex];
-            const color = selectedOpt ? selectedOpt.getAttribute('data-color') : '';
-            const textColor = contrastTextColor(color);
-            if (color) {
-                badge.style.display = 'inline-block';
-                badge.style.backgroundColor = color;
-                badge.style.color = textColor;
-                badge.textContent = selectedOpt.value;
-                sphereSelect.style.backgroundColor = color;
-                sphereSelect.style.color = textColor;
-            } else {
-                badge.style.display = 'none';
-                badge.textContent = '';
-                sphereSelect.style.backgroundColor = '';
-                sphereSelect.style.color = '';
-            }
-        }
-
-        sphereSelect.addEventListener('change', updateSphereBadge);
-        updateSphereBadge();
-    })();
-</script>
+<script src="/scripts/activity-form.js" defer></script>

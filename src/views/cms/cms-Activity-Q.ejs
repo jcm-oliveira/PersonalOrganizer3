@@ -158,6 +158,12 @@
                             <a href="/cms-Activity-V/<%= act.id %>" class="activity-desc-link">
                                 <%= act.description %>
                             </a>
+                            <% if (act.recurrence_description) { %>
+                                <span class="activity-recurrence-icon" title="Repete: <%= act.recurrence_description %>">
+                                    <i class="fas fa-redo-alt" aria-hidden="true"></i>
+                                    <span class="sr-only">Repete: <%= act.recurrence_description %></span>
+                                </span>
+                            <% } %>
                         </td>
 
                         <!-- Esfera da Vida -->
@@ -256,6 +262,18 @@
                                 title="Status da atividade" aria-label="Status da atividade">
                                 <i class="fas fa-sync-alt" aria-hidden="true"></i>
                             </button>
+                            <% if (act.recurrence_description) { %>
+                                <button type="button" class="btn btn-sm btn-outline-success ml-1"
+                                    data-toggle="modal" data-target="#occurrenceModal"
+                                    data-activity-id="<%= act.id %>"
+                                    data-activity-description="<%= act.description %>"
+                                    data-recurrence="<%= act.recurrence_description %>"
+                                    data-next-date="<%= act.next_activity_date_formatted || '' %>"
+                                    data-next-occurrence="<%= act.next_occurrence_date || '' %>"
+                                    title="Concluir ocorrência" aria-label="Concluir ocorrência">
+                                    <i class="fas fa-check" aria-hidden="true"></i>
+                                </button>
+                            <% } %>
                         </td>
                     </tr>
                 <% }) %>
@@ -287,6 +305,7 @@
     <!-- Pop-ups de ações rápidas -->
     <%- include('cms-Activity-R') %>
     <%- include('cms-Activity-S') %>
+    <%- include('cms-Activity-O') %>
 </main>
 
 <script src="/scripts/sphere-colors.js" defer></script>

@@ -91,6 +91,21 @@
                         <dt class="col-sm-5 text-muted">Periodicidade:</dt>
                         <dd class="col-sm-7"><%= activity.periodicity || '-' %></dd>
 
+                        <dt class="col-sm-5 text-muted">Repetição:</dt>
+                        <dd class="col-sm-7">
+                            <% if (activity.recurrence_description) { %>
+                                <i class="fas fa-redo-alt text-muted mr-1" aria-hidden="true"></i>
+                                <%= activity.recurrence_description %>
+                                <% if (activity.next_occurrence_date) { %>
+                                    <span class="d-block small text-muted">
+                                        Ocorrência seguinte: <%= activity.next_occurrence_date.split('-').reverse().join('/') %>
+                                    </span>
+                                <% } %>
+                            <% } else { %>
+                                Não se repete
+                            <% } %>
+                        </dd>
+
                         <dt class="col-sm-5 text-muted">Tipo de Ação:</dt>
                         <dd class="col-sm-7"><%= activity.action_type || '-' %></dd>
 

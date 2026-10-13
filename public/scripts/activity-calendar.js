@@ -137,8 +137,14 @@
                     ),
             },
             eventDidMount: (info) => {
-                const { lifeSphere, relevance, status } = info.event.extendedProps;
-                info.el.title = [info.event.title, lifeSphere, relevance, status]
+                const { lifeSphere, relevance, status, recurrence } = info.event.extendedProps;
+                info.el.title = [
+                    info.event.title,
+                    lifeSphere,
+                    relevance,
+                    status,
+                    recurrence ? `Repete: ${recurrence}` : null,
+                ]
                     .filter(Boolean)
                     .join(" · ");
             },

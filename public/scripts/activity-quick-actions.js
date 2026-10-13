@@ -38,6 +38,18 @@
             form.querySelector('[name="next_activity_date"]').value = currentDate;
         });
 
+        onModalShow("occurrenceModal", (form, button) => {
+            const nextOccurrence = button.getAttribute("data-next-occurrence") || "";
+            form.querySelector('[data-field="recurrence"]').textContent =
+                button.getAttribute("data-recurrence") || "";
+            form.querySelector('[data-field="current-date"]').textContent = formatDateBr(
+                button.getAttribute("data-next-date"),
+            );
+            form.querySelector('[data-field="next-occurrence"]').textContent = nextOccurrence
+                ? formatDateBr(nextOccurrence)
+                : "Nenhuma — esta é a última ocorrência";
+        });
+
         onModalShow("statusModal", (form, button) => {
             form.querySelector('[name="status"]').value = button.getAttribute("data-status") || "";
         });

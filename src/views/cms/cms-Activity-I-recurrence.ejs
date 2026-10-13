@@ -1,0 +1,127 @@
+<%#
+    Seção "Repetição" do formulário de atividade (inserção e edição).
+    Gera uma regra no padrão iCalendar (RRULE) no servidor: src/validation/recurrence.js.
+    A exibição dos campos conforme a frequência é feita por /scripts/activity-form.js.
+%>
+<%
+    const rv = (name, fallback) => (values[name] !== undefined && values[name] !== '' ? String(values[name]) : fallback);
+    const freq = rv('recurrence_freq', '');
+    const monthlyMode = rv('recurrence_monthly_mode', 'day');
+    const endMode = rv('recurrence_end', 'never');
+    const checkedWeekdays = [].concat(values.recurrence_weekdays || []);
+    const weekdayOptions = [
+        { code: 'MO', short: 'Seg', label: 'Segunda' },
+        { code: 'TU', short: 'Ter', label: 'Terça' },
+        { code: 'WE', short: 'Qua', label: 'Quarta' },
+        { code: 'TH', short: 'Qui', label: 'Quinta' },
+        { code: 'FR', short: 'Sex', label: 'Sexta' },
+        { code: 'SA', short: 'Sáb', label: 'Sábado' },
+        { code: 'SU', short: 'Dom', label: 'Domingo' },
+    ];
+    const unitLabels = { DAILY: 'dia(s)', WEEKLY: 'semana(s)', MONTHLY: 'mês(es)', YEARLY: 'ano(s)' };
+%>
+
+<h5 class="text-primary border-bottom pb-2 mb-3 mt-4">
+    <i class="fas fa-redo-alt text-primary mr-1" aria-hidden="true"></i> Repetição
+</h5>
+
+<div id="recurrenceSection" data-freq="<%= freq %>">
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="recurrence_freq">Repetir</label>
+            <select class="form-control <%= errors.recurrence ? 'is-invalid' : '' %>" id="recurrence_freq" name="recurrence_freq">
+                <option value="" <%= freq === '' ? 'selected' : '' %>>Não se repete</option>
+                <option value="DAILY" <%= freq === 'DAILY' ? 'selected' : '' %>>Diariamente</option>
+                <option value="WEEKLY" <%= freq === 'WEEKLY' ? 'selected' : '' %>>Semanalmente</option>
+                <option value="MONTHLY" <%= freq === 'MONTHLY' ? 'selected' : '' %>>Mensalmente</option>
+                <option value="YEARLY" <%= freq === 'YEARLY' ? 'selected' : '' %>>Anualmente</option>
+            </select>
+            <small class="form-text text-muted">A série começa na data da próxima atividade.</small>
+        </div>
+
+        <div class="form-group col-md-3" data-recurrence-show="DAILY WEEKLY MONTHLY YEARLY">
+            <label for="recurrence_interval">A cada</label>
+            <div class="input-group">
+                <input type="number" class="form-control" id="recurrence_interval" name="recurrence_interval"
+                    min="1" max="99" value="<%= rv('recurrence_interval', '1') %>">
+                <div class="input-group-append">
+                    <span class="input-group-text" id="recurrence_interval_unit"><%= unitLabels[freq] || 'vez(es)' %></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Semanal: dias da semana -->
+    <div class="form-group" data-recurrence-show="WEEKLY">
+        <span class="d-block mb-1">Nos dias</span>
+        <div class="btn-group-toggle recurrence-weekdays" data-toggle="buttons" role="group" aria-label="Dias da semana">
+            <% weekdayOptions.forEach((w) => { const checked = checkedWeekdays.includes(w.code); %>
+                <label class="btn btn-sm btn-outline-primary mb-1 <%= checked ? 'active' : '' %>" title="<%= w.label %>">
+                    <input type="checkbox" name="recurrence_weekdays" value="<%= w.code %>" autocomplete="off" <%= checked ? 'checked' : '' %>>
+                    <%= w.short %>
+                </label>
+            <% }) %>
+        </div>
+    </div>
+
+    <!-- Mensal: no dia N ou na Nª [dia da semana] -->
+    <div class="form-group" data-recurrence-show="MONTHLY">
+        <div class="form-check form-check-inline align-items-center mb-2">
+            <input class="form-check-input" type="radio" name="recurrence_monthly_mode" id="recurrence_monthly_day"
+                value="day" <%= monthlyMode === 'day' ? 'checked' : '' %>>
+            <label class="form-check-label mr-2" for="recurrence_monthly_day">No dia</label>
+            <select class="form-control form-control-sm recurrence-inline-select" name="recurrence_month_day" aria-label="Dia do mês">
+                <% for (let d = 1; d <= 31; d++) { %>
+                    <option value="<%= d %>" <%= rv('recurrence_month_day', '1') === String(d) ? 'selected' : '' %>><%= d %></option>
+                <% } %>
+                <option value="-1" <%= rv('recurrence_month_day', '1') === '-1' ? 'selected' : '' %>>Último dia</option>
+            </select>
+        </div>
+        <br>
+        <div class="form-check form-check-inline align-items-center">
+            <input class="form-check-input" type="radio" name="recurrence_monthly_mode" id="recurrence_monthly_weekday"
+                value="weekday" <%= monthlyMode === 'weekday' ? 'checked' : '' %>>
+            <label class="form-check-label mr-2" for="recurrence_monthly_weekday">No(a)</label>
+            <select class="form-control form-control-sm recurrence-inline-select mr-1" name="recurrence_setpos" aria-label="Posição no mês">
+                <% [['1', '1º (primeiro)'], ['2', '2º (segundo)'], ['3', '3º (terceiro)'], ['4', '4º (quarto)'], ['-1', 'Último']].forEach(([v, l]) => { %>
+                    <option value="<%= v %>" <%= rv('recurrence_setpos', '1') === v ? 'selected' : '' %>><%= l %></option>
+                <% }) %>
+            </select>
+            <select class="form-control form-control-sm recurrence-inline-select" name="recurrence_setpos_weekday" aria-label="Dia da semana">
+                <% weekdayOptions.forEach((w) => { %>
+                    <option value="<%= w.code %>" <%= rv('recurrence_setpos_weekday', 'MO') === w.code ? 'selected' : '' %>><%= w.label %></option>
+                <% }) %>
+            </select>
+            <span class="small text-muted ml-2">do mês</span>
+        </div>
+    </div>
+
+    <!-- Término -->
+    <div class="form-group" data-recurrence-show="DAILY WEEKLY MONTHLY YEARLY">
+        <span class="d-block mb-1">Termina</span>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="recurrence_end" id="recurrence_end_never"
+                value="never" <%= endMode === 'never' ? 'checked' : '' %>>
+            <label class="form-check-label" for="recurrence_end_never">Nunca</label>
+        </div>
+        <div class="form-check form-check-inline align-items-center">
+            <input class="form-check-input" type="radio" name="recurrence_end" id="recurrence_end_until"
+                value="until" <%= endMode === 'until' ? 'checked' : '' %>>
+            <label class="form-check-label mr-2" for="recurrence_end_until">Em</label>
+            <input type="date" class="form-control form-control-sm recurrence-inline-select" name="recurrence_until"
+                aria-label="Data de término" value="<%= rv('recurrence_until', '') %>">
+        </div>
+        <div class="form-check form-check-inline align-items-center">
+            <input class="form-check-input" type="radio" name="recurrence_end" id="recurrence_end_count"
+                value="count" <%= endMode === 'count' ? 'checked' : '' %>>
+            <label class="form-check-label mr-2" for="recurrence_end_count">Após</label>
+            <input type="number" class="form-control form-control-sm recurrence-count-input mr-1" name="recurrence_count"
+                min="1" max="999" aria-label="Quantidade de ocorrências" value="<%= rv('recurrence_count', '10') %>">
+            <span class="small text-muted">ocorrências</span>
+        </div>
+    </div>
+
+    <% if (errors.recurrence) { %>
+        <div class="alert alert-danger py-2" role="alert"><%= errors.recurrence %></div>
+    <% } %>
+</div>

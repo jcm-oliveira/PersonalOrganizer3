@@ -33,6 +33,13 @@ const {
     getContrastTextColor,
     toDateOnlyString,
 } = require("../validation/activitySchemas");
+const {
+    buildRecurrence,
+    nextOccurrence,
+    occurrencesBetween,
+    ruleToFormValues,
+    describeRecurrence,
+} = require("../validation/recurrence");
 
 const LIST_URL = "/cms-Activity-Q";
 
@@ -48,6 +55,18 @@ const MESSAGES = {
     invalidDate: {
         alertType: "alert-danger",
         text: "Data inválida. Informe a nova data da próxima atividade.",
+    },
+    occurrenceDone: {
+        alertType: "alert-success",
+        text: "Ocorrência concluída. A atividade foi remarcada para a próxima ocorrência.",
+    },
+    seriesEnded: {
+        alertType: "alert-warning",
+        text: "Esta foi a última ocorrência da repetição. Não há próximas ocorrências; altere o status da atividade se ela estiver concluída.",
+    },
+    notRecurring: {
+        alertType: "alert-danger",
+        text: "Esta atividade não é recorrente.",
     },
     invalidStatus: {
         alertType: "alert-danger",
@@ -332,6 +351,38 @@ function buildDashboardCharts(distribution, lookups) {
     ];
 }
 
+// Valida o formulário de atividade e a recorrência. Com recorrência, a próxima
+// atividade é alinhada à primeira ocorrência válida da regra.
+function parseActivityForm(body) {
+    const parsed = activityFormSchema.safeParse(body ?? {});
+    const errors = parsed.success ? {} : toFieldErrors(parsed.error);
+    const startDate = parsed.success ? parsed.data.next_activity_date : null;
+    const recurrence = startDate ? buildRecurrence(body, startDate) : null;
+    if (recurrence?.error) errors.recurrence = recurrence.error;
+
+    if (Object.keys(errors).length > 0) {
+        return { success: false, errors };
+    }
+    return {
+        success: true,
+        data: {
+            ...parsed.data,
+            next_activity_date: recurrence.nextActivityDate,
+            recurrence_rule: recurrence.rule,
+        },
+    };
+}
+
+// Campos de recorrência exibidos na consulta e na visualização
+function recurrenceInfo(act) {
+    if (!act.recurrence_rule) return { recurrence_description: null, next_occurrence_date: null };
+    const currentDate = toDateOnlyString(act.next_activity_date);
+    return {
+        recurrence_description: describeRecurrence(act.recurrence_rule),
+        next_occurrence_date: currentDate ? nextOccurrence(act.recurrence_rule, currentDate) : null,
+    };
+}
+
 // "all" = sem filtro | "visible" = status visíveis por padrão | número = id do status
 function toStatusCriteria(status) {
     if (status === STATUS_FILTER_ALL) return null;
@@ -389,6 +440,7 @@ module.exports = {
                 status_color_code: statusColor,
                 status_text_color: getContrastTextColor(statusColor) || "#ffffff",
                 ...resolveSphereColor(act.life_sphere),
+                ...recurrenceInfo(act),
             };
         });
 
@@ -440,6 +492,7 @@ module.exports = {
             status_color_code:
                 statusObj?.color_code || (rawActivity.status === 1 ? "#28a745" : "#6c757d"),
             ...resolveSphereColor(rawActivity.life_sphere),
+            ...recurrenceInfo(rawActivity),
         };
 
         return res.render("cms/cms-Activity-V", {
@@ -475,7 +528,7 @@ module.exports = {
     },
 
     async insertActivityPage(req, res) {
-        const parsed = activityFormSchema.safeParse(req.body ?? {});
+        const parsed = parseActivityForm(req.body);
         if (!parsed.success) {
             const lookups = await loadLookupOptions();
             return res.status(422).render("cms/cms-Activity-C", {
@@ -489,7 +542,7 @@ module.exports = {
                 actionTypes: lookups.actionTypes,
                 themeOrganizations: lookups.themeOrganizations,
                 activityStatuses: lookups.activityStatuses,
-                errors: toFieldErrors(parsed.error),
+                errors: parsed.errors,
             });
         }
 
@@ -532,6 +585,7 @@ module.exports = {
                 theme_organization: activity.theme_organization || "",
                 notes: activity.notes || "",
                 status: String(activity.status),
+                ...ruleToFormValues(activity.recurrence_rule),
             },
             lifeSpheres: lookups.lifeSpheres,
             lifeSpheresWithColor: lookups.lifeSpheresWithColor,
@@ -547,7 +601,7 @@ module.exports = {
 
     async updateActivityPage(req, res) {
         const id = parseId(req.params.id);
-        const parsed = activityFormSchema.safeParse(req.body ?? {});
+        const parsed = parseActivityForm(req.body);
         if (!parsed.success) {
             const lookups = await loadLookupOptions();
             return res.status(422).render("cms/cms-Activity-U", {
@@ -562,7 +616,7 @@ module.exports = {
                 actionTypes: lookups.actionTypes,
                 themeOrganizations: lookups.themeOrganizations,
                 activityStatuses: lookups.activityStatuses,
-                errors: toFieldErrors(parsed.error),
+                errors: parsed.errors,
             });
         }
 
@@ -639,6 +693,7 @@ module.exports = {
                 lifeSphere: act.life_sphere,
                 relevance: act.relevance,
                 status: statusMap.get(act.status)?.name || null,
+                recurrence: act.recurrence_rule ? describeRecurrence(act.recurrence_rule) : null,
             };
             const result = [];
 
@@ -653,6 +708,27 @@ module.exports = {
                     ...(color ? { backgroundColor: color, borderColor: color, textColor } : {}),
                     extendedProps: { ...extendedProps, kind: "next" },
                 });
+            }
+
+            // Ocorrências futuras da repetição (depois da próxima atividade): somente leitura
+            if (act.recurrence_rule && nextDate) {
+                occurrencesBetween(act.recurrence_rule, nextDate, start, end)
+                    .filter((date) => date > nextDate)
+                    .forEach((date) =>
+                        result.push({
+                            id: `occurrence-${act.id}-${date}`,
+                            title: act.description,
+                            start: time ? `${date}T${time}` : date,
+                            allDay: !time,
+                            url: `/cms-Activity-V/${act.id}`,
+                            editable: false,
+                            classNames: ["fc-event-occurrence"],
+                            ...(color
+                                ? { backgroundColor: color, borderColor: color, textColor }
+                                : {}),
+                            extendedProps: { ...extendedProps, kind: "occurrence" },
+                        }),
+                    );
             }
 
             if (inRange(finalDate)) {
@@ -713,6 +789,32 @@ module.exports = {
             throw new HttpError(404, "Atividade não encontrada.");
         }
         return res.redirect(303, returnToListUrl(returnTo, "rescheduled"));
+    },
+
+    //------------------------------------------------
+    //  CONCLUIR OCORRÊNCIA (atividade recorrente, pop-up da consulta)
+    //------------------------------------------------
+
+    async completeOccurrencePage(req, res) {
+        const id = parseId(req.params.id);
+        const returnTo = req.body?.returnTo;
+        const activity = await Activity.selectActivityById(id);
+        if (!activity) {
+            throw new HttpError(404, "Atividade não encontrada.");
+        }
+        if (!activity.recurrence_rule) {
+            return res.redirect(303, returnToListUrl(returnTo, "notRecurring"));
+        }
+
+        const next = nextOccurrence(
+            activity.recurrence_rule,
+            toDateOnlyString(activity.next_activity_date),
+        );
+        if (!next) {
+            return res.redirect(303, returnToListUrl(returnTo, "seriesEnded"));
+        }
+        await Activity.updateNextActivityDate(id, next);
+        return res.redirect(303, returnToListUrl(returnTo, "occurrenceDone"));
     },
 
     //------------------------------------------------

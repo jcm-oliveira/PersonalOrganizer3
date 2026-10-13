@@ -108,6 +108,7 @@ async function selectActivities({
             day_period,
             scheduled_time,
             periodicity,
+            recurrence_rule,
             action_type,
             theme_organization,
             notes,
@@ -156,9 +157,11 @@ async function countActivities({
 async function selectActivitiesForCalendar({ start, end, status }) {
     const conditions = [
         "excluded = 0",
-        "((next_activity_date >= ? AND next_activity_date < ?) OR (final_deadline >= ? AND final_deadline < ?))",
+        `((next_activity_date >= ? AND next_activity_date < ?)
+            OR (final_deadline >= ? AND final_deadline < ?)
+            OR (recurrence_rule IS NOT NULL AND next_activity_date < ?))`,
     ];
-    const values = [start, end, start, end];
+    const values = [start, end, start, end, end];
     pushStatusCondition(status, conditions, values);
 
     const sql = `
@@ -171,6 +174,7 @@ async function selectActivitiesForCalendar({ start, end, status }) {
             final_deadline,
             day_period,
             scheduled_time,
+            recurrence_rule,
             action_type,
             theme_organization,
             status
@@ -194,6 +198,7 @@ async function selectActivityById(id) {
             day_period,
             scheduled_time,
             periodicity,
+            recurrence_rule,
             action_type,
             theme_organization,
             notes,
@@ -322,11 +327,12 @@ async function insertActivity(data) {
             day_period,
             scheduled_time,
             periodicity,
+            recurrence_rule,
             action_type,
             theme_organization,
             notes,
             status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const [result] = await pool.query(sql, [
         data.life_sphere,
@@ -337,6 +343,7 @@ async function insertActivity(data) {
         data.day_period,
         data.scheduled_time,
         data.periodicity,
+        data.recurrence_rule ?? null,
         data.action_type,
         data.theme_organization,
         data.notes,
@@ -361,6 +368,7 @@ async function updateActivity(id, data) {
             day_period = ?,
             scheduled_time = ?,
             periodicity = ?,
+            recurrence_rule = ?,
             action_type = ?,
             theme_organization = ?,
             notes = ?,
@@ -376,6 +384,7 @@ async function updateActivity(id, data) {
         data.day_period,
         data.scheduled_time,
         data.periodicity,
+        data.recurrence_rule ?? null,
         data.action_type,
         data.theme_organization,
         data.notes,

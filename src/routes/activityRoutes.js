@@ -14,6 +14,7 @@ routes.get("/cms-Calendar", ActivityController.loadCalendarPage);
 routes.get("/cms-Calendar/events", ActivityController.loadCalendarEvents);
 routes.post("/cms-Calendar/events/:id/reschedule", ActivityController.rescheduleCalendarEvent);
 routes.post("/cms-Activity-R/:id", ActivityController.rescheduleActivityPage);
+routes.post("/cms-Activity-O/:id", ActivityController.completeOccurrencePage);
 routes.post("/cms-Activity-S/:id", ActivityController.changeActivityStatusPage);
 routes.post("/cms-Activity-D/:id", ActivityController.deleteActivityPage);
 

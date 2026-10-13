@@ -205,6 +205,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             day_period: "1 - Manhã",
             scheduled_time: "09:30:00",
             periodicity: "Única",
+            recurrence_rule: null,
             action_type: "Tarefa",
             theme_organization: "[TI] - Projetos",
             notes: "Revisar protótipo",
@@ -627,6 +628,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                     relevance: "Prioridade",
                     status: "Em andamento",
                     kind: "next",
+                    recurrence: null,
                 },
             },
             {
@@ -642,6 +644,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                     relevance: "Normal",
                     status: "Pendente",
                     kind: "next",
+                    recurrence: null,
                 },
             },
             {
@@ -658,6 +661,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                     relevance: "Normal",
                     status: "Pendente",
                     kind: "deadline",
+                    recurrence: null,
                 },
             },
             {
@@ -675,6 +679,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                     relevance: "Normal",
                     status: "Pendente",
                     kind: "deadline",
+                    recurrence: null,
                 },
             },
         ]);

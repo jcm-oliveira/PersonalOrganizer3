@@ -8,7 +8,7 @@
                 <%= item.status === 1 ? 'Ativo' : 'Inativo' %>
             </span>
             <% if (item.color_code) { %>
-                <span class="badge badge-pill ml-1" style="background-color: <%= item.color_code %>; color: #fff;">
+                <span class="badge badge-pill ml-1 color-badge" data-bg-color="<%= item.color_code %>" data-text-color="auto">
                     <%= item.color_code %>
                 </span>
             <% } %>
@@ -44,9 +44,8 @@
                 <% if (item.color_code) { %>
                     <dt class="col-sm-3 text-muted"><%= routePrefix === 'cms-ActivityStatus' ? 'Cor do Texto:' : 'Cor da Linha:' %></dt>
                     <dd class="col-sm-9">
-                        <span class="d-inline-block rounded mr-1"
-                            style="width: 14px; height: 14px; background-color: <%= item.color_code %>; vertical-align: middle;"></span>
-                        <code style="color: <%= item.color_code %>;"><%= item.color_code %></code>
+                        <span class="color-swatch mr-1" data-bg-color="<%= item.color_code %>" aria-hidden="true"></span>
+                        <code class="color-code"><%= item.color_code %></code>
                     </dd>
                 <% } %>
 
@@ -91,5 +90,7 @@
         </div>
     </div>
 </main>
+
+<script src="/scripts/sphere-colors.js" defer></script>
 
 <%- include('../../parts/footer') %>

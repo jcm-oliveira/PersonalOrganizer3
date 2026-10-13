@@ -98,9 +98,9 @@
                         </td>
                         <% if (routePrefix === 'cms-LifeSphere') { %>
                             <td class="align-middle text-center">
-                                <span class="d-inline-block rounded mr-1"
-                                    style="width: 14px; height: 14px; background-color: <%= it.color_code || '#007bff' %>; vertical-align: middle;"></span>
-                                <code><%= it.color_code || '-' %></code>
+                                <span class="color-swatch mr-1" data-bg-color="<%= it.color_code || '#007bff' %>"
+                                    aria-hidden="true"></span>
+                                <code class="color-code"><%= it.color_code || '-' %></code>
                             </td>
                         <% } else if (routePrefix === 'cms-ActivityStatus') { %>
                             <td class="align-middle text-center">
@@ -109,9 +109,9 @@
                                 </span>
                             </td>
                             <td class="align-middle text-center">
-                                <span class="d-inline-block rounded mr-1"
-                                    style="width: 14px; height: 14px; background-color: <%= it.color_code || '#212529' %>; vertical-align: middle;"></span>
-                                <code style="color: <%= it.color_code || '#212529' %>;"><%= it.color_code || '-' %></code>
+                                <span class="color-swatch mr-1" data-bg-color="<%= it.color_code || '#212529' %>"
+                                    aria-hidden="true"></span>
+                                <code class="color-code"><%= it.color_code || '-' %></code>
                             </td>
                         <% } %>
                         <td class="align-middle text-left text-muted">
@@ -199,5 +199,7 @@
         </div>
     </div>
 </main>
+
+<script src="/scripts/sphere-colors.js" defer></script>
 
 <%- include('../../parts/footer') %>

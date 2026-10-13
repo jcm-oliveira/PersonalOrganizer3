@@ -1,17 +1,22 @@
 const { pool } = require("../db/config");
 
-function buildWhere({ status, search, lifeSphere, relevance, actionType, trafficLight, todayStr }) {
-    const conditions = ["excluded = 0"];
-    const values = [];
-
+// Filtro de status: null = todos | "visible" = status visíveis por padrão | número = id do status
+function pushStatusCondition(status, conditions, values) {
     if (status === "visible") {
         conditions.push(
             "status IN (SELECT id FROM activity_status WHERE excluded = 0 AND status = 1 AND visibility = 1)",
         );
-    } else if (status !== null) {
+    } else if (status !== null && status !== undefined) {
         conditions.push("status = ?");
         values.push(status);
     }
+}
+
+function buildWhere({ status, search, lifeSphere, relevance, actionType, trafficLight, todayStr }) {
+    const conditions = ["excluded = 0"];
+    const values = [];
+
+    pushStatusCondition(status, conditions, values);
 
     if (lifeSphere) {
         conditions.push("life_sphere = ?");
@@ -142,6 +147,39 @@ async function countActivities({
         values,
     );
     return Number(rows[0].total);
+}
+
+/**
+ * Atividades do calendário: próxima atividade OU prazo final dentro do intervalo
+ * [start, end) exibido, com o mesmo filtro de status da consulta.
+ */
+async function selectActivitiesForCalendar({ start, end, status }) {
+    const conditions = [
+        "excluded = 0",
+        "((next_activity_date >= ? AND next_activity_date < ?) OR (final_deadline >= ? AND final_deadline < ?))",
+    ];
+    const values = [start, end, start, end];
+    pushStatusCondition(status, conditions, values);
+
+    const sql = `
+        SELECT
+            id,
+            life_sphere,
+            description,
+            relevance,
+            next_activity_date,
+            final_deadline,
+            day_period,
+            scheduled_time,
+            action_type,
+            theme_organization,
+            status
+        FROM activity
+        WHERE ${conditions.join(" AND ")}
+        ORDER BY next_activity_date ASC, scheduled_time ASC, id ASC
+    `;
+    const [rows] = await pool.query(sql, values);
+    return rows;
 }
 
 async function selectActivityById(id) {
@@ -286,6 +324,13 @@ async function updateActivity(id, data) {
     return result.affectedRows;
 }
 
+// Remarcação pelo calendário (arrastar e soltar): data e, se informado, o horário
+async function updateNextActivitySchedule(id, nextActivityDate, scheduledTime) {
+    const sql = `UPDATE activity SET next_activity_date = ?, scheduled_time = ? WHERE id = ? AND excluded = 0`;
+    const [result] = await pool.query(sql, [nextActivityDate, scheduledTime, id]);
+    return result.affectedRows;
+}
+
 async function updateNextActivityDate(id, nextActivityDate) {
     const sql = `UPDATE activity SET next_activity_date = ? WHERE id = ? AND excluded = 0`;
     const [result] = await pool.query(sql, [nextActivityDate, id]);
@@ -312,10 +357,12 @@ module.exports = {
     selectActivities,
     countActivities,
     selectActivityById,
+    selectActivitiesForCalendar,
     getActivityStats,
     insertActivity,
     updateActivity,
     updateNextActivityDate,
+    updateNextActivitySchedule,
     updateActivityStatus,
     deleteActivity,
 };

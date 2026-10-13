@@ -167,6 +167,42 @@ const activityStatusChangeSchema = z.object({
     status: z.coerce.number({ error: "Selecione o status." }).int().min(0),
 });
 
+// Intervalo pedido pelo calendário (FullCalendar envia ISO, ex.: 2026-09-27T00:00:00-03:00)
+const CALENDAR_MAX_RANGE_DAYS = 400;
+const calendarDate = z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}/, "Data inválida.")
+    .transform((val) => val.slice(0, 10));
+
+const calendarRangeQuerySchema = z
+    .object({
+        start: calendarDate,
+        end: calendarDate,
+        status: activityListQuerySchema.shape.status,
+    })
+    .refine(({ start, end }) => start < end, { message: "Intervalo inválido." })
+    .refine(
+        ({ start, end }) =>
+            (Date.parse(end) - Date.parse(start)) / (24 * 60 * 60 * 1000) <=
+            CALENDAR_MAX_RANGE_DAYS,
+        { message: "Intervalo muito grande." },
+    );
+
+// Remarcação pelo calendário (arrastar e soltar). Sem horário = mantém o horário atual.
+const calendarRescheduleSchema = z.object({
+    next_activity_date: z
+        .string({ error: "Informe a nova data da próxima atividade." })
+        .trim()
+        .regex(dateRegex, "Data da próxima atividade inválida (AAAA-MM-DD)."),
+    scheduled_time: z
+        .string()
+        .trim()
+        .regex(timeRegex, "Horário inválido (HH:MM).")
+        .optional()
+        .nullable(),
+});
+
 const idParamSchema = z.coerce.number().int().positive();
 
 function toFieldErrors(zodError) {
@@ -322,6 +358,8 @@ module.exports = {
     activityFormSchema,
     activityRescheduleSchema,
     activityStatusChangeSchema,
+    calendarRangeQuerySchema,
+    calendarRescheduleSchema,
     idParamSchema,
     toFieldErrors,
     calculateDaysDiff,

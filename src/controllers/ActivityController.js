@@ -25,6 +25,8 @@ const {
     activityFormSchema,
     activityRescheduleSchema,
     activityStatusChangeSchema,
+    calendarRangeQuerySchema,
+    calendarRescheduleSchema,
     idParamSchema,
     toFieldErrors,
     enrichActivity,
@@ -417,6 +419,107 @@ module.exports = {
             throw new HttpError(404, "Atividade não encontrada.");
         }
         return res.redirect(303, `${LIST_URL}?msg=updated`);
+    },
+
+    //------------------------------------------------
+    //            CALENDÁRIO (FullCalendar)
+    //------------------------------------------------
+
+    async loadCalendarPage(req, res) {
+        const lookups = await loadLookupOptions();
+        return res.render("cms/cms-Calendar", {
+            title: "Calendário",
+            lifeSphereColors: (lookups.lifeSphereColors || []).filter((s) => s.color_code),
+            activityStatuses: lookups.activityStatuses,
+        });
+    },
+
+    // Fonte de eventos JSON consumida pelo FullCalendar (?start=...&end=...&status=...).
+    // Cada atividade gera até dois eventos: a próxima atividade (pode ser arrastada
+    // para remarcar) e o prazo final (marcador, somente leitura).
+    async loadCalendarEvents(req, res) {
+        const parsed = calendarRangeQuerySchema.safeParse(req.query);
+        if (!parsed.success) {
+            throw new HttpError(400, "Intervalo de datas inválido.");
+        }
+        const { start, end } = parsed.data;
+        const inRange = (date) => Boolean(date) && date >= start && date < end;
+
+        const [rawActivities, lookups] = await Promise.all([
+            Activity.selectActivitiesForCalendar({
+                start,
+                end,
+                status: toStatusCriteria(parsed.data.status),
+            }),
+            loadLookupOptions(),
+        ]);
+
+        const statusMap = new Map((lookups.activityStatuses || []).map((s) => [s.id, s]));
+        const resolveSphereColor = buildSphereColorResolver(lookups.lifeSphereColors);
+
+        const events = rawActivities.flatMap((act) => {
+            const nextDate = toDateOnlyString(act.next_activity_date);
+            const finalDate = toDateOnlyString(act.final_deadline);
+            const time = act.scheduled_time ? String(act.scheduled_time).slice(0, 8) : null;
+            const { life_sphere_color: color, life_sphere_text_color: textColor } =
+                resolveSphereColor(act.life_sphere);
+            const extendedProps = {
+                activityId: act.id,
+                lifeSphere: act.life_sphere,
+                relevance: act.relevance,
+                status: statusMap.get(act.status)?.name || null,
+            };
+            const result = [];
+
+            if (inRange(nextDate)) {
+                result.push({
+                    id: String(act.id),
+                    title: act.description,
+                    start: time ? `${nextDate}T${time}` : nextDate,
+                    allDay: !time,
+                    url: `/cms-Activity-V/${act.id}`,
+                    editable: true,
+                    ...(color ? { backgroundColor: color, borderColor: color, textColor } : {}),
+                    extendedProps: { ...extendedProps, kind: "next" },
+                });
+            }
+
+            if (inRange(finalDate)) {
+                result.push({
+                    id: `deadline-${act.id}`,
+                    title: `Prazo final: ${act.description}`,
+                    start: finalDate,
+                    allDay: true,
+                    url: `/cms-Activity-V/${act.id}`,
+                    editable: false,
+                    classNames: ["fc-event-deadline"],
+                    ...(color ? { borderColor: color } : {}),
+                    extendedProps: { ...extendedProps, kind: "deadline" },
+                });
+            }
+
+            return result;
+        });
+
+        return res.json(events);
+    },
+
+    // Remarcação ao arrastar e soltar no calendário (JSON)
+    async rescheduleCalendarEvent(req, res) {
+        const id = parseId(req.params.id);
+        const parsed = calendarRescheduleSchema.safeParse(req.body ?? {});
+        if (!parsed.success) {
+            return res.status(422).json({ ok: false, errors: toFieldErrors(parsed.error) });
+        }
+
+        const { next_activity_date: date, scheduled_time: time } = parsed.data;
+        const affectedRows = time
+            ? await Activity.updateNextActivitySchedule(id, date, time)
+            : await Activity.updateNextActivityDate(id, date);
+        if (affectedRows === 0) {
+            return res.status(404).json({ ok: false, message: "Atividade não encontrada." });
+        }
+        return res.json({ ok: true });
     },
 
     //------------------------------------------------

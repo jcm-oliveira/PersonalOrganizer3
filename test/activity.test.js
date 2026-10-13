@@ -462,6 +462,220 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             .expect(404);
     });
 
+    it("renderiza a aba Calendário com o FullCalendar e o menu", async () => {
+        mockLookupsWithStatuses();
+
+        const res = await request(app).get("/cms-Calendar").expect(200);
+
+        assert.match(res.text, /<a class="nav-link" href="\/cms-Calendar">Calendário<\/a>/);
+        assert.match(res.text, /id="activityCalendar"\s+data-events-url="\/cms-Calendar\/events"/);
+        assert.match(res.text, /fullcalendar@5\.11\.5\/main\.min\.js"\s+integrity="sha384-/);
+        assert.match(res.text, /src="\/scripts\/activity-calendar.js"/);
+    });
+
+    it("retorna as atividades como eventos do calendário com a cor da esfera", async () => {
+        mockLookupsWithStatuses();
+        mock.method(Lookups.LifeSphereModel, "selectAllWithColor", async () => [
+            { id: 1, name: "Profissão e Carreira", color_code: "#6f42c1" },
+        ]);
+        const select = mock.method(Activity, "selectActivitiesForCalendar", async () => [
+            {
+                id: 3,
+                life_sphere: "Profissão e Carreira",
+                description: "Reunião",
+                relevance: "Prioridade",
+                next_activity_date: new Date(2026, 9, 20),
+                scheduled_time: "14:30:00",
+                status: 2,
+            },
+            {
+                id: 4,
+                life_sphere: "Sem cadastro",
+                description: "Dia inteiro",
+                relevance: "Normal",
+                next_activity_date: "2026-10-21",
+                final_deadline: "2026-11-05",
+                scheduled_time: null,
+                status: 1,
+            },
+            {
+                id: 6,
+                life_sphere: "Profissão e Carreira",
+                description: "Só o prazo no período",
+                relevance: "Normal",
+                next_activity_date: "2026-12-01",
+                final_deadline: new Date(2026, 9, 30),
+                scheduled_time: null,
+                status: 1,
+            },
+        ]);
+
+        const res = await request(app)
+            .get("/cms-Calendar/events")
+            .query({ start: "2026-09-27T00:00:00-03:00", end: "2026-11-08T00:00:00-03:00" })
+            .expect(200)
+            .expect("Content-Type", /json/);
+
+        assert.deepEqual(select.mock.calls[0].arguments[0], {
+            start: "2026-09-27",
+            end: "2026-11-08",
+            status: "visible",
+        });
+        assert.deepEqual(res.body, [
+            {
+                id: "3",
+                title: "Reunião",
+                start: "2026-10-20T14:30:00",
+                allDay: false,
+                url: "/cms-Activity-V/3",
+                editable: true,
+                backgroundColor: "#6f42c1",
+                borderColor: "#6f42c1",
+                textColor: "#ffffff",
+                extendedProps: {
+                    activityId: 3,
+                    lifeSphere: "Profissão e Carreira",
+                    relevance: "Prioridade",
+                    status: "Em andamento",
+                    kind: "next",
+                },
+            },
+            {
+                id: "4",
+                title: "Dia inteiro",
+                start: "2026-10-21",
+                allDay: true,
+                url: "/cms-Activity-V/4",
+                editable: true,
+                extendedProps: {
+                    activityId: 4,
+                    lifeSphere: "Sem cadastro",
+                    relevance: "Normal",
+                    status: "Pendente",
+                    kind: "next",
+                },
+            },
+            {
+                id: "deadline-4",
+                title: "Prazo final: Dia inteiro",
+                start: "2026-11-05",
+                allDay: true,
+                url: "/cms-Activity-V/4",
+                editable: false,
+                classNames: ["fc-event-deadline"],
+                extendedProps: {
+                    activityId: 4,
+                    lifeSphere: "Sem cadastro",
+                    relevance: "Normal",
+                    status: "Pendente",
+                    kind: "deadline",
+                },
+            },
+            {
+                id: "deadline-6",
+                title: "Prazo final: Só o prazo no período",
+                start: "2026-10-30",
+                allDay: true,
+                url: "/cms-Activity-V/6",
+                editable: false,
+                classNames: ["fc-event-deadline"],
+                borderColor: "#6f42c1",
+                extendedProps: {
+                    activityId: 6,
+                    lifeSphere: "Profissão e Carreira",
+                    relevance: "Normal",
+                    status: "Pendente",
+                    kind: "deadline",
+                },
+            },
+        ]);
+    });
+
+    it("filtra o calendário pelo status escolhido", async () => {
+        mockLookupsWithStatuses();
+        const select = mock.method(Activity, "selectActivitiesForCalendar", async () => []);
+        const range = { start: "2026-10-01", end: "2026-11-01" };
+
+        await request(app)
+            .get("/cms-Calendar/events")
+            .query({ ...range, status: "4" })
+            .expect(200);
+        await request(app)
+            .get("/cms-Calendar/events")
+            .query({ ...range, status: "all" })
+            .expect(200);
+        await request(app)
+            .get("/cms-Calendar/events")
+            .query({ ...range, status: "x" })
+            .expect(200);
+
+        assert.equal(select.mock.calls[0].arguments[0].status, 4);
+        assert.equal(select.mock.calls[1].arguments[0].status, null);
+        assert.equal(select.mock.calls[2].arguments[0].status, "visible");
+    });
+
+    it("renderiza o filtro de status e a legenda de prazo final no calendário", async () => {
+        mockLookupsWithStatuses();
+
+        const res = await request(app).get("/cms-Calendar").expect(200);
+
+        assert.match(res.text, /id="calendarStatusFilter"/);
+        assert.match(res.text, /<option value="visible" selected>Visíveis por padrão<\/option>/);
+        assert.match(res.text, /<option value="4">Cancelado<\/option>/);
+        assert.match(res.text, /Prazo final/);
+        assert.match(res.text, /data-reschedule-url-prefix="\/cms-Calendar\/events\/"/);
+    });
+
+    it("remarca pelo calendário (arrastar) mantendo o horário quando não informado", async () => {
+        const updateDate = mock.method(Activity, "updateNextActivityDate", async () => 1);
+        const updateSchedule = mock.method(Activity, "updateNextActivitySchedule", async () => 1);
+
+        await request(app)
+            .post("/cms-Calendar/events/5/reschedule")
+            .send({ next_activity_date: "2026-10-22" })
+            .expect(200, { ok: true });
+        await request(app)
+            .post("/cms-Calendar/events/5/reschedule")
+            .send({ next_activity_date: "2026-10-23", scheduled_time: "09:30" })
+            .expect(200, { ok: true });
+
+        assert.deepEqual(updateDate.mock.calls[0].arguments, [5, "2026-10-22"]);
+        assert.deepEqual(updateSchedule.mock.calls[0].arguments, [5, "2026-10-23", "09:30"]);
+    });
+
+    it("recusa remarcação inválida pelo calendário", async () => {
+        const updateDate = mock.method(Activity, "updateNextActivityDate", async () => 0);
+
+        await request(app)
+            .post("/cms-Calendar/events/5/reschedule")
+            .send({ next_activity_date: "22/10/2026" })
+            .expect(422);
+        await request(app)
+            .post("/cms-Calendar/events/5/reschedule")
+            .send({ next_activity_date: "2026-10-22", scheduled_time: "25:00" })
+            .expect(422);
+        await request(app)
+            .post("/cms-Calendar/events/999/reschedule")
+            .send({ next_activity_date: "2026-10-22" })
+            .expect(404);
+
+        assert.equal(updateDate.mock.callCount(), 1);
+    });
+
+    it("rejeita intervalo inválido no calendário", async () => {
+        const select = mock.method(Activity, "selectActivitiesForCalendar", async () => []);
+        await request(app).get("/cms-Calendar/events").expect(400);
+        await request(app)
+            .get("/cms-Calendar/events")
+            .query({ start: "2026-11-01", end: "2026-10-01" })
+            .expect(400);
+        await request(app)
+            .get("/cms-Calendar/events")
+            .query({ start: "2020-01-01", end: "2026-01-01" })
+            .expect(400);
+        assert.equal(select.mock.callCount(), 0);
+    });
+
     it("exclui uma atividade com exclusão lógica", async () => {
         const del = mock.method(Activity, "deleteActivity", async () => 1);
 

@@ -1,0 +1,67 @@
+<%- include('../parts/head') %>
+
+<!-- FullCalendar 5 (https://fullcalendar.io), tema Bootstrap 4 + ícones Font Awesome -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.css"
+    integrity="sha384-sqZzszWGLecrc1b1k/tp0xMWNbWAsfVqbakTFvcvac+HYuNE/qzxQLDVxgrfm/lM" crossorigin="anonymous">
+
+<main class="container-fluid py-4 px-lg-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 mb-0 text-dark">Calendário</h1>
+        <a class="btn btn-sm btn-outline-primary" href="/cms-Activity-C"
+            title="Nova Atividade" aria-label="Nova Atividade">
+            <i class="fas fa-plus" aria-hidden="true"></i>
+        </a>
+    </div>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+        <div class="calendar-legend mb-2" aria-label="Legenda">
+            <% lifeSphereColors.forEach((sphere) => { %>
+                <span class="calendar-legend-item">
+                    <span class="calendar-legend-swatch" data-bg-color="<%= sphere.color_code %>"></span>
+                    <%= sphere.name %>
+                </span>
+            <% }) %>
+            <span class="calendar-legend-item">
+                <span class="calendar-legend-swatch calendar-legend-swatch--deadline"></span>
+                <i class="fas fa-flag-checkered text-muted" aria-hidden="true"></i> Prazo final
+            </span>
+        </div>
+        <div class="form-inline mb-2">
+            <label for="calendarStatusFilter" class="small text-muted mr-2">
+                <i class="fas fa-sync-alt mr-1" aria-hidden="true"></i> Status
+            </label>
+            <select class="form-control form-control-sm" id="calendarStatusFilter">
+                <option value="visible" selected>Visíveis por padrão</option>
+                <option value="all">Todos os Status</option>
+                <% if ((activityStatuses || []).length > 0) { %>
+                    <optgroup label="Status de Atividade">
+                        <% activityStatuses.forEach((st) => { %>
+                            <option value="<%= st.id %>"><%= st.name %></option>
+                        <% }) %>
+                    </optgroup>
+                <% } %>
+            </select>
+        </div>
+    </div>
+
+    <div id="activityCalendarMessage" class="alert d-none" role="status"></div>
+
+    <div class="bg-white rounded shadow-sm p-3">
+        <div id="activityCalendar"
+            data-events-url="/cms-Calendar/events"
+            data-reschedule-url-prefix="/cms-Calendar/events/"></div>
+        <p class="small text-muted mt-2 mb-0">
+            <i class="fas fa-arrows-alt mr-1" aria-hidden="true"></i>
+            Arraste uma atividade para outro dia (ou horário, na visão semanal) para remarcá-la.
+        </p>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.js"
+    integrity="sha384-5CieS4A1azLJVmr03kEpWi5VP3iX04vu4iVoQrnilWlWkcsaf+mMem/TdIFPUkLj" crossorigin="anonymous" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/locales/pt-br.js"
+    integrity="sha384-nYTm93SVXbkFBAZDYl7rIdivGWF6TuP6m3X7taeRDE3L5VaeNv4OW34We0UTtUyr" crossorigin="anonymous" defer></script>
+<script src="/scripts/sphere-colors.js" defer></script>
+<script src="/scripts/activity-calendar.js" defer></script>
+
+<%- include('../parts/footer') %>

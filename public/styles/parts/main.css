@@ -17,6 +17,27 @@ h4,
 h5,
 .navbar-brand {
     font-family: "IBM Plex Sans", "Inter", sans-serif;
+    margin-right: 2rem;
+}
+
+/* Espaçamento maior entre os itens do menu principal (telas médias e maiores) */
+@media (min-width: 768px) {
+    .navbar-expand-md .navbar-nav .nav-item + .nav-item {
+        margin-left: 0.75rem;
+    }
+
+    .navbar-expand-md .navbar-nav .nav-link {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+}
+
+/* No menu recolhido (celular), um pouco mais de altura entre os itens */
+@media (max-width: 767.98px) {
+    .navbar-nav .nav-link {
+        padding-top: 0.6rem;
+        padding-bottom: 0.6rem;
+    }
 }
 
 main {
@@ -253,4 +274,91 @@ main {
 .table-activity .activity-desc-link:focus {
     color: #007bff;
     text-decoration: underline;
+}
+
+/* ---------- Calendário (FullCalendar) ---------- */
+
+.calendar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    font-size: 0.82rem;
+    color: #495057;
+}
+
+.calendar-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.calendar-legend-swatch {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+/* Só a primeira letra maiúscula: "Outubro de 2026" (capitalize geraria "Outubro De 2026") */
+#activityCalendar .fc-toolbar-title {
+    font-size: 1.25rem;
+}
+
+#activityCalendar .fc-toolbar-title::first-letter {
+    text-transform: uppercase;
+}
+
+/* Prazo final: marcador contornado com a cor da esfera, sem arrastar */
+#activityCalendar .fc-event.fc-event-deadline {
+    background-color: #ffffff;
+    color: #212529;
+    border-width: 1px 1px 1px 4px;
+    border-style: dashed dashed dashed solid;
+}
+
+#activityCalendar .fc-event.fc-event-deadline .fc-event-title::before,
+#activityCalendar .fc-list-event.fc-event-deadline .fc-list-event-title a::before {
+    content: "\f11e";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    margin-right: 0.3rem;
+}
+
+#activityCalendar .fc-event-deadline .fc-event-main {
+    color: #212529;
+}
+
+.calendar-legend-swatch--deadline {
+    background-color: #ffffff;
+    border: 1px dashed #6c757d;
+    border-left: 3px solid #6c757d;
+}
+
+/* "Hoje", "Amanhã", "em N dias"... ao lado do dia da semana */
+.calendar-relative-day {
+    display: inline-block;
+    margin-left: 0.35rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 0.6rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #495057;
+    background-color: #e9ecef;
+    vertical-align: middle;
+}
+
+.calendar-relative-day--today {
+    color: #ffffff;
+    background-color: #007bff;
+}
+
+.calendar-relative-day--past {
+    color: #6c757d;
+    background-color: #f1f3f5;
+}
+
+#activityCalendar .fc-event {
+    cursor: pointer;
+    font-size: 0.8rem;
 }

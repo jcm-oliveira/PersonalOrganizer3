@@ -11,6 +11,7 @@ const {
 const { HttpError } = require("../errors/HttpError");
 const {
     PAGE_SIZES,
+    LIFE_SPHERES_WITH_COLORS,
     LIFE_SPHERES,
     RELEVANCE_OPTIONS,
     DAY_PERIODS,
@@ -22,6 +23,7 @@ const {
     idParamSchema,
     toFieldErrors,
     enrichActivity,
+    getContrastTextColor,
 } = require("../validation/activitySchemas");
 
 const LIST_URL = "/cms-Activity-Q";
@@ -60,16 +62,25 @@ function listUrl(filter, page) {
 
 async function loadLookupOptions() {
     try {
-        const [spheres, relevances, periods, periodicities, actionTypes, themes, statuses] =
-            await Promise.all([
-                LifeSphereModel.selectActiveOptions(),
-                RelevanceModel.selectActiveOptions(),
-                DayPeriodModel.selectActiveOptions(),
-                PeriodicityModel.selectActiveOptions(),
-                ActionTypeModel.selectActiveOptions(),
-                ThemeOrganizationModel.selectActiveOptions(),
-                ActivityStatusModel.selectActiveOptionsWithStyle(),
-            ]);
+        const [
+            spheres,
+            allSphereColors,
+            relevances,
+            periods,
+            periodicities,
+            actionTypes,
+            themes,
+            statuses,
+        ] = await Promise.all([
+            LifeSphereModel.selectActiveOptionsWithColor(),
+            LifeSphereModel.selectAllWithColor(),
+            RelevanceModel.selectActiveOptions(),
+            DayPeriodModel.selectActiveOptions(),
+            PeriodicityModel.selectActiveOptions(),
+            ActionTypeModel.selectActiveOptions(),
+            ThemeOrganizationModel.selectActiveOptions(),
+            ActivityStatusModel.selectActiveOptionsWithStyle(),
+        ]);
 
         const formattedThemes =
             themes.length > 0
@@ -80,8 +91,13 @@ async function loadLookupOptions() {
                       life_sphere_name: null,
                   }));
 
+        const spheresWithColor = spheres.length > 0 ? spheres : LIFE_SPHERES_WITH_COLORS;
+
         return {
-            lifeSpheres: spheres.length ? spheres.map((s) => s.name) : LIFE_SPHERES,
+            lifeSpheres: spheresWithColor.map((s) => s.name),
+            lifeSpheresWithColor: spheresWithColor,
+            // Cores de todas as esferas (ativas e inativas), usadas para pintar as linhas
+            lifeSphereColors: allSphereColors.length > 0 ? allSphereColors : spheresWithColor,
             relevanceOptions: relevances.length ? relevances.map((r) => r.name) : RELEVANCE_OPTIONS,
             dayPeriods: periods.length ? periods.map((p) => p.name) : DAY_PERIODS,
             periodicityOptions: periodicities.length
@@ -94,6 +110,8 @@ async function loadLookupOptions() {
     } catch {
         return {
             lifeSpheres: LIFE_SPHERES,
+            lifeSpheresWithColor: LIFE_SPHERES_WITH_COLORS,
+            lifeSphereColors: LIFE_SPHERES_WITH_COLORS,
             relevanceOptions: RELEVANCE_OPTIONS,
             dayPeriods: DAY_PERIODS,
             periodicityOptions: PERIODICITY_OPTIONS,
@@ -109,6 +127,24 @@ async function loadLookupOptions() {
             ],
         };
     }
+}
+
+function normalizeSphereName(name) {
+    return String(name ?? "")
+        .trim()
+        .toLocaleLowerCase("pt-BR");
+}
+
+function buildSphereColorResolver(lifeSpheresWithColor) {
+    const colorMap = new Map(
+        (lifeSpheresWithColor || [])
+            .filter((s) => s.color_code)
+            .map((s) => [normalizeSphereName(s.name), s.color_code]),
+    );
+    return (sphereName) => {
+        const color = colorMap.get(normalizeSphereName(sphereName)) || null;
+        return { life_sphere_color: color, life_sphere_text_color: getContrastTextColor(color) };
+    };
 }
 
 function getTodayString() {
@@ -149,15 +185,18 @@ module.exports = {
         ]);
 
         const statusMap = new Map((lookups.activityStatuses || []).map((s) => [s.id, s]));
+        const resolveSphereColor = buildSphereColorResolver(lookups.lifeSphereColors);
 
         const activities = rawActivities.map((act) => {
             const enriched = enrichActivity(act);
             const statusObj = statusMap.get(act.status);
+            const statusColor = statusObj?.color_code || (act.status === 1 ? "#28a745" : "#6c757d");
             return {
                 ...enriched,
                 status_name: statusObj?.name || (act.status === 1 ? "Ativo" : "Inativo"),
-                status_color_code:
-                    statusObj?.color_code || (act.status === 1 ? "#28a745" : "#6c757d"),
+                status_color_code: statusColor,
+                status_text_color: getContrastTextColor(statusColor) || "#ffffff",
+                ...resolveSphereColor(act.life_sphere),
             };
         });
 
@@ -199,6 +238,7 @@ module.exports = {
         }
 
         const statusMap = new Map((lookups.activityStatuses || []).map((s) => [s.id, s]));
+        const resolveSphereColor = buildSphereColorResolver(lookups.lifeSphereColors);
         const enriched = enrichActivity(rawActivity);
         const statusObj = statusMap.get(rawActivity.status);
         const activity = {
@@ -206,6 +246,7 @@ module.exports = {
             status_name: statusObj?.name || (rawActivity.status === 1 ? "Ativo" : "Inativo"),
             status_color_code:
                 statusObj?.color_code || (rawActivity.status === 1 ? "#28a745" : "#6c757d"),
+            ...resolveSphereColor(rawActivity.life_sphere),
         };
 
         return res.render("cms/cms-Activity-V", {
@@ -229,6 +270,7 @@ module.exports = {
                 next_activity_date: todayStr,
             },
             lifeSpheres: lookups.lifeSpheres,
+            lifeSpheresWithColor: lookups.lifeSpheresWithColor,
             relevanceOptions: lookups.relevanceOptions,
             dayPeriods: lookups.dayPeriods,
             periodicityOptions: lookups.periodicityOptions,
@@ -247,6 +289,7 @@ module.exports = {
                 title: "Nova Atividade",
                 values: req.body ?? {},
                 lifeSpheres: lookups.lifeSpheres,
+                lifeSpheresWithColor: lookups.lifeSpheresWithColor,
                 relevanceOptions: lookups.relevanceOptions,
                 dayPeriods: lookups.dayPeriods,
                 periodicityOptions: lookups.periodicityOptions,
@@ -307,6 +350,7 @@ module.exports = {
                 status: String(activity.status),
             },
             lifeSpheres: lookups.lifeSpheres,
+            lifeSpheresWithColor: lookups.lifeSpheresWithColor,
             relevanceOptions: lookups.relevanceOptions,
             dayPeriods: lookups.dayPeriods,
             periodicityOptions: lookups.periodicityOptions,
@@ -327,11 +371,13 @@ module.exports = {
                 activityId: id,
                 values: req.body ?? {},
                 lifeSpheres: lookups.lifeSpheres,
+                lifeSpheresWithColor: lookups.lifeSpheresWithColor,
                 relevanceOptions: lookups.relevanceOptions,
                 dayPeriods: lookups.dayPeriods,
                 periodicityOptions: lookups.periodicityOptions,
                 actionTypes: lookups.actionTypes,
                 themeOrganizations: lookups.themeOrganizations,
+                activityStatuses: lookups.activityStatuses,
                 errors: toFieldErrors(parsed.error),
             });
         }

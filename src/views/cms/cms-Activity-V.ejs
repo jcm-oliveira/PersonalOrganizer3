@@ -37,7 +37,12 @@
                 <div class="card-body">
                     <dl class="row mb-0">
                         <dt class="col-sm-5 text-muted">Esfera da Vida:</dt>
-                        <dd class="col-sm-7 font-weight-bold"><%= activity.life_sphere %></dd>
+                        <dd class="col-sm-7 font-weight-bold">
+                            <% if (activity.life_sphere_color) { %>
+                                <span class="d-inline-block rounded-circle mr-1" style="width: 12px; height: 12px; vertical-align: middle; background-color: <%= activity.life_sphere_color %>;"></span>
+                            <% } %>
+                            <%= activity.life_sphere %>
+                        </dd>
 
                         <dt class="col-sm-5 text-muted">Descrição:</dt>
                         <dd class="col-sm-7"><%= activity.description %></dd>

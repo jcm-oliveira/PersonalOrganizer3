@@ -221,6 +221,27 @@ main {
     border-color: #dee2e6;
 }
 
+/* Linha pintada com a cor da Esfera da Vida (cor e contraste definidos inline na <tr>) */
+.table-activity tbody tr.activity-row--sphere > td {
+    background-color: inherit;
+    color: inherit;
+}
+
+.table-activity tbody tr.activity-row--sphere .activity-desc-link {
+    color: inherit;
+}
+
+.table-activity .activity-status-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.3em 0.6em;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.table-activity tbody tr.activity-row--sphere:hover > td {
+    box-shadow: inset 0 0 0 9999px rgba(0, 0, 0, 0.075);
+}
+
 /* Descrição: mesmo tamanho e cor, com leve destaque em negrito */
 .table-activity .activity-desc-link {
     font-weight: 600;

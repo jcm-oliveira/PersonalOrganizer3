@@ -105,6 +105,16 @@ const LifeSphereModel = {
         const [rows] = await pool.query(sql);
         return rows;
     },
+    // Inclui esferas inativas: atividades antigas ainda vinculadas a elas mantêm a cor
+    async selectAllWithColor() {
+        const sql = `
+            SELECT id, name, color_code
+            FROM life_sphere
+            WHERE excluded = 0
+        `;
+        const [rows] = await pool.query(sql);
+        return rows;
+    },
 };
 
 const RelevanceModel = createLookupModel("relevance");

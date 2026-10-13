@@ -2,14 +2,16 @@ const { z } = require("zod");
 
 const PAGE_SIZES = [10, 25, 50, 100];
 
-const LIFE_SPHERES = [
-    "Profissão e Carreira",
-    "Família, Lazer e Social",
-    "Saúde e Disposição",
-    "Financeiro e Bens",
-    "Espiritualidade e Plenitude",
-    "Desenvolvimento Pessoal",
+const LIFE_SPHERES_WITH_COLORS = [
+    { name: "Profissão e Carreira", color_code: "#007bff" },
+    { name: "Família, Lazer e Social", color_code: "#28a745" },
+    { name: "Saúde e Disposição", color_code: "#17a2b8" },
+    { name: "Financeiro e Bens", color_code: "#ffc107" },
+    { name: "Espiritualidade e Plenitude", color_code: "#6f42c1" },
+    { name: "Desenvolvimento Pessoal", color_code: "#fd7e14" },
 ];
+
+const LIFE_SPHERES = LIFE_SPHERES_WITH_COLORS.map((s) => s.name);
 
 const RELEVANCE_OPTIONS = ["Prioridade", "Normal", "Baixa", "Backlog"];
 
@@ -171,6 +173,28 @@ function calculateDaysDiff(targetDateStr, referenceDate = new Date()) {
 }
 
 /**
+ * Retorna a cor de texto (escura ou clara) com melhor contraste sobre a cor de fundo informada
+ */
+function getContrastTextColor(hexColor) {
+    const match = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(hexColor || "").trim());
+    if (!match) return null;
+
+    let hex = match[1];
+    if (hex.length === 3) {
+        hex = hex
+            .split("")
+            .map((c) => c + c)
+            .join("");
+    }
+
+    const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+    const toLinear = (c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+    const luminance = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+
+    return luminance > 0.179 ? "#212529" : "#ffffff";
+}
+
+/**
  * Enriquece uma atividade com campos calculados de farol, dias restantes e resumo
  */
 function enrichActivity(activity, referenceDate = new Date()) {
@@ -233,6 +257,7 @@ function enrichActivity(activity, referenceDate = new Date()) {
 
 module.exports = {
     PAGE_SIZES,
+    LIFE_SPHERES_WITH_COLORS,
     LIFE_SPHERES,
     RELEVANCE_OPTIONS,
     DAY_PERIODS,
@@ -245,4 +270,5 @@ module.exports = {
     toFieldErrors,
     calculateDaysDiff,
     enrichActivity,
+    getContrastTextColor,
 };

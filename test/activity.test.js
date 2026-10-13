@@ -5,6 +5,7 @@ const { describe, it, afterEach, mock } = require("node:test");
 const assert = require("node:assert/strict");
 const request = require("supertest");
 const Activity = require("../src/model/ActivityModel");
+const Lookups = require("../src/model/LookupModels");
 const { createApp } = require("../src/app");
 
 const app = createApp();
@@ -38,6 +39,17 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.match(res.text, /Atividades/);
         assert.match(res.text, /Reunião de Governança/);
         assert.match(res.text, /Profissão e Carreira/);
+        // Mesmo atrasada, a linha mantém a cor da Esfera da Vida
+        assert.match(
+            res.text,
+            /<tr class="activity-row--sphere"\s+data-bg-color="#007bff" data-text-color="#212529">/,
+        );
+        assert.doesNotMatch(res.text, /table-danger/);
+        assert.match(
+            res.text,
+            /class="badge activity-status-badge" style="background-color: #28a745; color: #212529;"/,
+        );
+        assert.match(res.text, /href="\/cms-Activity-U\/1"/);
         assert.match(res.text, /ATRASADA/); // Data 2026-10-10 é anterior a 2026-10-13
     });
 
@@ -169,6 +181,80 @@ describe("Módulo Activity (Painel de Vôo)", () => {
 
         assert.equal(res.headers.location, "/cms-Activity-Q?msg=updated");
         assert.equal(update.mock.callCount(), 1);
+    });
+
+    it("carrega tela de edição com a cor da esfera e indicador visual", async () => {
+        mock.method(Activity, "selectActivityById", async () => ({
+            id: 15,
+            life_sphere: "Profissão e Carreira",
+            description: "Backup Celular e PC",
+            relevance: "Prioridade",
+            next_activity_date: "2026-10-25",
+            final_deadline: null,
+            day_period: null,
+            scheduled_time: null,
+            periodicity: null,
+            action_type: null,
+            theme_organization: null,
+            notes: "Verificar HD externo",
+            status: 1,
+        }));
+
+        const res = await request(app).get("/cms-Activity-U/15").expect(200);
+
+        assert.match(res.text, /Editar Atividade nº 15/);
+        assert.match(res.text, /id="life_sphere_badge"/);
+        assert.match(res.text, /data-color="#007bff"/);
+    });
+
+    it("pinta a linha com a cor da esfera, inclusive de esfera inativa", async () => {
+        mock.method(Lookups.LifeSphereModel, "selectActiveOptionsWithColor", async () => [
+            { id: 1, name: "Profissão e Carreira", color_code: "#007bff" },
+        ]);
+        mock.method(Lookups.LifeSphereModel, "selectAllWithColor", async () => [
+            { id: 1, name: "Profissão e Carreira", color_code: "#007bff" },
+            { id: 2, name: "Esfera Antiga", color_code: "#6f42c1" },
+        ]);
+        for (const model of [
+            "RelevanceModel",
+            "DayPeriodModel",
+            "PeriodicityModel",
+            "ActionTypeModel",
+            "ThemeOrganizationModel",
+        ]) {
+            mock.method(Lookups[model], "selectActiveOptions", async () => []);
+        }
+        mock.method(Lookups.ActivityStatusModel, "selectActiveOptionsWithStyle", async () => [
+            { id: 1, name: "Ativo", visibility: 1, color_code: "#28a745" },
+        ]);
+        mock.method(Activity, "countActivities", async () => 1);
+        mock.method(Activity, "selectActivities", async () => [
+            {
+                id: 7,
+                life_sphere: "esfera antiga ",
+                description: "Atividade de esfera inativa",
+                relevance: "Normal",
+                next_activity_date: "2099-01-01",
+                final_deadline: null,
+                status: 1,
+            },
+        ]);
+
+        const res = await request(app).get("/cms-Activity-Q").expect(200);
+
+        assert.match(
+            res.text,
+            /<tr class="activity-row--sphere"\s+data-bg-color="#6f42c1" data-text-color="#ffffff">/,
+        );
+    });
+
+    it("calcula a cor de texto com contraste adequado sobre a cor da esfera", () => {
+        const { getContrastTextColor } = require("../src/validation/activitySchemas");
+        assert.equal(getContrastTextColor("#ffc107"), "#212529");
+        assert.equal(getContrastTextColor("#6f42c1"), "#ffffff");
+        assert.equal(getContrastTextColor("#000"), "#ffffff");
+        assert.equal(getContrastTextColor("invalida"), null);
+        assert.equal(getContrastTextColor(null), null);
     });
 
     it("carrega tela de inserção e renderiza o select de Organização por Tema igual aos demais", async () => {

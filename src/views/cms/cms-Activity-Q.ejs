@@ -147,9 +147,12 @@
                 <% } %>
                 <% activities.forEach((act) => { 
                     const isOverdue = act.traffic_light === 'ATRASADA';
-                    const rowClass = isOverdue ? 'table-danger' : '';
+                    // A cor da Esfera da Vida sempre prevalece, independente de data ou atraso
+                    const hasSphereColor = Boolean(act.life_sphere_color);
+                    const rowClass = hasSphereColor ? 'activity-row--sphere' : (isOverdue ? 'table-danger' : '');
                 %>
-                    <tr class="<%= rowClass %>">
+                    <tr class="<%= rowClass %>"
+                        <% if (hasSphereColor) { %>data-bg-color="<%= act.life_sphere_color %>" data-text-color="<%= act.life_sphere_text_color %>"<% } %>>
                         <!-- Descrição (destaque em negrito) -->
                         <td class="align-middle text-left">
                             <a href="/cms-Activity-V/<%= act.id %>" class="activity-desc-link">
@@ -203,8 +206,10 @@
                         </td>
 
                         <!-- Status -->
-                        <td class="align-middle text-center font-weight-bold" style="<%= act.status_color_code ? 'color: ' + act.status_color_code + ';' : '' %>">
-                            <%= act.status_name || (act.status === 1 ? 'Ativo' : 'Inativo') %>
+                        <td class="align-middle text-center">
+                            <span class="badge activity-status-badge" style="background-color: <%= act.status_color_code %>; color: <%= act.status_text_color %>;">
+                                <%= act.status_name || (act.status === 1 ? 'Ativo' : 'Inativo') %>
+                            </span>
                         </td>
 
                         <!-- Dias Próx. Atividade com indicador circular (dot) -->
@@ -231,7 +236,7 @@
                                 title="Visualizar atividade" aria-label="Visualizar atividade">
                                 <i class="fas fa-search" aria-hidden="true"></i>
                             </a>
-                            <a class="btn btn-sm btn-outline-primary" href="/cms-Activity-C/<%= act.id %>"
+                            <a class="btn btn-sm btn-outline-primary" href="/cms-Activity-U/<%= act.id %>"
                                 title="Editar atividade" aria-label="Editar atividade">
                                 <i class="fas fa-pen" aria-hidden="true"></i>
                             </a>
@@ -263,5 +268,7 @@
     <!-- Modal de Filtros -->
     <%- include('cms-Activity-F') %>
 </main>
+
+<script src="/scripts/sphere-colors.js" defer></script>
 
 <%- include('../parts/footer') %>

@@ -7,11 +7,16 @@
     <div class="form-group col-md-4">
         <label for="life_sphere">
             <i class="fas fa-heart text-muted mr-1" aria-hidden="true"></i> Esfera da Vida <span class="text-danger">*</span>
+            <span id="life_sphere_badge" class="badge ml-1 border" style="display: none; vertical-align: middle;"></span>
         </label>
         <select class="form-control <%= errors.life_sphere ? 'is-invalid' : '' %>" id="life_sphere" name="life_sphere" required autofocus>
-            <option value="">Selecione...</option>
-            <% lifeSpheres.forEach((sphere) => { %>
-                <option value="<%= sphere %>" <%= values.life_sphere === sphere ? 'selected' : '' %>><%= sphere %></option>
+            <option value="" data-color="">Selecione...</option>
+            <% 
+                const colorMap = new Map((locals.lifeSpheresWithColor || []).map((s) => [s.name, s.color_code]));
+                lifeSpheres.forEach((sphere) => { 
+                    const sphereColor = colorMap.get(sphere) || '';
+            %>
+                <option value="<%= sphere %>" data-color="<%= sphereColor %>" <%= values.life_sphere === sphere ? 'selected' : '' %>><%= sphere %></option>
             <% }) %>
         </select>
         <% if (errors.life_sphere) { %><div class="invalid-feedback"><%= errors.life_sphere %></div><% } %>
@@ -170,3 +175,43 @@
         <% if (errors.notes) { %><div class="invalid-feedback"><%= errors.notes %></div><% } %>
     </div>
 </div>
+
+<script>
+    (function () {
+        const sphereSelect = document.getElementById('life_sphere');
+        const badge = document.getElementById('life_sphere_badge');
+        if (!sphereSelect || !badge) return;
+
+        function contrastTextColor(hex) {
+            const match = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex || '');
+            if (!match) return '';
+            let h = match[1];
+            if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+            const toLinear = (c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+            const [r, g, b] = [0, 2, 4].map((i) => toLinear(parseInt(h.slice(i, i + 2), 16) / 255));
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.179 ? '#212529' : '#ffffff';
+        }
+
+        function updateSphereBadge() {
+            const selectedOpt = sphereSelect.options[sphereSelect.selectedIndex];
+            const color = selectedOpt ? selectedOpt.getAttribute('data-color') : '';
+            const textColor = contrastTextColor(color);
+            if (color) {
+                badge.style.display = 'inline-block';
+                badge.style.backgroundColor = color;
+                badge.style.color = textColor;
+                badge.textContent = selectedOpt.value;
+                sphereSelect.style.backgroundColor = color;
+                sphereSelect.style.color = textColor;
+            } else {
+                badge.style.display = 'none';
+                badge.textContent = '';
+                sphereSelect.style.backgroundColor = '';
+                sphereSelect.style.color = '';
+            }
+        }
+
+        sphereSelect.addEventListener('change', updateSphereBadge);
+        updateSphereBadge();
+    })();
+</script>

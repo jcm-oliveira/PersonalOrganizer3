@@ -1,0 +1,36 @@
+<!-- Pop-up "Status da atividade": altera o status conforme o cadastro de Status de Atividade (preenchido por /scripts/activity-quick-actions.js) -->
+<div class="modal fade" id="statusModal" tabindex="-1" role="dialog" aria-labelledby="statusModalTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form class="modal-content" method="post" action="" data-action-prefix="/cms-Activity-S/">
+            <div class="modal-header">
+                <h5 class="modal-title" id="statusModalTitle">
+                    <i class="fas fa-toggle-on text-muted mr-1" aria-hidden="true"></i> Status da atividade
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">
+                    Atividade nº <strong data-field="activity-id"></strong> –
+                    <span data-field="activity-description"></span>
+                </p>
+                <div class="form-group mb-0">
+                    <label for="status_change_status">
+                        Status <span class="text-danger">*</span>
+                    </label>
+                    <select class="form-control" id="status_change_status" name="status" required>
+                        <% (activityStatuses || []).forEach((st) => { %>
+                            <option value="<%= st.id %>"><%= st.name %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <input type="hidden" name="returnTo" value="<%= returnTo %>">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Salvar status</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -10,6 +10,8 @@ routes.get("/cms-Activity-C/:id", ActivityController.loadUpdatePage);
 routes.get("/cms-Activity-U/:id", ActivityController.loadUpdatePage);
 routes.get("/cms-Activity-V/:id", ActivityController.loadViewPage);
 routes.post("/cms-Activity-U/:id", ActivityController.updateActivityPage);
+routes.post("/cms-Activity-R/:id", ActivityController.rescheduleActivityPage);
+routes.post("/cms-Activity-S/:id", ActivityController.changeActivityStatusPage);
 routes.post("/cms-Activity-D/:id", ActivityController.deleteActivityPage);
 
 module.exports = routes;

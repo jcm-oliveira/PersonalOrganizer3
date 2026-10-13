@@ -4,7 +4,11 @@ function buildWhere({ status, search, lifeSphere, relevance, actionType, traffic
     const conditions = ["excluded = 0"];
     const values = [];
 
-    if (status !== null) {
+    if (status === "visible") {
+        conditions.push(
+            "status IN (SELECT id FROM activity_status WHERE excluded = 0 AND status = 1 AND visibility = 1)",
+        );
+    } else if (status !== null) {
         conditions.push("status = ?");
         values.push(status);
     }
@@ -282,6 +286,18 @@ async function updateActivity(id, data) {
     return result.affectedRows;
 }
 
+async function updateNextActivityDate(id, nextActivityDate) {
+    const sql = `UPDATE activity SET next_activity_date = ? WHERE id = ? AND excluded = 0`;
+    const [result] = await pool.query(sql, [nextActivityDate, id]);
+    return result.affectedRows;
+}
+
+async function updateActivityStatus(id, status) {
+    const sql = `UPDATE activity SET status = ? WHERE id = ? AND excluded = 0`;
+    const [result] = await pool.query(sql, [status, id]);
+    return result.affectedRows;
+}
+
 //------------------------------------------------
 //                 DELETE (lógico)
 //------------------------------------------------
@@ -299,5 +315,7 @@ module.exports = {
     getActivityStats,
     insertActivity,
     updateActivity,
+    updateNextActivityDate,
+    updateActivityStatus,
     deleteActivity,
 };

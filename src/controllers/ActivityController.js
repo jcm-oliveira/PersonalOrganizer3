@@ -11,6 +11,9 @@ const {
 const { HttpError } = require("../errors/HttpError");
 const {
     PAGE_SIZES,
+    DEFAULT_ACTIVITY_STATUS_ID,
+    STATUS_FILTER_VISIBLE,
+    STATUS_FILTER_ALL,
     LIFE_SPHERES_WITH_COLORS,
     LIFE_SPHERES,
     RELEVANCE_OPTIONS,
@@ -20,10 +23,13 @@ const {
     THEME_ORGANIZATIONS,
     activityListQuerySchema,
     activityFormSchema,
+    activityRescheduleSchema,
+    activityStatusChangeSchema,
     idParamSchema,
     toFieldErrors,
     enrichActivity,
     getContrastTextColor,
+    toDateOnlyString,
 } = require("../validation/activitySchemas");
 
 const LIST_URL = "/cms-Activity-Q";
@@ -32,10 +38,35 @@ const MESSAGES = {
     created: { alertType: "alert-success", text: "Atividade inserida com sucesso." },
     updated: { alertType: "alert-success", text: "Atividade alterada com sucesso." },
     deleted: { alertType: "alert-warning", text: "Atividade excluída com sucesso." },
+    rescheduled: { alertType: "alert-success", text: "Atividade remarcada com sucesso." },
+    statusChanged: {
+        alertType: "alert-success",
+        text: "Status da atividade alterado com sucesso.",
+    },
+    invalidDate: {
+        alertType: "alert-danger",
+        text: "Data inválida. Informe a nova data da próxima atividade.",
+    },
+    invalidStatus: {
+        alertType: "alert-danger",
+        text: "Status inválido. Selecione um status do cadastro de Status de Atividade.",
+    },
 };
 
 function messageFor(code) {
     return Object.hasOwn(MESSAGES, code) ? MESSAGES[code] : null;
+}
+
+// Volta para a consulta mantendo os filtros/página de origem. Só aceita a própria
+// tela de consulta como destino (evita redirecionamento aberto).
+function returnToListUrl(returnTo, msgCode) {
+    const isListPath = typeof returnTo === "string" && /^\/cms-Activity-Q(\?|$)/.test(returnTo);
+    const url = new URL(isListPath ? returnTo : LIST_URL, "http://localhost");
+    if (url.pathname !== LIST_URL) {
+        return `${LIST_URL}?msg=${msgCode}`;
+    }
+    url.searchParams.set("msg", msgCode);
+    return `${url.pathname}${url.search}`;
 }
 
 function parseId(rawId) {
@@ -147,8 +178,15 @@ function buildSphereColorResolver(lifeSpheresWithColor) {
     };
 }
 
+// "all" = sem filtro | "visible" = status visíveis por padrão | número = id do status
+function toStatusCriteria(status) {
+    if (status === STATUS_FILTER_ALL) return null;
+    if (status === STATUS_FILTER_VISIBLE) return STATUS_FILTER_VISIBLE;
+    return Number(status);
+}
+
 function getTodayString() {
-    return new Date().toISOString().slice(0, 10);
+    return toDateOnlyString(new Date());
 }
 
 module.exports = {
@@ -161,7 +199,7 @@ module.exports = {
         const todayStr = getTodayString();
 
         const criteria = {
-            status: filter.status === "all" ? null : Number(filter.status),
+            status: toStatusCriteria(filter.status),
             search: filter.search,
             lifeSphere: filter.lifeSphere,
             relevance: filter.relevance,
@@ -210,6 +248,7 @@ module.exports = {
             actionTypes: lookups.actionTypes,
             themeOrganizations: lookups.themeOrganizations,
             activityStatuses: lookups.activityStatuses,
+            returnTo: listUrl(filter, page),
             pagination: {
                 page,
                 totalPages,
@@ -265,7 +304,7 @@ module.exports = {
         return res.render("cms/cms-Activity-C", {
             title: "Nova Atividade",
             values: {
-                status: "1",
+                status: String(DEFAULT_ACTIVITY_STATUS_ID),
                 relevance: "Prioridade",
                 next_activity_date: todayStr,
             },
@@ -318,17 +357,8 @@ module.exports = {
             throw new HttpError(404, "Atividade não encontrada.");
         }
 
-        const nextDate = activity.next_activity_date
-            ? typeof activity.next_activity_date === "string"
-                ? activity.next_activity_date.slice(0, 10)
-                : new Date(activity.next_activity_date).toISOString().slice(0, 10)
-            : "";
-
-        const finalDate = activity.final_deadline
-            ? typeof activity.final_deadline === "string"
-                ? activity.final_deadline.slice(0, 10)
-                : new Date(activity.final_deadline).toISOString().slice(0, 10)
-            : "";
+        const nextDate = toDateOnlyString(activity.next_activity_date) || "";
+        const finalDate = toDateOnlyString(activity.final_deadline) || "";
 
         const scheduledTime = activity.scheduled_time ? activity.scheduled_time.slice(0, 5) : "";
 
@@ -387,6 +417,51 @@ module.exports = {
             throw new HttpError(404, "Atividade não encontrada.");
         }
         return res.redirect(303, `${LIST_URL}?msg=updated`);
+    },
+
+    //------------------------------------------------
+    //      REMARCAR ATIVIDADE (pop-up da consulta)
+    //------------------------------------------------
+
+    async rescheduleActivityPage(req, res) {
+        const id = parseId(req.params.id);
+        const returnTo = req.body?.returnTo;
+        const parsed = activityRescheduleSchema.safeParse(req.body ?? {});
+        if (!parsed.success) {
+            return res.redirect(303, returnToListUrl(returnTo, "invalidDate"));
+        }
+
+        const affectedRows = await Activity.updateNextActivityDate(
+            id,
+            parsed.data.next_activity_date,
+        );
+        if (affectedRows === 0) {
+            throw new HttpError(404, "Atividade não encontrada.");
+        }
+        return res.redirect(303, returnToListUrl(returnTo, "rescheduled"));
+    },
+
+    //------------------------------------------------
+    //     STATUS DA ATIVIDADE (pop-up da consulta)
+    //------------------------------------------------
+
+    async changeActivityStatusPage(req, res) {
+        const id = parseId(req.params.id);
+        const returnTo = req.body?.returnTo;
+        const parsed = activityStatusChangeSchema.safeParse(req.body ?? {});
+        const lookups = await loadLookupOptions();
+        const statusExists =
+            parsed.success &&
+            (lookups.activityStatuses || []).some((s) => s.id === parsed.data.status);
+        if (!statusExists) {
+            return res.redirect(303, returnToListUrl(returnTo, "invalidStatus"));
+        }
+
+        const affectedRows = await Activity.updateActivityStatus(id, parsed.data.status);
+        if (affectedRows === 0) {
+            throw new HttpError(404, "Atividade não encontrada.");
+        }
+        return res.redirect(303, returnToListUrl(returnTo, "statusChanged"));
     },
 
     //------------------------------------------------

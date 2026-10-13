@@ -1,0 +1,36 @@
+<!-- Pop-up "Remarcar atividade": altera a data da próxima atividade (preenchido por /scripts/activity-quick-actions.js) -->
+<div class="modal fade" id="rescheduleModal" tabindex="-1" role="dialog" aria-labelledby="rescheduleModalTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form class="modal-content" method="post" action="" data-action-prefix="/cms-Activity-R/">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rescheduleModalTitle">
+                    <i class="far fa-calendar-alt text-muted mr-1" aria-hidden="true"></i> Remarcar atividade
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">
+                    Atividade nº <strong data-field="activity-id"></strong> –
+                    <span data-field="activity-description"></span>
+                </p>
+                <p class="text-muted small mb-2">
+                    Próxima atividade atual: <strong data-field="current-date"></strong>
+                </p>
+                <div class="form-group mb-0">
+                    <label for="reschedule_next_activity_date">
+                        Nova data da próxima atividade <span class="text-danger">*</span>
+                    </label>
+                    <input type="date" class="form-control" id="reschedule_next_activity_date"
+                        name="next_activity_date" required>
+                </div>
+                <input type="hidden" name="returnTo" value="<%= returnTo %>">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Remarcar</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -17,18 +17,17 @@
                     <div class="form-group col-md-4">
                         <label for="filterStatus">Status</label>
                         <select class="form-control" id="filterStatus" name="status">
-                            <option value="1" <%= filter.status === "1" ? "selected" : "" %>>Ativas (Padrão)</option>
-                            <option value="0" <%= filter.status === "0" ? "selected" : "" %>>Inativas / Ocultas</option>
+                            <option value="visible" <%= filter.status === "visible" ? "selected" : "" %>>Visíveis por padrão</option>
+                            <option value="all" <%= filter.status === "all" ? "selected" : "" %>>Todos os Status</option>
                             <% if (typeof activityStatuses !== 'undefined' && activityStatuses.length > 0) { %>
-                                <optgroup label="Por Status de Atividade">
+                                <optgroup label="Status de Atividade">
                                     <% activityStatuses.forEach((st) => { %>
                                         <option value="<%= st.id %>" <%= String(filter.status) === String(st.id) ? "selected" : "" %>>
-                                            <%= st.name %> <%= st.visibility === 0 ? '(Oculto por padrão)' : '' %>
+                                            <%= st.name %>
                                         </option>
                                     <% }) %>
                                 </optgroup>
                             <% } %>
-                            <option value="all" <%= filter.status === "all" ? "selected" : "" %>>Todos os Status</option>
                         </select>
                     </div>
                 </div>

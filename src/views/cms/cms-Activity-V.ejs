@@ -8,7 +8,7 @@
                 <%= activity.status_name || (activity.status === 1 ? 'Ativo' : 'Inativo') %>
             </span>
             <span class="badge badge-pill <%= activity.traffic_light_class %> ml-1">
-                <%= activity.traffic_light_label %>
+                <%= activity.next_activity_day_label %>
             </span>
         </div>
         <div class="d-flex align-items-center">

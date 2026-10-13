@@ -49,13 +49,24 @@ const THEME_ORGANIZATIONS = [
     "[Estudos] - Cursos e Certificações",
 ];
 
+// Registro 1 do cadastro de Status de Atividade: padrão de toda atividade nova
+const DEFAULT_ACTIVITY_STATUS_ID = 1;
+
+// Filtro de status padrão: status marcados como "visível por padrão" no cadastro
+const STATUS_FILTER_VISIBLE = "visible";
+const STATUS_FILTER_ALL = "all";
+
 // Filtros da listagem (Q + F)
 const activityListQuerySchema = z.object({
     status: z
         .string()
         .trim()
-        .refine((val) => val === "all" || /^\d+$/.test(val), { message: "Status inválido." })
-        .catch("1"),
+        .refine(
+            (val) =>
+                val === STATUS_FILTER_ALL || val === STATUS_FILTER_VISIBLE || /^\d+$/.test(val),
+            { message: "Status inválido." },
+        )
+        .catch(STATUS_FILTER_VISIBLE),
     search: z.string().trim().max(150).catch(""),
     lifeSphere: z.string().trim().catch(""),
     relevance: z.string().trim().catch(""),
@@ -140,7 +151,20 @@ const activityFormSchema = z.object({
         .optional()
         .or(z.literal(""))
         .transform((val) => (val && val.trim() !== "" ? val.trim() : null)),
-    status: z.coerce.number().int().catch(1),
+    status: z.coerce.number().int().catch(DEFAULT_ACTIVITY_STATUS_ID),
+});
+
+// Pop-up "Remarcar atividade" (Q)
+const activityRescheduleSchema = z.object({
+    next_activity_date: z
+        .string({ error: "Informe a nova data da próxima atividade." })
+        .trim()
+        .regex(dateRegex, "Data da próxima atividade inválida (AAAA-MM-DD)."),
+});
+
+// Pop-up "Status da atividade" (Q)
+const activityStatusChangeSchema = z.object({
+    status: z.coerce.number({ error: "Selecione o status." }).int().min(0),
 });
 
 const idParamSchema = z.coerce.number().int().positive();
@@ -155,17 +179,32 @@ function toFieldErrors(zodError) {
 }
 
 /**
+ * Converte uma data (string "YYYY-MM-DD..." ou Date) para "YYYY-MM-DD" no horário LOCAL.
+ * Não usar toISOString(): ele converte para UTC e, no Brasil (UTC-3), após as 21h
+ * já retorna o dia seguinte.
+ */
+function toDateOnlyString(value) {
+    if (!value) return null;
+    if (typeof value === "string") return value.slice(0, 10);
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+/**
  * Calcula a diferença em dias entre uma data e a data de referência (hoje).
- * Retorna número inteiro de dias (positivo = futuro, negativo = atrasado).
+ * Retorna número inteiro de dias (positivo = futuro, 0 = hoje, negativo = atrasado).
  */
 function calculateDaysDiff(targetDateStr, referenceDate = new Date()) {
-    if (!targetDateStr) return null;
-    const target = new Date(targetDateStr);
-    if (Number.isNaN(target.getTime())) return null;
+    // new Date("YYYY-MM-DD") é interpretado como meia-noite UTC, o que no Brasil
+    // cai no dia anterior. Por isso a data é lida pelos seus componentes.
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(toDateOnlyString(targetDateStr) || "");
+    if (!match) return null;
 
     const ref = new Date(referenceDate);
     // Zera os horários para cálculo exato em dias corridos
-    const targetUtc = Date.UTC(target.getFullYear(), target.getMonth(), target.getDate());
+    const targetUtc = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
     const refUtc = Date.UTC(ref.getFullYear(), ref.getMonth(), ref.getDate());
 
     const msPerDay = 1000 * 60 * 60 * 24;
@@ -194,21 +233,32 @@ function getContrastTextColor(hexColor) {
     return luminance > 0.179 ? "#212529" : "#ffffff";
 }
 
+const WEEKDAY_LABELS = ["DOMINGO", "SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA", "SÁBADO"];
+
+/**
+ * Rótulo da coluna "Dia Próx.", conforme a regra da planilha:
+ * < 0 ATRASADO | 0 HOJE | 1 AMANHÃ | 2 a 15 dia da semana (HOJE() + dias) | > 15 MAIS DE 15 DIAS
+ */
+function getNextActivityDayLabel(daysNext, referenceDate = new Date()) {
+    if (daysNext === null || daysNext === undefined) return "-";
+    if (daysNext < 0) return "ATRASADO";
+    if (daysNext === 0) return "HOJE";
+    if (daysNext === 1) return "AMANHÃ";
+    if (daysNext <= 15) {
+        const ref = new Date(referenceDate);
+        const refUtc = Date.UTC(ref.getFullYear(), ref.getMonth(), ref.getDate());
+        const targetDay = new Date(refUtc + daysNext * 24 * 60 * 60 * 1000).getUTCDay();
+        return WEEKDAY_LABELS[targetDay];
+    }
+    return "MAIS DE 15 DIAS";
+}
+
 /**
  * Enriquece uma atividade com campos calculados de farol, dias restantes e resumo
  */
 function enrichActivity(activity, referenceDate = new Date()) {
-    const nextDate = activity.next_activity_date
-        ? typeof activity.next_activity_date === "string"
-            ? activity.next_activity_date.slice(0, 10)
-            : new Date(activity.next_activity_date).toISOString().slice(0, 10)
-        : null;
-
-    const finalDate = activity.final_deadline
-        ? typeof activity.final_deadline === "string"
-            ? activity.final_deadline.slice(0, 10)
-            : new Date(activity.final_deadline).toISOString().slice(0, 10)
-        : null;
+    const nextDate = toDateOnlyString(activity.next_activity_date);
+    const finalDate = toDateOnlyString(activity.final_deadline);
 
     const daysNext = calculateDaysDiff(nextDate, referenceDate);
     const daysFinal = calculateDaysDiff(finalDate, referenceDate);
@@ -250,6 +300,7 @@ function enrichActivity(activity, referenceDate = new Date()) {
         days_final_deadline: daysFinal,
         traffic_light: trafficLight,
         traffic_light_label: trafficLightLabel,
+        next_activity_day_label: getNextActivityDayLabel(daysNext, referenceDate),
         traffic_light_class: trafficLightClass,
         traffic_light_dot_color: dotColor,
     };
@@ -257,6 +308,9 @@ function enrichActivity(activity, referenceDate = new Date()) {
 
 module.exports = {
     PAGE_SIZES,
+    DEFAULT_ACTIVITY_STATUS_ID,
+    STATUS_FILTER_VISIBLE,
+    STATUS_FILTER_ALL,
     LIFE_SPHERES_WITH_COLORS,
     LIFE_SPHERES,
     RELEVANCE_OPTIONS,
@@ -266,9 +320,13 @@ module.exports = {
     THEME_ORGANIZATIONS,
     activityListQuerySchema,
     activityFormSchema,
+    activityRescheduleSchema,
+    activityStatusChangeSchema,
     idParamSchema,
     toFieldErrors,
     calculateDaysDiff,
+    toDateOnlyString,
     enrichActivity,
+    getNextActivityDayLabel,
     getContrastTextColor,
 };

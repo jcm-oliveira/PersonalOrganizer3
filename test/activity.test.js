@@ -50,7 +50,8 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             /class="badge activity-status-badge" style="background-color: #28a745; color: #212529;"/,
         );
         assert.match(res.text, /href="\/cms-Activity-U\/1"/);
-        assert.match(res.text, /ATRASADA/); // Data 2026-10-10 é anterior a 2026-10-13
+        assert.match(res.text, /Dia Próx\./);
+        assert.match(res.text, />\s*ATRASADO\s*</); // Data 2026-10-10 é anterior a 2026-10-13
     });
 
     it("renderiza a tela de dashboard com o quadrante de status das atividades", async () => {
@@ -248,6 +249,40 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         );
     });
 
+    it("considera a data de hoje como HOJE (0 dias), sem deslocamento de fuso horário", () => {
+        const {
+            calculateDaysDiff,
+            toDateOnlyString,
+            enrichActivity,
+        } = require("../src/validation/activitySchemas");
+        for (const hour of [0, 10, 22, 23]) {
+            const ref = new Date(2026, 9, 13, hour, 30); // 13/10/2026 em horário local
+            assert.equal(calculateDaysDiff("2026-10-13", ref), 0);
+            assert.equal(calculateDaysDiff("2026-10-14", ref), 1);
+            assert.equal(calculateDaysDiff("2026-10-12", ref), -1);
+            assert.equal(calculateDaysDiff(new Date(2026, 9, 13), ref), 0); // Date vindo do MySQL
+            assert.equal(toDateOnlyString(ref), "2026-10-13");
+            assert.equal(
+                enrichActivity({ next_activity_date: "2026-10-13" }, ref).next_activity_day_label,
+                "HOJE",
+            );
+        }
+    });
+
+    it("calcula o rótulo do Dia Próx. conforme a regra da planilha", () => {
+        const { getNextActivityDayLabel } = require("../src/validation/activitySchemas");
+        const ref = new Date(2026, 9, 13); // terça-feira, 13/10/2026
+        assert.equal(getNextActivityDayLabel(-3, ref), "ATRASADO");
+        assert.equal(getNextActivityDayLabel(0, ref), "HOJE");
+        assert.equal(getNextActivityDayLabel(1, ref), "AMANHÃ");
+        assert.equal(getNextActivityDayLabel(2, ref), "QUINTA");
+        assert.equal(getNextActivityDayLabel(5, ref), "DOMINGO");
+        assert.equal(getNextActivityDayLabel(6, ref), "SEGUNDA");
+        assert.equal(getNextActivityDayLabel(15, ref), "QUARTA");
+        assert.equal(getNextActivityDayLabel(16, ref), "MAIS DE 15 DIAS");
+        assert.equal(getNextActivityDayLabel(null, ref), "-");
+    });
+
     it("calcula a cor de texto com contraste adequado sobre a cor da esfera", () => {
         const { getContrastTextColor } = require("../src/validation/activitySchemas");
         assert.equal(getContrastTextColor("#ffc107"), "#212529");
@@ -262,6 +297,169 @@ describe("Módulo Activity (Painel de Vôo)", () => {
 
         assert.match(res.text, /<select[^>]*id="theme_organization"/);
         assert.match(res.text, /<option value="">\(Nenhum\)<\/option>/);
+    });
+
+    function mockLookupsWithStatuses() {
+        mock.method(Lookups.LifeSphereModel, "selectActiveOptionsWithColor", async () => []);
+        mock.method(Lookups.LifeSphereModel, "selectAllWithColor", async () => []);
+        for (const model of [
+            "RelevanceModel",
+            "DayPeriodModel",
+            "PeriodicityModel",
+            "ActionTypeModel",
+            "ThemeOrganizationModel",
+        ]) {
+            mock.method(Lookups[model], "selectActiveOptions", async () => []);
+        }
+        mock.method(Lookups.ActivityStatusModel, "selectActiveOptionsWithStyle", async () => [
+            { id: 4, name: "Cancelado", visibility: 0, color_code: "#6c757d" },
+            { id: 2, name: "Em andamento", visibility: 1, color_code: "#007bff" },
+            { id: 1, name: "Pendente", visibility: 1, color_code: "#28a745" },
+        ]);
+    }
+
+    it("filtro de status lista os status do cadastro e usa os visíveis como padrão", async () => {
+        mockLookupsWithStatuses();
+        mock.method(Activity, "countActivities", async () => 0);
+        const select = mock.method(Activity, "selectActivities", async () => []);
+
+        const res = await request(app).get("/cms-Activity-Q").expect(200);
+
+        assert.equal(select.mock.calls[0].arguments[0].status, "visible");
+        assert.match(res.text, /<option value="visible" selected>Visíveis por padrão<\/option>/);
+        assert.match(res.text, /<option value="4" >\s*Cancelado\s*<\/option>/);
+        assert.match(res.text, /<option value="2" >\s*Em andamento\s*<\/option>/);
+        assert.match(res.text, /<option value="1" >\s*Pendente\s*<\/option>/);
+        assert.doesNotMatch(res.text, /Ativas \(Padrão\)|Inativas \/ Ocultas/);
+        assert.doesNotMatch(res.text, /Filtros aplicados/);
+    });
+
+    it("filtra por um status específico do cadastro", async () => {
+        mockLookupsWithStatuses();
+        mock.method(Activity, "countActivities", async () => 0);
+        const select = mock.method(Activity, "selectActivities", async () => []);
+
+        const res = await request(app).get("/cms-Activity-Q?status=2").expect(200);
+
+        assert.equal(select.mock.calls[0].arguments[0].status, 2);
+        assert.match(res.text, /<option value="2" selected>\s*Em andamento\s*<\/option>/);
+        assert.match(res.text, /Filtros aplicados/);
+    });
+
+    it("nova atividade vem com o registro 1 do cadastro de status como padrão", async () => {
+        mockLookupsWithStatuses();
+
+        const res = await request(app).get("/cms-Activity-C").expect(200);
+
+        assert.match(res.text, /<option value="1" selected>\s*Pendente\s*<\/option>/);
+        assert.doesNotMatch(res.text, /<option value="[234]" selected>/);
+    });
+
+    it("exibe os botões Remarcar atividade e Status da atividade com seus pop-ups", async () => {
+        mockLookupsWithStatuses();
+        mock.method(Activity, "countActivities", async () => 1);
+        mock.method(Activity, "selectActivities", async () => [
+            {
+                id: 5,
+                life_sphere: "Profissão e Carreira",
+                description: "Revisar contrato",
+                relevance: "Normal",
+                next_activity_date: "2026-10-20",
+                final_deadline: null,
+                status: 2,
+            },
+        ]);
+
+        const res = await request(app).get("/cms-Activity-Q?status=all").expect(200);
+
+        assert.match(res.text, /data-target="#rescheduleModal"[\s\S]*?data-activity-id="5"/);
+        assert.match(res.text, /data-next-date="2026-10-20"/);
+        assert.match(res.text, /title="Remarcar atividade"/);
+        assert.match(res.text, /data-target="#statusModal"[\s\S]*?data-status="2"/);
+        assert.match(res.text, /title="Status da atividade"/);
+        assert.match(res.text, /id="rescheduleModal"/);
+        assert.match(res.text, /id="statusModal"/);
+        assert.match(res.text, /name="returnTo" value="\/cms-Activity-Q\?status=all&amp;/);
+        assert.match(res.text, /src="\/scripts\/activity-quick-actions.js"/);
+    });
+
+    it("remarca a atividade e volta para a consulta mantendo os filtros", async () => {
+        const update = mock.method(Activity, "updateNextActivityDate", async () => 1);
+
+        const res = await request(app)
+            .post("/cms-Activity-R/5")
+            .type("form")
+            .send({
+                next_activity_date: "2026-11-02",
+                returnTo: "/cms-Activity-Q?status=all&page=2",
+            })
+            .expect(303);
+
+        assert.deepEqual(update.mock.calls[0].arguments, [5, "2026-11-02"]);
+        assert.equal(res.headers.location, "/cms-Activity-Q?status=all&page=2&msg=rescheduled");
+    });
+
+    it("não remarca com data inválida", async () => {
+        const update = mock.method(Activity, "updateNextActivityDate", async () => 1);
+
+        const res = await request(app)
+            .post("/cms-Activity-R/5")
+            .type("form")
+            .send({ next_activity_date: "02/11/2026" })
+            .expect(303);
+
+        assert.equal(update.mock.callCount(), 0);
+        assert.equal(res.headers.location, "/cms-Activity-Q?msg=invalidDate");
+    });
+
+    it("ignora destino de retorno externo (redirecionamento aberto)", async () => {
+        mock.method(Activity, "updateNextActivityDate", async () => 1);
+
+        for (const returnTo of ["https://exemplo.com/cms-Activity-Q", "//exemplo.com", "/outra"]) {
+            const res = await request(app)
+                .post("/cms-Activity-R/5")
+                .type("form")
+                .send({ next_activity_date: "2026-11-02", returnTo })
+                .expect(303);
+            assert.equal(res.headers.location, "/cms-Activity-Q?msg=rescheduled");
+        }
+    });
+
+    it("altera o status da atividade para um status do cadastro", async () => {
+        mockLookupsWithStatuses();
+        const update = mock.method(Activity, "updateActivityStatus", async () => 1);
+
+        const res = await request(app)
+            .post("/cms-Activity-S/5")
+            .type("form")
+            .send({ status: "4", returnTo: "/cms-Activity-Q" })
+            .expect(303);
+
+        assert.deepEqual(update.mock.calls[0].arguments, [5, 4]);
+        assert.equal(res.headers.location, "/cms-Activity-Q?msg=statusChanged");
+    });
+
+    it("não altera o status para um status inexistente no cadastro", async () => {
+        mockLookupsWithStatuses();
+        const update = mock.method(Activity, "updateActivityStatus", async () => 1);
+
+        const res = await request(app)
+            .post("/cms-Activity-S/5")
+            .type("form")
+            .send({ status: "99" })
+            .expect(303);
+
+        assert.equal(update.mock.callCount(), 0);
+        assert.equal(res.headers.location, "/cms-Activity-Q?msg=invalidStatus");
+    });
+
+    it("retorna 404 ao remarcar atividade inexistente", async () => {
+        mock.method(Activity, "updateNextActivityDate", async () => 0);
+        await request(app)
+            .post("/cms-Activity-R/999")
+            .type("form")
+            .send({ next_activity_date: "2026-11-02" })
+            .expect(404);
     });
 
     it("exclui uma atividade com exclusão lógica", async () => {

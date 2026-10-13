@@ -180,6 +180,158 @@ function buildSphereColorResolver(lifeSpheresWithColor) {
     };
 }
 
+//------------------------------------------------
+//        GRÁFICOS DO DASHBOARD (barras horizontais)
+//------------------------------------------------
+
+const CHART_DEFAULT_COLOR = "#007bff"; // Uma cor só quando a cor não identifica a categoria
+const CHART_NEUTRAL_COLOR = "#adb5bd";
+
+const SCHEDULE_BUCKETS = [
+    {
+        key: "ATRASADO",
+        label: "Atrasado",
+        color: "#dc3545",
+        icon: "fa-exclamation-circle",
+        trafficLight: "ATRASADA",
+    },
+    { key: "HOJE", label: "Hoje", color: "#fd7e14", icon: "fa-clock", trafficLight: "HOJE" },
+    { key: "AMANHA", label: "Amanhã", color: CHART_DEFAULT_COLOR },
+    { key: "ATE_7", label: "De 2 a 7 dias", color: CHART_DEFAULT_COLOR },
+    { key: "ATE_15", label: "De 8 a 15 dias", color: CHART_DEFAULT_COLOR },
+    { key: "MAIS_15", label: "Mais de 15 dias", color: CHART_DEFAULT_COLOR },
+];
+
+function listLink(params) {
+    return `${LIST_URL}?${new URLSearchParams({ status: "visible", ...params })}`;
+}
+
+// Monta um gráfico: percentual sobre o total e largura relativa à maior barra
+function buildChart({ key, title, subtitle, icon, rows, sortByTotal = true }) {
+    const total = rows.reduce((sum, r) => sum + r.total, 0);
+    const max = Math.max(0, ...rows.map((r) => r.total));
+    const sorted = sortByTotal
+        ? [...rows].sort((a, b) => b.total - a.total || a.label.localeCompare(b.label, "pt-BR"))
+        : rows;
+    return {
+        key,
+        title,
+        subtitle,
+        icon,
+        total,
+        rows: sorted.map((r) => ({
+            ...r,
+            percent: total > 0 ? Math.round((r.total / total) * 100) : 0,
+            width: max > 0 ? Math.round((r.total / max) * 1000) / 10 : 0,
+        })),
+    };
+}
+
+// Junta as contagens com o cadastro, para que categorias sem atividade apareçam com 0
+function withZeroRows(names, counts) {
+    const byName = new Map(counts.map((c) => [normalizeSphereName(c.label), c]));
+    const rows = names.map((name) => ({
+        label: name,
+        total: byName.get(normalizeSphereName(name))?.total || 0,
+    }));
+    const known = new Set(names.map(normalizeSphereName));
+    counts
+        .filter((c) => !known.has(normalizeSphereName(c.label)))
+        .forEach((c) => rows.push({ label: String(c.label), total: c.total }));
+    return rows;
+}
+
+function buildDashboardCharts(distribution, lookups) {
+    const resolveSphereColor = buildSphereColorResolver(lookups.lifeSphereColors);
+
+    const sphereRows = withZeroRows(lookups.lifeSpheres || [], distribution.bySphere).map((r) => ({
+        ...r,
+        color: resolveSphereColor(r.label).life_sphere_color || CHART_NEUTRAL_COLOR,
+        href: listLink({ lifeSphere: r.label }),
+    }));
+
+    const statuses = lookups.activityStatuses || [];
+    const statusCounts = new Map(distribution.byStatus.map((s) => [s.statusId, s.total]));
+    const statusRows = statuses.map((st) => ({
+        label: st.name,
+        total: statusCounts.get(st.id) || 0,
+        color: st.color_code || CHART_NEUTRAL_COLOR,
+        href: `${LIST_URL}?status=${st.id}`,
+    }));
+    distribution.byStatus
+        .filter((s) => !statuses.some((st) => st.id === s.statusId))
+        .forEach((s) =>
+            statusRows.push({
+                label: `Status nº ${s.statusId}`,
+                total: s.total,
+                color: CHART_NEUTRAL_COLOR,
+            }),
+        );
+
+    const actionRows = withZeroRows(lookups.actionTypes || [], distribution.byActionType).map(
+        (r) => ({
+            ...r,
+            color: CHART_DEFAULT_COLOR,
+            href: r.label === "Não informado" ? undefined : listLink({ actionType: r.label }),
+        }),
+    );
+
+    const relevanceRows = withZeroRows(
+        lookups.relevanceOptions || [],
+        distribution.byRelevance,
+    ).map((r) => ({ ...r, color: CHART_DEFAULT_COLOR, href: listLink({ relevance: r.label }) }));
+
+    const scheduleCounts = new Map(distribution.bySchedule.map((b) => [b.bucket, b.total]));
+    const scheduleRows = SCHEDULE_BUCKETS.map((b) => ({
+        label: b.label,
+        total: scheduleCounts.get(b.key) || 0,
+        color: b.color,
+        icon: b.icon,
+        href: b.trafficLight ? listLink({ trafficLight: b.trafficLight }) : undefined,
+    }));
+
+    const visibleNote = "Atividades com status visíveis por padrão";
+    return [
+        buildChart({
+            key: "sphere",
+            title: "Esfera da Vida",
+            subtitle: visibleNote,
+            icon: "fa-heart",
+            rows: sphereRows,
+        }),
+        buildChart({
+            key: "status",
+            title: "Status",
+            subtitle: "Todas as atividades",
+            icon: "fa-sync-alt",
+            rows: statusRows,
+        }),
+        buildChart({
+            key: "actionType",
+            title: "Tipo de Ação",
+            subtitle: visibleNote,
+            icon: "fa-layer-group",
+            rows: actionRows,
+        }),
+        buildChart({
+            key: "relevance",
+            title: "Relevância",
+            subtitle: visibleNote,
+            icon: "fa-flag",
+            rows: relevanceRows,
+            sortByTotal: false,
+        }),
+        buildChart({
+            key: "schedule",
+            title: "Próxima atividade",
+            subtitle: `${visibleNote}, pela data da próxima atividade`,
+            icon: "fa-calendar-day",
+            rows: scheduleRows,
+            sortByTotal: false,
+        }),
+    ];
+}
+
 // "all" = sem filtro | "visible" = status visíveis por padrão | número = id do status
 function toStatusCriteria(status) {
     if (status === STATUS_FILTER_ALL) return null;
@@ -424,6 +576,25 @@ module.exports = {
     //------------------------------------------------
     //            CALENDÁRIO (FullCalendar)
     //------------------------------------------------
+
+    //------------------------------------------------
+    //        DASHBOARD (quadrante + gráficos)
+    //------------------------------------------------
+
+    async loadDashboardPage(req, res) {
+        const todayStr = getTodayString();
+        const [stats, distribution, lookups] = await Promise.all([
+            Activity.getActivityStats(todayStr),
+            Activity.getActivityDistribution(todayStr),
+            loadLookupOptions(),
+        ]);
+
+        return res.render("dashboard", {
+            title: "Dashboard",
+            stats,
+            charts: buildDashboardCharts(distribution, lookups),
+        });
+    },
 
     async loadCalendarPage(req, res) {
         const lookups = await loadLookupOptions();

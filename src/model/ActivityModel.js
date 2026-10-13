@@ -246,6 +246,67 @@ async function getActivityStats(todayStr) {
     };
 }
 
+const VISIBLE_STATUS_SQL =
+    "status IN (SELECT id FROM activity_status WHERE excluded = 0 AND status = 1 AND visibility = 1)";
+
+/**
+ * Distribuição (balanceamento) das atividades para os gráficos do Dashboard.
+ * Status considera todas as atividades; as demais dimensões, só as de status
+ * visíveis por padrão (mesmo padrão da consulta e do calendário).
+ */
+async function getActivityDistribution(todayStr) {
+    const groupBy = async (expression) => {
+        const [rows] = await pool.query(`
+            SELECT ${expression} AS label, COUNT(*) AS total
+            FROM activity
+            WHERE excluded = 0 AND ${VISIBLE_STATUS_SQL}
+            GROUP BY label
+        `);
+        return rows.map((r) => ({ label: r.label, total: Number(r.total) }));
+    };
+
+    const [bySphere, byActionType, byRelevance, byStatusRows, byScheduleRows] = await Promise.all([
+        groupBy("life_sphere"),
+        groupBy("COALESCE(NULLIF(TRIM(action_type), ''), 'Não informado')"),
+        groupBy("relevance"),
+        pool.query(`
+            SELECT status AS status_id, COUNT(*) AS total
+            FROM activity
+            WHERE excluded = 0
+            GROUP BY status
+        `),
+        pool.query(
+            `
+            SELECT
+                CASE
+                    WHEN DATEDIFF(next_activity_date, ?) < 0 THEN 'ATRASADO'
+                    WHEN DATEDIFF(next_activity_date, ?) = 0 THEN 'HOJE'
+                    WHEN DATEDIFF(next_activity_date, ?) = 1 THEN 'AMANHA'
+                    WHEN DATEDIFF(next_activity_date, ?) <= 7 THEN 'ATE_7'
+                    WHEN DATEDIFF(next_activity_date, ?) <= 15 THEN 'ATE_15'
+                    ELSE 'MAIS_15'
+                END AS bucket,
+                COUNT(*) AS total
+            FROM activity
+            WHERE excluded = 0 AND ${VISIBLE_STATUS_SQL}
+            GROUP BY bucket
+        `,
+            [todayStr, todayStr, todayStr, todayStr, todayStr],
+        ),
+    ]);
+
+    return {
+        bySphere,
+        byActionType,
+        byRelevance,
+        byStatus: byStatusRows[0].map((r) => ({
+            statusId: Number(r.status_id),
+            total: Number(r.total),
+        })),
+        bySchedule: byScheduleRows[0].map((r) => ({ bucket: r.bucket, total: Number(r.total) })),
+    };
+}
+
 //------------------------------------------------
 //                     INSERT
 //------------------------------------------------
@@ -359,6 +420,7 @@ module.exports = {
     selectActivityById,
     selectActivitiesForCalendar,
     getActivityStats,
+    getActivityDistribution,
     insertActivity,
     updateActivity,
     updateNextActivityDate,

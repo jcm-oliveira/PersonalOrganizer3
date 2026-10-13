@@ -65,6 +65,14 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             totalAtivos: 295,
         }));
 
+        mock.method(Activity, "getActivityDistribution", async () => ({
+            bySphere: [],
+            byActionType: [],
+            byRelevance: [],
+            byStatus: [],
+            bySchedule: [],
+        }));
+
         const res = await request(app).get("/dashboard").expect(200);
 
         assert.match(res.text, /Status das Atividades/);
@@ -72,6 +80,83 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.match(res.text, /9/);
         assert.match(res.text, /Priorizados/);
         assert.match(res.text, /93/);
+        assert.match(res.text, /Balanceamento das atividades/);
+        assert.match(res.text, /Nenhuma atividade para exibir\./);
+    });
+
+    it("renderiza os gráficos de balanceamento no dashboard", async () => {
+        mockLookupsWithStatuses();
+        mock.method(Lookups.LifeSphereModel, "selectActiveOptionsWithColor", async () => [
+            { id: 1, name: "Profissão e Carreira", color_code: "#007bff" },
+            { id: 2, name: "Saúde e Esporte", color_code: "#28a745" },
+            { id: 3, name: "Bens e Finanças", color_code: "#fd7e14" },
+        ]);
+        mock.method(Lookups.LifeSphereModel, "selectAllWithColor", async () => [
+            { id: 1, name: "Profissão e Carreira", color_code: "#007bff" },
+            { id: 2, name: "Saúde e Esporte", color_code: "#28a745" },
+            { id: 3, name: "Bens e Finanças", color_code: "#fd7e14" },
+        ]);
+        mock.method(Lookups.ActionTypeModel, "selectActiveOptions", async () => [
+            { id: 1, name: "Compromisso" },
+            { id: 2, name: "Tarefa" },
+        ]);
+        mock.method(Activity, "getActivityStats", async () => ({
+            prazoFinal7Dias: 0,
+            vencidas: 0,
+            proximos7Dias: 0,
+            entre7e15Dias: 0,
+            priorizados: 0,
+            backlog: 0,
+            totalAtivos: 4,
+        }));
+        const distribution = mock.method(Activity, "getActivityDistribution", async () => ({
+            bySphere: [
+                { label: "Profissão e Carreira", total: 3 },
+                { label: "Saúde e Esporte", total: 1 },
+            ],
+            byActionType: [
+                { label: "Compromisso", total: 2 },
+                { label: "Não informado", total: 2 },
+            ],
+            byRelevance: [{ label: "Prioridade", total: 4 }],
+            byStatus: [
+                { statusId: 1, total: 4 },
+                { statusId: 4, total: 1 },
+            ],
+            bySchedule: [
+                { bucket: "ATRASADO", total: 1 },
+                { bucket: "MAIS_15", total: 3 },
+            ],
+        }));
+
+        const res = await request(app).get("/dashboard").expect(200);
+        const text = res.text.replace(/\s+/g, " ");
+
+        assert.match(distribution.mock.calls[0].arguments[0], /^\d{4}-\d{2}-\d{2}$/);
+        // Esfera da Vida: cor do cadastro, % do total e largura relativa à maior barra
+        assert.match(
+            text,
+            /title="Profissão e Carreira: 3 atividades \(75%\)"[^]*?data-bar-width="100" data-bg-color="#007bff"/,
+        );
+        assert.match(
+            text,
+            /title="Saúde e Esporte: 1 atividade \(25%\)"[^]*?data-bar-width="33.3" data-bg-color="#28a745"/,
+        );
+        // Esfera sem atividades aparece com zero (é parte do balanceamento)
+        assert.match(text, /title="Bens e Finanças: 0 atividades \(0%\)"/);
+        assert.match(
+            text,
+            /href="\/cms-Activity-Q\?status=visible&amp;lifeSphere=Bens\+e\+Finan%C3%A7as"/,
+        );
+        // Status: todas as atividades, com cor do cadastro e link para o filtro
+        assert.match(text, /title="Pendente: 4 atividades \(80%\)"[^]*?data-bg-color="#28a745"/);
+        assert.match(text, /href="\/cms-Activity-Q\?status=4"/);
+        // Tipo de Ação: "Não informado" sem link
+        assert.match(text, /<span class="hbar-label"> Não informado <\/span>/);
+        assert.match(text, /title="Tarefa: 0 atividades \(0%\)"/);
+        // Próxima atividade: ordem fixa (Atrasado primeiro)
+        assert.match(text, /title="Atrasado: 1 atividade \(25%\)"[^]*?title="Hoje: 0 atividades/);
+        assert.match(text, /src="\/scripts\/dashboard-charts.js"/);
     });
 
     it("renderiza a tela inicial com logotipo e atalhos", async () => {
@@ -81,6 +166,10 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.match(res.text, /Vida organizada, mente saudável\./);
         assert.match(res.text, /Atividades/);
         assert.match(res.text, /Gestão/);
+        assert.match(
+            res.text,
+            /<a class="card dashboard-shortcut h-100" href="\/cms-Calendar">[\s\S]*?Calendário/,
+        );
     });
 
     it("insere uma atividade válida com campos obrigatórios e complementares (PRG)", async () => {

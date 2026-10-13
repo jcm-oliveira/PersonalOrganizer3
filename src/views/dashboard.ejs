@@ -73,6 +73,21 @@
             </div>
         </div>
     </div>
+
+    <!-- Gráficos de balanceamento das atividades -->
+    <section aria-labelledby="balanceTitle">
+        <h2 class="dashboard-section-title" id="balanceTitle">Balanceamento das atividades</h2>
+        <div class="row">
+            <% charts.forEach((chart) => { %>
+                <div class="col-lg-6 mb-4">
+                    <%- include('parts/hbar-chart', { chart }) %>
+                </div>
+            <% }) %>
+        </div>
+    </section>
 </main>
+
+<script src="/scripts/sphere-colors.js" defer></script>
+<script src="/scripts/dashboard-charts.js" defer></script>
 
 <%- include('parts/footer') %>

@@ -362,3 +362,86 @@ main {
     cursor: pointer;
     font-size: 0.8rem;
 }
+
+/* ---------- Dashboard: gráficos de barras horizontais (balanceamento) ---------- */
+
+.hbar-chart-title {
+    font-family: "IBM Plex Sans", "Inter", sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #212529;
+}
+
+.hbar-chart {
+    display: grid;
+    gap: 0.55rem;
+}
+
+/* Rótulo | barra | valor */
+.hbar-row {
+    display: grid;
+    grid-template-columns: minmax(110px, 38%) 1fr auto;
+    align-items: center;
+    column-gap: 0.75rem;
+    font-size: 0.85rem;
+}
+
+.hbar-label {
+    color: #495057;
+    overflow-wrap: anywhere;
+    line-height: 1.2;
+}
+
+a.hbar-label:hover,
+a.hbar-label:focus {
+    color: #007bff;
+}
+
+/* Linha de base discreta de onde as barras crescem */
+.hbar-track {
+    position: relative;
+    display: block;
+    height: 14px;
+    border-left: 1px solid #ced4da;
+}
+
+/* Barra: espessura fixa, ponta arredondada (4px) e base reta */
+.hbar-bar {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: 0 4px 4px 0;
+    background-color: #007bff;
+    transition: width 0.4s ease-out;
+}
+
+.hbar-row:hover .hbar-bar {
+    filter: brightness(0.92);
+}
+
+.hbar-value {
+    min-width: 4.5rem;
+    text-align: right;
+    font-weight: 600;
+    color: #212529;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.hbar-percent {
+    font-weight: 400;
+    color: #6c757d;
+}
+
+@media (max-width: 575.98px) {
+    .hbar-row {
+        grid-template-columns: minmax(90px, 40%) 1fr auto;
+        column-gap: 0.5rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hbar-bar {
+        transition: none;
+    }
+}

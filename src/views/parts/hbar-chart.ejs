@@ -1,0 +1,47 @@
+<%#
+    Gráfico de barras horizontais (balanceamento por categoria).
+    Largura e cor vêm de data-* e são aplicadas por /scripts/dashboard-charts.js e
+    /scripts/sphere-colors.js (a CSP bloqueia style="" inline).
+    Espera: chart = { key, title, subtitle, icon, total, rows: [{ label, total, percent, width, color, href?, icon? }] }
+%>
+<div class="card shadow-sm h-100">
+    <div class="card-header bg-light d-flex justify-content-between align-items-start">
+        <div>
+            <h2 class="hbar-chart-title mb-0" id="chart-<%= chart.key %>-title">
+                <i class="fas <%= chart.icon %> text-muted mr-1" aria-hidden="true"></i> <%= chart.title %>
+            </h2>
+            <span class="small text-muted"><%= chart.subtitle %></span>
+        </div>
+        <span class="small text-muted text-nowrap ml-2">
+            Total: <strong class="text-dark"><%= chart.total %></strong>
+        </span>
+    </div>
+    <div class="card-body">
+        <% if (chart.total === 0) { %>
+            <p class="text-muted small mb-0">Nenhuma atividade para exibir.</p>
+        <% } else { %>
+            <ul class="hbar-chart list-unstyled mb-0" aria-labelledby="chart-<%= chart.key %>-title">
+                <% chart.rows.forEach((row) => {
+                    const description = `${row.label}: ${row.total} ${row.total === 1 ? 'atividade' : 'atividades'} (${row.percent}%)`;
+                %>
+                    <li class="hbar-row" title="<%= description %>">
+                        <% if (row.href) { %>
+                            <a class="hbar-label" href="<%= row.href %>">
+                        <% } else { %>
+                            <span class="hbar-label">
+                        <% } %>
+                            <% if (row.icon) { %><i class="fas <%= row.icon %> text-muted mr-1" aria-hidden="true"></i><% } %><%= row.label %>
+                        <% if (row.href) { %></a><% } else { %></span><% } %>
+                        <span class="hbar-track" aria-hidden="true">
+                            <span class="hbar-bar" data-bar-width="<%= row.width %>" data-bg-color="<%= row.color %>"></span>
+                        </span>
+                        <span class="hbar-value">
+                            <span class="sr-only"><%= description %></span>
+                            <span aria-hidden="true"><%= row.total %> <span class="hbar-percent">(<%= row.percent %>%)</span></span>
+                        </span>
+                    </li>
+                <% }) %>
+            </ul>
+        <% } %>
+    </div>
+</div>

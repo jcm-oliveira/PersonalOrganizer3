@@ -60,6 +60,20 @@ scripts/migrate.js       # runner de migrações (tabela schema_migrations)
 test/                    # *.test.js
 ```
 
+## Módulo de Atividades (`Activity`)
+
+Implementado cobrindo inserção, edição, visualização e exclusão com indicadores de farol de vencimento, e visão geral de status das atividades na tela inicial:
+
+| Rota                                                   | Controller           | View                                   |
+| ------------------------------------------------------ | -------------------- | -------------------------------------- |
+| `GET /cms-Activity-Q?status=&search=&trafficLight=...` | `loadShowPage`       | `cms-Activity-Q` (+ modal `-F`)        |
+| `GET /cms-Activity-C`                                  | `loadInsertPage`     | `cms-Activity-C` (+ campos `-I`)       |
+| `POST /cms-Activity-C`                                 | `insertActivityPage` | redirect 303 → lista                   |
+| `GET /cms-Activity-C/:id`                              | `loadUpdatePage`     | `cms-Activity-U` (+ `-I`, modal `-D`)  |
+| `GET /cms-Activity-V/:id`                              | `loadViewPage`       | `cms-Activity-V` (detalhes/visualizar) |
+| `POST /cms-Activity-U/:id`                             | `updateActivityPage` | redirect 303 → lista                   |
+| `POST /cms-Activity-D/:id`                             | `deleteActivityPage` | redirect 303 → lista                   |
+
 ## Módulo de exemplo (`Example`)
 
 É o modelo a copiar para cada novo cadastro do CMS. Ele mantém as convenções de nomes do projeto de referência (sufixos `Q`/`C`/`U`/`D`/`F`/`I` nas views e rotas, `excluded` para exclusão lógica, `status` ativo/inativo).

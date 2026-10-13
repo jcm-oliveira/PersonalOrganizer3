@@ -1,0 +1,119 @@
+<%# Campos do formulário de Atividade compartilhados por C e U %>
+<h5 class="text-primary border-bottom pb-2 mb-3">Informações Obrigatórias</h5>
+
+<div class="form-row">
+    <div class="form-group col-md-4">
+        <label for="life_sphere">Esfera da Vida <span class="text-danger">*</span></label>
+        <select class="form-control <%= errors.life_sphere ? 'is-invalid' : '' %>" id="life_sphere" name="life_sphere" required autofocus>
+            <option value="">Selecione...</option>
+            <% lifeSpheres.forEach((sphere) => { %>
+                <option value="<%= sphere %>" <%= values.life_sphere === sphere ? 'selected' : '' %>><%= sphere %></option>
+            <% }) %>
+        </select>
+        <% if (errors.life_sphere) { %><div class="invalid-feedback"><%= errors.life_sphere %></div><% } %>
+    </div>
+
+    <div class="form-group col-md-5">
+        <label for="description">Descrição <span class="text-danger">*</span></label>
+        <input type="text" class="form-control <%= errors.description ? 'is-invalid' : '' %>" id="description"
+            name="description" maxlength="255" value="<%= values.description || '' %>" required
+            placeholder="Ex: Reunião Equipe TI, Backup Celular...">
+        <% if (errors.description) { %><div class="invalid-feedback"><%= errors.description %></div><% } %>
+    </div>
+
+    <div class="form-group col-md-3">
+        <label for="relevance">Relevância <span class="text-danger">*</span></label>
+        <select class="form-control <%= errors.relevance ? 'is-invalid' : '' %>" id="relevance" name="relevance" required>
+            <% relevanceOptions.forEach((rel) => { %>
+                <option value="<%= rel %>" <%= values.relevance === rel ? 'selected' : '' %>><%= rel %></option>
+            <% }) %>
+        </select>
+        <% if (errors.relevance) { %><div class="invalid-feedback"><%= errors.relevance %></div><% } %>
+    </div>
+</div>
+
+<div class="form-row">
+    <div class="form-group col-md-4">
+        <label for="next_activity_date">Próxima Atividade (Data) <span class="text-danger">*</span></label>
+        <input type="date" class="form-control <%= errors.next_activity_date ? 'is-invalid' : '' %>"
+            id="next_activity_date" name="next_activity_date" value="<%= values.next_activity_date || '' %>" required>
+        <% if (errors.next_activity_date) { %><div class="invalid-feedback"><%= errors.next_activity_date %></div><% } %>
+    </div>
+
+    <div class="form-group col-md-4">
+        <label for="final_deadline">Prazo Final</label>
+        <input type="date" class="form-control <%= errors.final_deadline ? 'is-invalid' : '' %>"
+            id="final_deadline" name="final_deadline" value="<%= values.final_deadline || '' %>">
+        <% if (errors.final_deadline) { %><div class="invalid-feedback"><%= errors.final_deadline %></div><% } %>
+    </div>
+
+    <div class="form-group col-md-4">
+        <label for="status">Status</label>
+        <select class="form-control <%= errors.status ? 'is-invalid' : '' %>" id="status" name="status">
+            <option value="1" <%= values.status === "1" ? "selected" : "" %>>Ativo</option>
+            <option value="0" <%= values.status === "0" ? "selected" : "" %>>Inativo</option>
+        </select>
+        <% if (errors.status) { %><div class="invalid-feedback"><%= errors.status %></div><% } %>
+    </div>
+</div>
+
+<h5 class="text-primary border-bottom pb-2 mb-3 mt-4">Informações Complementares</h5>
+
+<div class="form-row">
+    <div class="form-group col-md-3">
+        <label for="day_period">Período do Dia</label>
+        <select class="form-control <%= errors.day_period ? 'is-invalid' : '' %>" id="day_period" name="day_period">
+            <option value="">(Nenhum)</option>
+            <% dayPeriods.forEach((period) => { %>
+                <option value="<%= period %>" <%= values.day_period === period ? 'selected' : '' %>><%= period %></option>
+            <% }) %>
+        </select>
+        <% if (errors.day_period) { %><div class="invalid-feedback"><%= errors.day_period %></div><% } %>
+    </div>
+
+    <div class="form-group col-md-3">
+        <label for="scheduled_time">Horário</label>
+        <input type="time" class="form-control <%= errors.scheduled_time ? 'is-invalid' : '' %>"
+            id="scheduled_time" name="scheduled_time" value="<%= values.scheduled_time || '' %>">
+        <% if (errors.scheduled_time) { %><div class="invalid-feedback"><%= errors.scheduled_time %></div><% } %>
+    </div>
+
+    <div class="form-group col-md-3">
+        <label for="periodicity">Periodicidade</label>
+        <select class="form-control <%= errors.periodicity ? 'is-invalid' : '' %>" id="periodicity" name="periodicity">
+            <option value="">(Nenhuma)</option>
+            <% periodicityOptions.forEach((p) => { %>
+                <option value="<%= p %>" <%= values.periodicity === p ? 'selected' : '' %>><%= p %></option>
+            <% }) %>
+        </select>
+        <% if (errors.periodicity) { %><div class="invalid-feedback"><%= errors.periodicity %></div><% } %>
+    </div>
+
+    <div class="form-group col-md-3">
+        <label for="action_type">Tipo de Ação</label>
+        <select class="form-control <%= errors.action_type ? 'is-invalid' : '' %>" id="action_type" name="action_type">
+            <option value="">(Nenhum)</option>
+            <% actionTypes.forEach((act) => { %>
+                <option value="<%= act %>" <%= values.action_type === act ? 'selected' : '' %>><%= act %></option>
+            <% }) %>
+        </select>
+        <% if (errors.action_type) { %><div class="invalid-feedback"><%= errors.action_type %></div><% } %>
+    </div>
+</div>
+
+<div class="form-row">
+    <div class="form-group col-md-6">
+        <label for="theme_organization">Organização por Tema</label>
+        <input type="text" class="form-control <%= errors.theme_organization ? 'is-invalid' : '' %>"
+            id="theme_organization" name="theme_organization" maxlength="150"
+            value="<%= values.theme_organization || '' %>" placeholder="Ex: [TI] - Escritório de Projetos TI">
+        <% if (errors.theme_organization) { %><div class="invalid-feedback"><%= errors.theme_organization %></div><% } %>
+    </div>
+
+    <div class="form-group col-md-6">
+        <label for="notes">Anotações / Próximas Atividades</label>
+        <textarea class="form-control <%= errors.notes ? 'is-invalid' : '' %>" id="notes" name="notes"
+            rows="3" maxlength="5000" placeholder="Anotações complementares..."><%= values.notes || '' %></textarea>
+        <% if (errors.notes) { %><div class="invalid-feedback"><%= errors.notes %></div><% } %>
+    </div>
+</div>

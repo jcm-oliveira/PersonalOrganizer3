@@ -1,0 +1,104 @@
+<%- include('../parts/head') %>
+
+<main class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Atividade nº <%= activity.id %></h1>
+            <span class="badge badge-pill <%= activity.status === 1 ? 'badge-success' : 'badge-secondary' %>">
+                <%= activity.status === 1 ? 'Ativo' : 'Inativo' %>
+            </span>
+            <span class="badge badge-pill <%= activity.traffic_light_class %> ml-1">
+                <%= activity.traffic_light_label %>
+            </span>
+        </div>
+        <div>
+            <a class="btn btn-outline-primary" href="/cms-Activity-C/<%= activity.id %>">Editar</a>
+            <a class="btn btn-secondary" href="/cms-Activity-Q">Voltar à Lista</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Coluna Esquerda: Informações Principais -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light font-weight-bold">Informações Obrigatórias</div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5 text-muted">Esfera da Vida:</dt>
+                        <dd class="col-sm-7 font-weight-bold"><%= activity.life_sphere %></dd>
+
+                        <dt class="col-sm-5 text-muted">Descrição:</dt>
+                        <dd class="col-sm-7"><%= activity.description %></dd>
+
+                        <dt class="col-sm-5 text-muted">Relevância:</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge badge-info"><%= activity.relevance %></span>
+                        </dd>
+
+                        <dt class="col-sm-5 text-muted">Próxima Atividade:</dt>
+                        <dd class="col-sm-7 font-weight-bold">
+                            <%= activity.next_activity_date_formatted || '-' %>
+                            <% if (activity.days_next_activity !== null) { %>
+                                <span class="small <%= activity.days_next_activity < 0 ? 'text-danger' : 'text-muted' %>">
+                                    (<%= activity.days_next_activity %> dias)
+                                </span>
+                            <% } %>
+                        </dd>
+
+                        <dt class="col-sm-5 text-muted">Prazo Final:</dt>
+                        <dd class="col-sm-7">
+                            <%= activity.final_deadline_formatted || '-' %>
+                            <% if (activity.days_final_deadline !== null) { %>
+                                <span class="small text-muted">(<%= activity.days_final_deadline %> dias)</span>
+                            <% } %>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna Direita: Informações Complementares -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light font-weight-bold">Informações Complementares</div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5 text-muted">Período do Dia:</dt>
+                        <dd class="col-sm-7"><%= activity.day_period || '-' %></dd>
+
+                        <dt class="col-sm-5 text-muted">Horário:</dt>
+                        <dd class="col-sm-7"><%= activity.scheduled_time ? activity.scheduled_time.slice(0, 5) : '-' %></dd>
+
+                        <dt class="col-sm-5 text-muted">Periodicidade:</dt>
+                        <dd class="col-sm-7"><%= activity.periodicity || '-' %></dd>
+
+                        <dt class="col-sm-5 text-muted">Tipo de Ação:</dt>
+                        <dd class="col-sm-7"><%= activity.action_type || '-' %></dd>
+
+                        <dt class="col-sm-5 text-muted">Organização por Tema:</dt>
+                        <dd class="col-sm-7"><%= activity.theme_organization || '-' %></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anotações -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light font-weight-bold">Anotações / Próximas Atividades</div>
+        <div class="card-body">
+            <p class="mb-0" style="white-space: pre-wrap;"><%= activity.notes || 'Nenhuma anotação registrada.' %></p>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between">
+        <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#deleteModal">
+            Excluir Atividade
+        </button>
+        <a class="btn btn-primary" href="/cms-Activity-C/<%= activity.id %>">Editar Atividade</a>
+    </div>
+
+    <%- include('cms-Activity-D', { activityId: activity.id }) %>
+</main>
+
+<%- include('../parts/footer') %>

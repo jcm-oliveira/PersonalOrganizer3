@@ -1,0 +1,88 @@
+<div class="modal fade" id="filterModal" tabindex="-1" role="dialog" aria-labelledby="filterModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <form class="modal-content" method="get" action="/cms-Activity-Q">
+            <div class="modal-header">
+                <h5 class="modal-title" id="filterModalTitle">Filtrar Atividades</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group col-md-8">
+                        <label for="filterSearch">Descrição, Tema ou Código</label>
+                        <input type="text" class="form-control" id="filterSearch" name="search" maxlength="150"
+                            placeholder="Buscar por texto ou código..." value="<%= filter.search %>">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="filterStatus">Status</label>
+                        <select class="form-control" id="filterStatus" name="status">
+                            <option value="1" <%= filter.status === "1" ? "selected" : "" %>>Ativas</option>
+                            <option value="0" <%= filter.status === "0" ? "selected" : "" %>>Inativas</option>
+                            <option value="all" <%= filter.status === "all" ? "selected" : "" %>>Todas</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="filterLifeSphere">Esfera da Vida</label>
+                        <select class="form-control" id="filterLifeSphere" name="lifeSphere">
+                            <option value="">Todas</option>
+                            <% lifeSpheres.forEach((sphere) => { %>
+                                <option value="<%= sphere %>" <%= filter.lifeSphere === sphere ? "selected" : "" %>><%= sphere %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="filterRelevance">Relevância</label>
+                        <select class="form-control" id="filterRelevance" name="relevance">
+                            <option value="">Todas</option>
+                            <% relevanceOptions.forEach((rel) => { %>
+                                <option value="<%= rel %>" <%= filter.relevance === rel ? "selected" : "" %>><%= rel %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="filterActionType">Tipo de Ação</label>
+                        <select class="form-control" id="filterActionType" name="actionType">
+                            <option value="">Todos</option>
+                            <% actionTypes.forEach((actType) => { %>
+                                <option value="<%= actType %>" <%= filter.actionType === actType ? "selected" : "" %>><%= actType %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="filterTrafficLight">Farol / Vencimento</label>
+                        <select class="form-control" id="filterTrafficLight" name="trafficLight">
+                            <option value="">Todos</option>
+                            <option value="ATRASADA" <%= filter.trafficLight === "ATRASADA" ? "selected" : "" %>>Atrasadas</option>
+                            <option value="HOJE" <%= filter.trafficLight === "HOJE" ? "selected" : "" %>>Vence Hoje</option>
+                            <option value="7_DIAS" <%= filter.trafficLight === "7_DIAS" ? "selected" : "" %>>Próximos 7 dias</option>
+                            <option value="15_DIAS" <%= filter.trafficLight === "15_DIAS" ? "selected" : "" %>>Entre 7 e 15 dias</option>
+                            <option value="PRAZO" <%= filter.trafficLight === "PRAZO" ? "selected" : "" %>>Prazo Final em 7 dias</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="filterPerPage">Itens por página</label>
+                        <select class="form-control" id="filterPerPage" name="perPage">
+                            <% pageSizes.forEach((size) => { %>
+                                <option value="<%= size %>" <%= filter.perPage === size ? "selected" : "" %>><%= size %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-link" href="/cms-Activity-Q">Limpar</a>
+                <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+            </div>
+        </form>
+    </div>
+</div>

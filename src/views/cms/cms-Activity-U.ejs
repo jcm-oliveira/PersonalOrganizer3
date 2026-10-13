@@ -1,0 +1,26 @@
+<%- include('../parts/head') %>
+
+<main class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 mb-0">Editar Atividade nº <%= activityId %></h1>
+        <a class="btn btn-outline-info" href="/cms-Activity-V/<%= activityId %>">Visualizar</a>
+    </div>
+
+    <form method="post" action="/cms-Activity-U/<%= activityId %>">
+        <%- include('cms-Activity-I') %>
+
+        <div class="d-flex justify-content-between mt-4">
+            <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#deleteModal">
+                Excluir
+            </button>
+            <div>
+                <a class="btn btn-link" href="/cms-Activity-Q">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+            </div>
+        </div>
+    </form>
+
+    <%- include('cms-Activity-D') %>
+</main>
+
+<%- include('../parts/footer') %>

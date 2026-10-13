@@ -26,3 +26,210 @@ main {
 .site-footer {
     border-top: 1px solid #dee2e6;
 }
+
+/* Ícones dentro de botões e links */
+.btn .fas,
+.btn .far,
+.btn .fab {
+    pointer-events: none;
+}
+
+/* ---------- Início: Logo, Cabeçalho e Disclaimer ---------- */
+
+.home-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem 1.75rem;
+}
+
+.home-logo {
+    width: auto;
+    height: 5.5rem;
+    max-width: 100%;
+}
+
+.home-title {
+    margin-bottom: 0.25rem;
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: #212529;
+}
+
+.home-disclaimer {
+    display: flex;
+    gap: 0.85rem;
+    margin-top: 1.5rem;
+    padding: 0.85rem 1.15rem;
+    border-left: 4px solid #adb5bd;
+    border-radius: 0.25rem;
+    background: #f8f9fa;
+    color: #495057;
+    font-size: 0.875rem;
+    line-height: 1.55;
+}
+
+.home-disclaimer p {
+    margin-bottom: 0.35rem;
+}
+
+.home-disclaimer p:last-child {
+    margin-bottom: 0;
+}
+
+.home-disclaimer-icon {
+    margin-top: 0.25rem;
+    color: #6c757d;
+    font-size: 1rem;
+}
+
+/* ---------- Acesso rápido (Cards / Atalhos) ---------- */
+
+.dashboard-section-title {
+    margin-bottom: 0.85rem;
+    font-family: "IBM Plex Sans", "Inter", sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #212529;
+}
+
+.dashboard-shortcut {
+    color: #343a40;
+    text-decoration: none;
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    transition:
+        border-color 0.15s ease-in-out,
+        box-shadow 0.15s ease-in-out,
+        transform 0.15s ease-in-out;
+}
+
+.dashboard-shortcut:hover,
+.dashboard-shortcut:focus {
+    border-color: #007bff;
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 123, 255, 0.12);
+    color: #343a40;
+    text-decoration: none;
+    transform: translateY(-2px);
+}
+
+.dashboard-shortcut .card-body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.25rem;
+}
+
+.dashboard-shortcut-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    margin-bottom: 0.85rem;
+    border-radius: 0.5rem;
+    background-color: #e7f1ff;
+    color: #007bff;
+    font-size: 1.4rem;
+}
+
+.dashboard-shortcut-title {
+    margin-bottom: 0.3rem;
+    font-family: "IBM Plex Sans", "Inter", sans-serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #212529;
+}
+
+.dashboard-shortcut-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+    line-height: 1.45;
+}
+
+@media (max-width: 575.98px) {
+    .home-logo {
+        height: 4.25rem;
+    }
+
+    .home-title {
+        font-size: 1.45rem;
+    }
+}
+
+/* ---------- Grid de Atividades (Planilha / Painel de Vôo) ---------- */
+
+.table-activity {
+    font-size: 0.84rem;
+    color: #495057;
+}
+
+/* Cabeçalho da tabela */
+.table-activity thead th {
+    vertical-align: middle;
+    font-family: "IBM Plex Sans", "Inter", sans-serif;
+    font-weight: 600;
+    font-size: 0.78rem;
+    color: #495057;
+    letter-spacing: 0.01em;
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+    padding: 0.45rem 0.4rem;
+}
+
+/* Linha superior de agrupamento de cabeçalho */
+.table-activity thead .table-activity-group th {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #6c757d;
+    background-color: #eef2f6;
+    border-bottom: 2px solid #dee2e6;
+    padding: 0.35rem 0.5rem;
+}
+
+/* Ícone acima do texto no cabeçalho */
+.activity-th-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    line-height: 1.15;
+}
+
+.activity-th-content--left {
+    align-items: flex-start;
+}
+
+.activity-th-icon {
+    font-size: 0.9rem;
+    color: #5c6b7d;
+}
+
+.activity-th-label {
+    white-space: normal;
+}
+
+/* Células de dados das linhas */
+.table-activity tbody td {
+    vertical-align: middle;
+    padding: 0.4rem 0.45rem;
+    color: #495057;
+    font-size: 0.84rem;
+    border-color: #dee2e6;
+}
+
+/* Descrição: mesmo tamanho e cor, com leve destaque em negrito */
+.table-activity .activity-desc-link {
+    font-weight: 600;
+    color: #212529;
+    text-decoration: none;
+}
+
+.table-activity .activity-desc-link:hover,
+.table-activity .activity-desc-link:focus {
+    color: #007bff;
+    text-decoration: underline;
+}

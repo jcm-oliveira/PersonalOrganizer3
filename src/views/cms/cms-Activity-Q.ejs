@@ -4,17 +4,26 @@
     <!-- Barra de Ações (Filtros e Novo) -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h1 class="h4 mb-0 text-dark">Atividades</h1>
+            <h1 class="h3 mb-0 text-dark">Atividades</h1>
             <% if (filter.trafficLight || filter.search || filter.lifeSphere || filter.relevance || filter.actionType || filter.status !== '1') { %>
                 <span class="badge badge-info mt-1">Filtros aplicados</span>
                 <a href="/cms-Activity-Q" class="small text-danger ml-2">Limpar filtros</a>
             <% } %>
         </div>
-        <div>
-            <button type="button" class="btn btn-outline-secondary" data-toggle="modal" data-target="#filterModal">
-                Filtrar
+        <div class="d-flex align-items-center">
+            <% const hasActiveFilter = Boolean(filter.trafficLight || filter.search || filter.lifeSphere || filter.relevance || filter.actionType || filter.status !== '1'); %>
+            <button type="button" class="btn btn-sm <%= hasActiveFilter ? 'btn-primary' : 'btn-outline-secondary' %> mr-1"
+                data-toggle="modal" data-target="#filterModal" title="Filtrar atividades" aria-label="Filtrar atividades">
+                <i class="fas fa-filter" aria-hidden="true"></i>
             </button>
-            <a class="btn btn-primary" href="/cms-Activity-C">Nova Atividade</a>
+            <button type="button" class="btn btn-sm btn-outline-secondary mr-1" onclick="window.print()"
+                title="Imprimir" aria-label="Imprimir">
+                <i class="fas fa-print" aria-hidden="true"></i>
+            </button>
+            <a class="btn btn-sm btn-outline-primary" href="/cms-Activity-C"
+                title="Nova Atividade" aria-label="Nova Atividade">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+            </a>
         </div>
     </div>
 
@@ -22,35 +31,110 @@
 
     <!-- Tabela Estilo Planilha / Painel de Vôo -->
     <div class="table-responsive shadow-sm bg-white rounded">
-        <table class="table table-sm table-bordered table-hover mb-0">
-            <thead class="thead-light">
+        <table class="table table-sm table-bordered table-hover table-activity mb-0">
+            <thead>
                 <!-- Linha superior de agrupamento de cabeçalho -->
-                <tr class="text-center font-weight-bold">
-                    <th colspan="5" class="bg-light border-bottom text-left px-3 text-secondary">INFORMAÇÕES OBRIGATÓRIAS</th>
-                    <th colspan="5" class="bg-light border-bottom text-left px-3 text-secondary">INFORMAÇÕES COMPLEMENTARES</th>
-                    <th colspan="1" class="bg-light border-bottom text-secondary">STATUS</th>
-                    <th colspan="3" class="bg-light border-bottom text-secondary">FAROL</th>
-                    <th colspan="1" class="bg-light border-bottom text-secondary">AÇÕES</th>
+                <tr class="table-activity-group">
+                    <th colspan="5" class="text-left px-3">INFORMAÇÕES OBRIGATÓRIAS</th>
+                    <th colspan="5" class="text-left px-3">INFORMAÇÕES COMPLEMENTARES</th>
+                    <th colspan="1" class="text-center">STATUS</th>
+                    <th colspan="3" class="text-center">FAROL</th>
+                    <th colspan="1" class="text-center">AÇÕES</th>
                 </tr>
-                <!-- Linha inferior de colunas específicas -->
+                <!-- Linha inferior de colunas específicas com ícones acima dos textos -->
                 <tr class="text-center">
-                    <th style="min-width: 140px;">Esfera da Vida</th>
-                    <th style="min-width: 220px;" class="text-left">Descrição</th>
-                    <th style="min-width: 100px;">Relevância</th>
-                    <th style="min-width: 110px;">Próxima Atividade</th>
-                    <th style="min-width: 100px;">Prazo Final</th>
+                    <th style="min-width: 130px;">
+                        <span class="activity-th-content">
+                            <i class="fas fa-heart activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Esfera da Vida</span>
+                        </span>
+                    </th>
+                    <th style="min-width: 220px;" class="text-left">
+                        <span class="activity-th-content activity-th-content--left">
+                            <i class="fas fa-align-left activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Descrição</span>
+                        </span>
+                    </th>
+                    <th style="min-width: 95px;">
+                        <span class="activity-th-content">
+                            <i class="fas fa-flag activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Relevância</span>
+                        </span>
+                    </th>
+                    <th style="min-width: 110px;">
+                        <span class="activity-th-content">
+                            <i class="far fa-calendar-alt activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Próxima Atividade</span>
+                        </span>
+                    </th>
+                    <th style="min-width: 100px;">
+                        <span class="activity-th-content">
+                            <i class="far fa-calendar-check activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Prazo Final</span>
+                        </span>
+                    </th>
 
-                    <th style="min-width: 110px;">Período do dia</th>
-                    <th style="min-width: 80px;">Horário</th>
-                    <th style="min-width: 100px;">Periodicidade</th>
-                    <th style="min-width: 120px;">Tipo de Ação</th>
-                    <th style="min-width: 160px;">Organização por tema</th>
+                    <th style="min-width: 105px;">
+                        <span class="activity-th-content">
+                            <i class="fas fa-sun activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Período do dia</span>
+                        </span>
+                    </th>
+                    <th style="min-width: 75px;">
+                        <span class="activity-th-content">
+                            <i class="far fa-clock activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Horário</span>
+                        </span>
+                    </th>
+                    <th style="min-width: 95px;">
+                        <span class="activity-th-content">
+                            <i class="fas fa-redo-alt activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Periodicidade</span>
+                        </span>
+                    </th>
+                    <th style="min-width: 110px;">
+                        <span class="activity-th-content">
+                            <i class="fas fa-layer-group activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Tipo de Ação</span>
+                        </span>
+                    </th>
+                    <th style="min-width: 150px;">
+                        <span class="activity-th-content">
+                            <i class="fas fa-folder activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Organização por tema</span>
+                        </span>
+                    </th>
 
-                    <th style="min-width: 80px;">Status</th>
-                    <th style="min-width: 70px;">Dias próx.</th>
-                    <th style="min-width: 70px;">Dias prazo</th>
-                    <th style="min-width: 120px;">Farol Próx.</th>
-                    <th style="min-width: 110px;">Ações</th>
+                    <th style="min-width: 75px;">
+                        <span class="activity-th-content">
+                            <i class="fas fa-toggle-on activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Status</span>
+                        </span>
+                    </th>
+                    <th style="min-width: 70px;">
+                        <span class="activity-th-content">
+                            <i class="fas fa-stopwatch activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Dias próx.</span>
+                        </span>
+                    </th>
+                    <th style="min-width: 70px;">
+                        <span class="activity-th-content">
+                            <i class="fas fa-hourglass-half activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Dias prazo</span>
+                        </span>
+                    </th>
+                    <th style="min-width: 115px;">
+                        <span class="activity-th-content">
+                            <i class="fas fa-traffic-light activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Farol Próx.</span>
+                        </span>
+                    </th>
+                    <th style="min-width: 90px;">
+                        <span class="activity-th-content">
+                            <i class="fas fa-tools activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Ações</span>
+                        </span>
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -67,13 +151,13 @@
                 %>
                     <tr class="<%= rowClass %>">
                         <!-- Esfera da Vida -->
-                        <td class="align-middle">
+                        <td class="align-middle text-center">
                             <%= act.life_sphere %>
                         </td>
 
                         <!-- Descrição (destaque em negrito) -->
-                        <td class="align-middle text-left font-weight-bold">
-                            <a href="/cms-Activity-V/<%= act.id %>" class="text-dark">
+                        <td class="align-middle text-left">
+                            <a href="/cms-Activity-V/<%= act.id %>" class="activity-desc-link">
                                 <%= act.description %>
                             </a>
                         </td>
@@ -141,13 +225,15 @@
                             </span>
                         </td>
 
-                        <!-- Ações -->
+                        <!-- Ações (botões compactos de ícones nos moldes de Projetos) -->
                         <td class="align-middle text-center text-nowrap">
-                            <a class="btn btn-sm btn-outline-info py-0 px-2" href="/cms-Activity-V/<%= act.id %>" title="Visualizar">
-                                Ver
+                            <a class="btn btn-sm btn-outline-secondary mr-1" href="/cms-Activity-V/<%= act.id %>"
+                                title="Visualizar atividade" aria-label="Visualizar atividade">
+                                <i class="fas fa-search" aria-hidden="true"></i>
                             </a>
-                            <a class="btn btn-sm btn-outline-primary py-0 px-2" href="/cms-Activity-C/<%= act.id %>" title="Editar">
-                                Editar
+                            <a class="btn btn-sm btn-outline-primary" href="/cms-Activity-C/<%= act.id %>"
+                                title="Editar atividade" aria-label="Editar atividade">
+                                <i class="fas fa-pen" aria-hidden="true"></i>
                             </a>
                         </td>
                     </tr>

@@ -1,0 +1,78 @@
+<%- include('parts/head') %>
+
+<main class="container py-4">
+    <div class="row align-items-center mb-4">
+        <div class="col-md-7">
+            <h1 class="h3 mb-1">Dashboard</h1>
+            <p class="text-muted">Visão geral e status das atividades em andamento.</p>
+        </div>
+        <div class="col-md-5 text-md-right">
+            <a class="btn btn-primary" href="/cms-Activity-Q">
+                <i class="fas fa-tasks mr-1" aria-hidden="true"></i> Gerenciar Atividades
+            </a>
+            <a class="btn btn-outline-primary ml-1" href="/cms-Activity-C">
+                <i class="fas fa-plus mr-1" aria-hidden="true"></i> Nova Atividade
+            </a>
+        </div>
+    </div>
+
+    <!-- Quadrante com Status das Atividades -->
+    <div class="row">
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light font-weight-bold d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-chart-pie text-primary mr-1" aria-hidden="true"></i> Status das Atividades</span>
+                    <a href="/cms-Activity-Q" class="small text-primary">Ver todas</a>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm table-hover mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="px-3 py-2">
+                                    <a href="/cms-Activity-Q?trafficLight=PRAZO" class="text-dark">Prazo Final em 7 dias</a>
+                                </td>
+                                <td class="text-right px-3 py-2 font-weight-bold text-danger"><%= stats.prazoFinal7Dias %></td>
+                            </tr>
+                            <tr>
+                                <td class="px-3 py-2">
+                                    <span class="d-inline-block rounded-circle mr-2" style="width: 10px; height: 10px; background-color: #343a40;"></span>
+                                    <a href="/cms-Activity-Q?trafficLight=ATRASADA" class="text-dark">Atividades vencidas</a>
+                                </td>
+                                <td class="text-right px-3 py-2 font-weight-bold text-danger"><%= stats.vencidas %></td>
+                            </tr>
+                            <tr>
+                                <td class="px-3 py-2">
+                                    <span class="d-inline-block rounded-circle mr-2" style="width: 10px; height: 10px; background-color: #fd7e14;"></span>
+                                    <a href="/cms-Activity-Q?trafficLight=7_DIAS" class="text-dark">Atividades nos próximos 7 dias</a>
+                                </td>
+                                <td class="text-right px-3 py-2 font-weight-bold"><%= stats.proximos7Dias %></td>
+                            </tr>
+                            <tr>
+                                <td class="px-3 py-2">
+                                    <span class="d-inline-block rounded-circle mr-2" style="width: 10px; height: 10px; background-color: #ffc107;"></span>
+                                    <a href="/cms-Activity-Q?trafficLight=15_DIAS" class="text-dark">Atividades entre 7 e 15 dias</a>
+                                </td>
+                                <td class="text-right px-3 py-2 font-weight-bold"><%= stats.entre7e15Dias %></td>
+                            </tr>
+                            <tr>
+                                <td class="px-3 py-2">
+                                    <span class="d-inline-block rounded-circle mr-2" style="width: 10px; height: 10px; background-color: #28a745;"></span>
+                                    <a href="/cms-Activity-Q?relevance=Prioridade" class="text-dark">Priorizados</a>
+                                </td>
+                                <td class="text-right px-3 py-2 font-weight-bold text-success"><%= stats.priorizados %></td>
+                            </tr>
+                            <tr>
+                                <td class="px-3 py-2">
+                                    <a href="/cms-Activity-Q?relevance=Backlog" class="text-dark">Backlog</a>
+                                </td>
+                                <td class="text-right px-3 py-2 font-weight-bold text-muted"><%= stats.backlog %></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<%- include('parts/footer') %>

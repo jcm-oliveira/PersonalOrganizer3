@@ -45,7 +45,7 @@ src/
 ├── server.js            # sobe o HTTP e faz o encerramento gracioso
 ├── app.js               # monta o Express (helmet, estáticos, parsers, rotas, erros); usado pelos testes
 ├── routes.js            # agrega as rotas do portal e dos módulos
-├── routes/              # um router por módulo (exampleRoutes.js)
+├── routes/              # um router por módulo (activityRoutes.js)
 ├── controllers/         # <Entidade>Controller.js: HTTP, validação e escolha da view
 ├── model/               # <Entidade>Model.js: SQL parametrizado, devolve dados ou lança erro
 ├── validation/          # schemas zod de formulário e de filtros
@@ -62,7 +62,7 @@ test/                    # *.test.js
 
 ## Módulo de Atividades (`Activity`)
 
-Implementado cobrindo inserção, edição, visualização e exclusão com indicadores de farol de vencimento, e visão geral de status das atividades na tela inicial:
+Implementado cobrindo inserção, edição, visualização e exclusão com indicadores de farol de vencimento, e visão geral de status das atividades no Dashboard:
 
 | Rota                                                   | Controller           | View                                   |
 | ------------------------------------------------------ | -------------------- | -------------------------------------- |
@@ -73,19 +73,6 @@ Implementado cobrindo inserção, edição, visualização e exclusão com indic
 | `GET /cms-Activity-V/:id`                              | `loadViewPage`       | `cms-Activity-V` (detalhes/visualizar) |
 | `POST /cms-Activity-U/:id`                             | `updateActivityPage` | redirect 303 → lista                   |
 | `POST /cms-Activity-D/:id`                             | `deleteActivityPage` | redirect 303 → lista                   |
-
-## Módulo de exemplo (`Example`)
-
-É o modelo a copiar para cada novo cadastro do CMS. Ele mantém as convenções de nomes do projeto de referência (sufixos `Q`/`C`/`U`/`D`/`F`/`I` nas views e rotas, `excluded` para exclusão lógica, `status` ativo/inativo).
-
-| Rota                                                | Controller          | View                                 |
-| --------------------------------------------------- | ------------------- | ------------------------------------ |
-| `GET /cms-Example-Q?status=&search=&page=&perPage=` | `loadShowPage`      | `cms-Example-Q` (+ modal `-F`)       |
-| `GET /cms-Example-C`                                | `loadInsertPage`    | `cms-Example-C` (+ campos `-I`)      |
-| `POST /cms-Example-C`                               | `insertExamplePage` | redirect 303 → lista                 |
-| `GET /cms-Example-C/:id`                            | `loadUpdatePage`    | `cms-Example-U` (+ `-I`, modal `-D`) |
-| `POST /cms-Example-U/:id`                           | `updateExamplePage` | redirect 303 → lista                 |
-| `POST /cms-Example-D/:id`                           | `deleteExamplePage` | redirect 303 → lista                 |
 
 ### Diferenças em relação ao projeto de referência
 

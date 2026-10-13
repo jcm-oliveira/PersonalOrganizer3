@@ -1,17 +1,24 @@
 <%- include('../parts/head') %>
 
 <main class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h3 mb-0">Nova Atividade</h1>
-    </div>
-
     <form method="post" action="/cms-Activity-C">
-        <%- include('cms-Activity-I') %>
-
-        <div class="d-flex justify-content-end mt-4">
-            <a class="btn btn-link" href="/cms-Activity-Q">Cancelar</a>
-            <button type="submit" class="btn btn-primary">Salvar Atividade</button>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-calendar-plus text-primary mr-2" aria-hidden="true"></i> Nova Atividade
+            </h1>
+            <div class="d-flex align-items-center">
+                <button type="submit" class="btn btn-sm btn-primary mr-1"
+                    title="Salvar Atividade" aria-label="Salvar Atividade">
+                    <i class="fas fa-save mr-1" aria-hidden="true"></i> Salvar
+                </button>
+                <a class="btn btn-sm btn-outline-secondary" href="/cms-Activity-Q"
+                    title="Voltar à Lista" aria-label="Voltar à Lista">
+                    <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Voltar
+                </a>
+            </div>
         </div>
+
+        <%- include('cms-Activity-I') %>
     </form>
 </main>
 

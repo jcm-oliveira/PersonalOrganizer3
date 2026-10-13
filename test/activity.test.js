@@ -41,7 +41,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.match(res.text, /ATRASADA/); // Data 2026-10-10 é anterior a 2026-10-13
     });
 
-    it("renderiza a tela inicial com o quadrante de status das atividades", async () => {
+    it("renderiza a tela de dashboard com o quadrante de status das atividades", async () => {
         mock.method(Activity, "getActivityStats", async () => ({
             prazoFinal7Dias: 2,
             vencidas: 9,
@@ -52,13 +52,22 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             totalAtivos: 295,
         }));
 
-        const res = await request(app).get("/").expect(200);
+        const res = await request(app).get("/dashboard").expect(200);
 
         assert.match(res.text, /Status das Atividades/);
         assert.match(res.text, /Atividades vencidas/);
         assert.match(res.text, /9/);
         assert.match(res.text, /Priorizados/);
         assert.match(res.text, /93/);
+    });
+
+    it("renderiza a tela inicial institucional com logotipo e atalhos", async () => {
+        const res = await request(app).get("/").expect(200);
+
+        assert.match(res.text, /Congregação Cristã no Brasil/);
+        assert.match(res.text, /Departamento de Suporte Administrativo/);
+        assert.match(res.text, /Atividades/);
+        assert.match(res.text, /Gestão/);
     });
 
     it("insere uma atividade válida com campos obrigatórios e complementares (PRG)", async () => {

@@ -1,74 +1,69 @@
 <%- include('parts/head') %>
 
-<main class="container py-4">
-    <div class="row align-items-center mb-4">
-        <div class="col-md-7">
-            <h1 class="h3 mb-1">Personal Organizer</h1>
-            <p class="text-muted">Visão geral e status das atividades em andamento.</p>
+<main class="container py-5">
+    <%# Cabeçalho: logo da Congregação Cristã no Brasil e o nome do departamento %>
+    <header class="home-header">
+        <img class="home-logo" src="/images/logo-ccb.png" alt="Congregação Cristã no Brasil"
+            width="1114" height="576">
+        <div>
+            <h1 class="home-title">DSA - Departamento de Suporte Administrativo</h1>
+            <p class="lead text-muted mb-0">Planejamento Estratégico e Gestão para Brasil e Exterior</p>
         </div>
-        <div class="col-md-5 text-md-right">
-            <a class="btn btn-primary" href="/cms-Activity-Q">Gerenciar Atividades</a>
-            <a class="btn btn-outline-primary ml-1" href="/cms-Activity-C">Nova Atividade</a>
-        </div>
-    </div>
+    </header>
 
-    <!-- Quadrante com Status das Atividades -->
-    <div class="row">
-        <div class="col-lg-6 col-md-8">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light font-weight-bold d-flex justify-content-between align-items-center">
-                    <span>Status das Atividades</span>
-                    <a href="/cms-Activity-Q" class="small text-primary">Ver todas</a>
-                </div>
-                <div class="card-body p-0">
-                    <table class="table table-sm table-hover mb-0">
-                        <tbody>
-                            <tr>
-                                <td class="px-3 py-2">
-                                    <a href="/cms-Activity-Q?trafficLight=PRAZO" class="text-dark">Prazo Final em 7 dias</a>
-                                </td>
-                                <td class="text-right px-3 py-2 font-weight-bold text-danger"><%= stats.prazoFinal7Dias %></td>
-                            </tr>
-                            <tr>
-                                <td class="px-3 py-2">
-                                    <span class="d-inline-block rounded-circle mr-2" style="width: 10px; height: 10px; background-color: #343a40;"></span>
-                                    <a href="/cms-Activity-Q?trafficLight=ATRASADA" class="text-dark">Atividades vencidas</a>
-                                </td>
-                                <td class="text-right px-3 py-2 font-weight-bold text-danger"><%= stats.vencidas %></td>
-                            </tr>
-                            <tr>
-                                <td class="px-3 py-2">
-                                    <span class="d-inline-block rounded-circle mr-2" style="width: 10px; height: 10px; background-color: #fd7e14;"></span>
-                                    <a href="/cms-Activity-Q?trafficLight=7_DIAS" class="text-dark">Atividades nos próximos 7 dias</a>
-                                </td>
-                                <td class="text-right px-3 py-2 font-weight-bold"><%= stats.proximos7Dias %></td>
-                            </tr>
-                            <tr>
-                                <td class="px-3 py-2">
-                                    <span class="d-inline-block rounded-circle mr-2" style="width: 10px; height: 10px; background-color: #ffc107;"></span>
-                                    <a href="/cms-Activity-Q?trafficLight=15_DIAS" class="text-dark">Atividades entre 7 e 15 dias</a>
-                                </td>
-                                <td class="text-right px-3 py-2 font-weight-bold"><%= stats.entre7e15Dias %></td>
-                            </tr>
-                            <tr>
-                                <td class="px-3 py-2">
-                                    <span class="d-inline-block rounded-circle mr-2" style="width: 10px; height: 10px; background-color: #28a745;"></span>
-                                    <a href="/cms-Activity-Q?relevance=Prioridade" class="text-dark">Priorizados</a>
-                                </td>
-                                <td class="text-right px-3 py-2 font-weight-bold text-success"><%= stats.priorizados %></td>
-                            </tr>
-                            <tr>
-                                <td class="px-3 py-2">
-                                    <a href="/cms-Activity-Q?relevance=Backlog" class="text-dark">Backlog</a>
-                                </td>
-                                <td class="text-right px-3 py-2 font-weight-bold text-muted"><%= stats.backlog %></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+    <%# Aviso de uso: plataforma restrita e com informações sigilosas %>
+    <aside class="home-disclaimer" role="note" aria-label="Aviso de uso da plataforma">
+        <i class="fas fa-lock home-disclaimer-icon" aria-hidden="true"></i>
+        <div>
+            <p>
+                Esta plataforma é de uso exclusivo e tem como objetivo oferecer ao corpo diretivo da
+                Congregação visibilidade sobre a execução do planejamento e a gestão dos projetos
+                estratégicos que a norteiam.
+            </p>
+            <p>
+                Ela contém informações sigilosas, e o acesso é restrito aos grupos de trabalho
+                responsáveis por definir normas e diretrizes aplicáveis a todo o Brasil e ao exterior.
+            </p>
+            <p>
+                Grupos estaduais, regionais ou locais devem consultar as informações disponíveis na
+                Intranet.
+            </p>
+        </div>
+    </aside>
+
+    <%# Acesso rápido aos módulos (Gestão) %>
+    <nav class="mt-5" aria-label="Acesso rápido">
+        <h2 class="dashboard-section-title">Gestão</h2>
+        <div class="row">
+            <div class="col-md-6 col-lg-6 mb-3">
+                <a class="card dashboard-shortcut h-100" href="/cms-Activity-Q">
+                    <div class="card-body">
+                        <span class="dashboard-shortcut-icon" aria-hidden="true">
+                            <i class="fas fa-tasks"></i>
+                        </span>
+                        <span class="dashboard-shortcut-title">Atividades</span>
+                        <span class="dashboard-shortcut-text">
+                            Cadastre e acompanhe atividades, prazos, farol de vencimento e prioridades.
+                        </span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-6 mb-3">
+                <a class="card dashboard-shortcut h-100" href="/dashboard">
+                    <div class="card-body">
+                        <span class="dashboard-shortcut-icon" aria-hidden="true">
+                            <i class="fas fa-chart-pie"></i>
+                        </span>
+                        <span class="dashboard-shortcut-title">Dashboard</span>
+                        <span class="dashboard-shortcut-text">
+                            Veja os indicadores e o quadrante com status e prazos das atividades.
+                        </span>
+                    </div>
+                </a>
             </div>
         </div>
-    </div>
+    </nav>
 </main>
 
 <%- include('parts/footer') %>

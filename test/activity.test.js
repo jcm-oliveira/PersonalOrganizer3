@@ -170,6 +170,8 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             res.text,
             /<a class="card dashboard-shortcut h-100" href="\/cms-Calendar">[\s\S]*?Calendário/,
         );
+        // Periodicidade foi substituída pela Repetição: fora do menu e da tela inicial
+        assert.doesNotMatch(res.text, /cms-Periodicity-Q/);
     });
 
     it("insere uma atividade válida com campos obrigatórios e complementares (PRG)", async () => {
@@ -204,7 +206,6 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             final_deadline: "2026-10-30",
             day_period: "1 - Manhã",
             scheduled_time: "09:30:00",
-            periodicity: "Única",
             recurrence_rule: null,
             action_type: "Tarefa",
             theme_organization: "[TI] - Projetos",

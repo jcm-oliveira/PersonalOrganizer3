@@ -89,7 +89,7 @@
 </h5>
 
 <div class="form-row">
-    <div class="form-group col-md-3">
+    <div class="form-group col-md-4">
         <label for="day_period">
             <i class="fas fa-sun text-muted mr-1" aria-hidden="true"></i> Período do Dia
         </label>
@@ -102,7 +102,7 @@
         <% if (errors.day_period) { %><div class="invalid-feedback"><%= errors.day_period %></div><% } %>
     </div>
 
-    <div class="form-group col-md-3">
+    <div class="form-group col-md-4">
         <label for="scheduled_time">
             <i class="far fa-clock text-muted mr-1" aria-hidden="true"></i> Horário
         </label>
@@ -111,20 +111,7 @@
         <% if (errors.scheduled_time) { %><div class="invalid-feedback"><%= errors.scheduled_time %></div><% } %>
     </div>
 
-    <div class="form-group col-md-3">
-        <label for="periodicity">
-            <i class="fas fa-redo-alt text-muted mr-1" aria-hidden="true"></i> Periodicidade
-        </label>
-        <select class="form-control <%= errors.periodicity ? 'is-invalid' : '' %>" id="periodicity" name="periodicity">
-            <option value="">(Nenhuma)</option>
-            <% periodicityOptions.forEach((p) => { %>
-                <option value="<%= p %>" <%= values.periodicity === p ? 'selected' : '' %>><%= p %></option>
-            <% }) %>
-        </select>
-        <% if (errors.periodicity) { %><div class="invalid-feedback"><%= errors.periodicity %></div><% } %>
-    </div>
-
-    <div class="form-group col-md-3">
+    <div class="form-group col-md-4">
         <label for="action_type">
             <i class="fas fa-layer-group text-muted mr-1" aria-hidden="true"></i> Tipo de Ação
         </label>

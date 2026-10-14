@@ -3,7 +3,6 @@ const {
     LifeSphereModel,
     RelevanceModel,
     DayPeriodModel,
-    PeriodicityModel,
     ActionTypeModel,
     ThemeOrganizationModel,
     ActivityStatusModel,
@@ -18,7 +17,6 @@ const {
     LIFE_SPHERES,
     RELEVANCE_OPTIONS,
     DAY_PERIODS,
-    PERIODICITY_OPTIONS,
     ACTION_TYPES,
     THEME_ORGANIZATIONS,
     activityListQuerySchema,
@@ -114,25 +112,16 @@ function listUrl(filter, page) {
 
 async function loadLookupOptions() {
     try {
-        const [
-            spheres,
-            allSphereColors,
-            relevances,
-            periods,
-            periodicities,
-            actionTypes,
-            themes,
-            statuses,
-        ] = await Promise.all([
-            LifeSphereModel.selectActiveOptionsWithColor(),
-            LifeSphereModel.selectAllWithColor(),
-            RelevanceModel.selectActiveOptions(),
-            DayPeriodModel.selectActiveOptions(),
-            PeriodicityModel.selectActiveOptions(),
-            ActionTypeModel.selectActiveOptions(),
-            ThemeOrganizationModel.selectActiveOptions(),
-            ActivityStatusModel.selectActiveOptionsWithStyle(),
-        ]);
+        const [spheres, allSphereColors, relevances, periods, actionTypes, themes, statuses] =
+            await Promise.all([
+                LifeSphereModel.selectActiveOptionsWithColor(),
+                LifeSphereModel.selectAllWithColor(),
+                RelevanceModel.selectActiveOptions(),
+                DayPeriodModel.selectActiveOptions(),
+                ActionTypeModel.selectActiveOptions(),
+                ThemeOrganizationModel.selectActiveOptions(),
+                ActivityStatusModel.selectActiveOptionsWithStyle(),
+            ]);
 
         const formattedThemes =
             themes.length > 0
@@ -152,9 +141,6 @@ async function loadLookupOptions() {
             lifeSphereColors: allSphereColors.length > 0 ? allSphereColors : spheresWithColor,
             relevanceOptions: relevances.length ? relevances.map((r) => r.name) : RELEVANCE_OPTIONS,
             dayPeriods: periods.length ? periods.map((p) => p.name) : DAY_PERIODS,
-            periodicityOptions: periodicities.length
-                ? periodicities.map((p) => p.name)
-                : PERIODICITY_OPTIONS,
             actionTypes: actionTypes.length ? actionTypes.map((a) => a.name) : ACTION_TYPES,
             themeOrganizations: formattedThemes,
             activityStatuses: statuses,
@@ -166,7 +152,6 @@ async function loadLookupOptions() {
             lifeSphereColors: LIFE_SPHERES_WITH_COLORS,
             relevanceOptions: RELEVANCE_OPTIONS,
             dayPeriods: DAY_PERIODS,
-            periodicityOptions: PERIODICITY_OPTIONS,
             actionTypes: ACTION_TYPES,
             themeOrganizations: THEME_ORGANIZATIONS.map((name, idx) => ({
                 id: idx + 1,
@@ -519,7 +504,6 @@ module.exports = {
             lifeSpheresWithColor: lookups.lifeSpheresWithColor,
             relevanceOptions: lookups.relevanceOptions,
             dayPeriods: lookups.dayPeriods,
-            periodicityOptions: lookups.periodicityOptions,
             actionTypes: lookups.actionTypes,
             themeOrganizations: lookups.themeOrganizations,
             activityStatuses: lookups.activityStatuses,
@@ -538,7 +522,6 @@ module.exports = {
                 lifeSpheresWithColor: lookups.lifeSpheresWithColor,
                 relevanceOptions: lookups.relevanceOptions,
                 dayPeriods: lookups.dayPeriods,
-                periodicityOptions: lookups.periodicityOptions,
                 actionTypes: lookups.actionTypes,
                 themeOrganizations: lookups.themeOrganizations,
                 activityStatuses: lookups.activityStatuses,
@@ -580,7 +563,6 @@ module.exports = {
                 final_deadline: finalDate,
                 day_period: activity.day_period || "",
                 scheduled_time: scheduledTime,
-                periodicity: activity.periodicity || "",
                 action_type: activity.action_type || "",
                 theme_organization: activity.theme_organization || "",
                 notes: activity.notes || "",
@@ -591,7 +573,6 @@ module.exports = {
             lifeSpheresWithColor: lookups.lifeSpheresWithColor,
             relevanceOptions: lookups.relevanceOptions,
             dayPeriods: lookups.dayPeriods,
-            periodicityOptions: lookups.periodicityOptions,
             actionTypes: lookups.actionTypes,
             themeOrganizations: lookups.themeOrganizations,
             activityStatuses: lookups.activityStatuses,
@@ -612,7 +593,6 @@ module.exports = {
                 lifeSpheresWithColor: lookups.lifeSpheresWithColor,
                 relevanceOptions: lookups.relevanceOptions,
                 dayPeriods: lookups.dayPeriods,
-                periodicityOptions: lookups.periodicityOptions,
                 actionTypes: lookups.actionTypes,
                 themeOrganizations: lookups.themeOrganizations,
                 activityStatuses: lookups.activityStatuses,

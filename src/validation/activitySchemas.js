@@ -17,17 +17,6 @@ const RELEVANCE_OPTIONS = ["Prioridade", "Normal", "Baixa", "Backlog"];
 
 const DAY_PERIODS = ["1 - Manhã", "2 - Tarde", "3 - Noite"];
 
-const PERIODICITY_OPTIONS = [
-    "Única",
-    "Diária",
-    "Semanal",
-    "Quinzenal",
-    "Mensal",
-    "Bimestral",
-    "Semestral",
-    "Anual",
-];
-
 const ACTION_TYPES = [
     "Compromisso",
     "Tarefa",
@@ -123,13 +112,6 @@ const activityFormSchema = z.object({
             const parts = val.trim().split(":");
             return `${parts[0].padStart(2, "0")}:${parts[1].padStart(2, "0")}:00`;
         }),
-    periodicity: z
-        .string()
-        .trim()
-        .max(50)
-        .optional()
-        .or(z.literal(""))
-        .transform((val) => (val && val.trim() !== "" ? val.trim() : null)),
     action_type: z
         .string()
         .trim()
@@ -351,7 +333,6 @@ module.exports = {
     LIFE_SPHERES,
     RELEVANCE_OPTIONS,
     DAY_PERIODS,
-    PERIODICITY_OPTIONS,
     ACTION_TYPES,
     THEME_ORGANIZATIONS,
     activityListQuerySchema,

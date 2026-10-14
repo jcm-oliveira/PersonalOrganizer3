@@ -86,10 +86,10 @@
                             <span class="activity-th-label">Horário</span>
                         </span>
                     </th>
-                    <th style="min-width: 95px;">
+                    <th style="min-width: 130px;">
                         <span class="activity-th-content">
                             <i class="fas fa-redo-alt activity-th-icon" aria-hidden="true"></i>
-                            <span class="activity-th-label">Periodicidade</span>
+                            <span class="activity-th-label">Repetição</span>
                         </span>
                     </th>
                     <th style="min-width: 110px;">
@@ -196,9 +196,9 @@
                             <%= act.scheduled_time ? act.scheduled_time.slice(0, 5) : '-' %>
                         </td>
 
-                        <!-- Periodicidade -->
+                        <!-- Repetição (regra da atividade recorrente) -->
                         <td class="align-middle text-center">
-                            <%= act.periodicity || '-' %>
+                            <%= act.recurrence_description || '-' %>
                         </td>
 
                         <!-- Tipo de Ação -->

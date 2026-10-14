@@ -210,6 +210,8 @@ describe("Recorrência de atividades (RRULE)", () => {
             assert.match(res.text, /value="WE" autocomplete="off" checked/);
             assert.doesNotMatch(res.text, /value="FR" autocomplete="off" checked/);
             assert.match(res.text, /src="\/scripts\/activity-form.js"/);
+            // Periodicidade foi substituída pela Repetição
+            assert.doesNotMatch(res.text, /name="periodicity"|for="periodicity"/);
             assert.doesNotMatch(res.text, /<script>/); // sem script inline (CSP)
         });
 
@@ -223,6 +225,12 @@ describe("Recorrência de atividades (RRULE)", () => {
             const res = await request(app).get("/cms-Activity-Q").expect(200);
 
             assert.match(res.text, /title="Repete: Todo mês, no dia 15"/);
+            assert.match(res.text, /<span class="activity-th-label">Repetição<\/span>/);
+            assert.doesNotMatch(res.text, /activity-th-label">Periodicidade/);
+            assert.match(
+                res.text,
+                /<td class="align-middle text-center">\s*Todo mês, no dia 15\s*<\/td>/,
+            );
             assert.match(
                 res.text,
                 /data-target="#occurrenceModal"[\s\S]*?data-activity-id="20"[\s\S]*?data-next-occurrence="2026-11-15"/,

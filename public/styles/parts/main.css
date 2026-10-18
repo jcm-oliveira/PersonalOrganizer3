@@ -796,3 +796,217 @@ a.hbar-label:focus {
         display: none !important;
     }
 }
+
+/* ---------- Calendário: botões discretos ---------- */
+
+#activityCalendar .fc-toolbar .btn-primary {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #495057;
+    background-color: #ffffff;
+    border-color: #dee2e6;
+    box-shadow: none;
+}
+
+#activityCalendar .fc-toolbar .btn-primary:hover {
+    color: #212529;
+    background-color: #f1f3f5;
+    border-color: #ced4da;
+}
+
+#activityCalendar .fc-toolbar .btn-primary:focus,
+#activityCalendar .fc-toolbar .btn-primary:focus-visible {
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* Visão selecionada (Mês / Semana / Lista) */
+#activityCalendar .fc-toolbar .btn-primary.active,
+#activityCalendar .fc-toolbar .btn-primary:not(:disabled):not(.disabled):active {
+    color: #0056b3;
+    background-color: #e7f1ff;
+    border-color: #b8daff;
+    box-shadow: none;
+}
+
+/* "Hoje" quando o dia atual já está na tela */
+#activityCalendar .fc-toolbar .btn-primary:disabled {
+    color: #adb5bd;
+    background-color: #ffffff;
+    border-color: #e9ecef;
+    opacity: 1;
+}
+
+#activityCalendar .fc-toolbar .fa {
+    font-size: 0.8rem;
+}
+
+#activityCalendar .fc-toolbar .fc-button-group > .btn + .btn {
+    margin-left: -1px;
+}
+
+/* Texto curto do selo de dia relativo: só no celular */
+.calendar-relative-day__short {
+    display: none;
+}
+
+/* ---------- Calendário no celular (Mês, Semana e Lista) ---------- */
+
+@media (max-width: 767.98px) {
+    .calendar-legend {
+        font-size: 0.75rem;
+        gap: 0.35rem 0.75rem;
+    }
+
+    #activityCalendar {
+        font-size: 0.8rem;
+    }
+
+    /* Barra superior: título numa linha, botões na linha de baixo */
+    #activityCalendar .fc-header-toolbar {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    #activityCalendar .fc-header-toolbar .fc-toolbar-chunk:nth-child(2) {
+        order: -1;
+        flex: 1 0 100%;
+        text-align: center;
+    }
+
+    #activityCalendar .fc-toolbar-title {
+        font-size: 1.1rem;
+    }
+
+    #activityCalendar .fc-toolbar .btn-primary {
+        padding: 0.3rem 0.55rem;
+        font-size: 0.8rem;
+    }
+
+    /* Mês: atividades em barras finas, sem horário; "+N" abre a lista do dia */
+    #activityCalendar .fc-daygrid-day-number {
+        padding: 2px 4px;
+        font-size: 0.75rem;
+    }
+
+    #activityCalendar .fc-daygrid-event {
+        margin-top: 1px;
+        font-size: 0.68rem;
+        line-height: 1.25;
+    }
+
+    #activityCalendar .fc-daygrid-event .fc-event-time {
+        display: none;
+    }
+
+    #activityCalendar .fc-daygrid-event .fc-event-title {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    #activityCalendar .fc-daygrid-more-link {
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    #activityCalendar .fc-daygrid-day-frame {
+        min-height: 3.5rem;
+    }
+
+    /* Semana: cabeçalho compacto, selo curto embaixo do dia, eixo de horas estreito */
+    #activityCalendar .fc-col-header-cell-cushion {
+        display: block;
+        padding: 2px 0;
+        font-size: 0.72rem;
+        line-height: 1.2;
+    }
+
+    #activityCalendar .fc-col-header-cell .calendar-relative-day {
+        display: block;
+        margin: 0 auto 3px;
+        width: fit-content;
+        padding: 0 0.3rem;
+        font-size: 0.62rem;
+    }
+
+    #activityCalendar .fc-col-header-cell .calendar-relative-day__full {
+        display: none;
+    }
+
+    #activityCalendar .fc-col-header-cell .calendar-relative-day__short {
+        display: inline;
+    }
+
+    #activityCalendar .fc-timegrid-axis-cushion,
+    #activityCalendar .fc-timegrid-slot-label-cushion {
+        padding: 0 2px;
+        font-size: 0.65rem;
+    }
+
+    #activityCalendar .fc-timegrid-event {
+        font-size: 0.65rem;
+        line-height: 1.2;
+    }
+
+    #activityCalendar .fc-timegrid-event .fc-event-main {
+        padding: 1px 2px;
+    }
+
+    #activityCalendar .fc-timegrid-event .fc-event-title {
+        overflow-wrap: anywhere;
+    }
+
+    /* Lista: cabeçalho do dia em duas linhas quando faltar espaço */
+    #activityCalendar .fc-list-day-cushion {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.15rem 0.4rem;
+        padding: 0.4rem 0.6rem;
+    }
+
+    #activityCalendar .fc-list-day-side-text {
+        margin-left: auto;
+        font-weight: 500;
+        color: #6c757d;
+    }
+
+    #activityCalendar .fc-list-event td {
+        padding: 0.45rem 0.5rem;
+    }
+
+    #activityCalendar .fc-list-event-time {
+        width: 1%;
+        white-space: nowrap;
+        font-size: 0.75rem;
+        color: #6c757d;
+    }
+
+    #activityCalendar .fc-list-event-graphic {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    #activityCalendar .fc-list-event-title {
+        overflow-wrap: anywhere;
+    }
+}
+
+/* Mês: o horário nunca é cortado; o título é que recebe reticências */
+#activityCalendar .fc-daygrid-event .fc-event-main-frame {
+    min-width: 0;
+}
+
+#activityCalendar .fc-daygrid-event .fc-event-time {
+    flex-shrink: 0;
+}
+
+#activityCalendar .fc-daygrid-event .fc-event-title-container,
+#activityCalendar .fc-daygrid-event .fc-event-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

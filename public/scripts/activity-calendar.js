@@ -52,6 +52,39 @@
         return days > 0 ? `em ${days} dias` : `há ${-days} dias`;
     }
 
+    // Versão curta para colunas estreitas (celular, visão semanal)
+    function relativeDayShortLabel(days) {
+        if (days === 0) return "Hoje";
+        if (days === 1) return "Amanhã";
+        if (days === -1) return "Ontem";
+        return days > 0 ? `+${days}d` : `−${-days}d`;
+    }
+
+    // Celular / tablet em pé: mesmo ponto de quebra da consulta de atividades
+    const MOBILE_QUERY = window.matchMedia("(max-width: 767.98px)");
+
+    // Opções que mudam com o tamanho da tela (chamado ao trocar de visão e ao redimensionar)
+    function applyResponsiveOptions(calendar) {
+        const mobile = MOBILE_QUERY.matches;
+        const viewType = calendar.view ? calendar.view.type : "";
+        const wanted = {
+            dayMaxEvents: mobile ? 2 : 4,
+            // Semana no celular: grade com rolagem própria, começando às 07:00
+            height: mobile && viewType === "timeGridWeek" ? 620 : "auto",
+        };
+        let heightChanged = false;
+        Object.entries(wanted).forEach(([name, value]) => {
+            if (calendar.getOption(name) !== value) {
+                calendar.setOption(name, value);
+                if (name === "height") heightChanged = true;
+            }
+        });
+        // Ao mudar a altura a grade volta ao topo (00:00); reposiciona no início do dia útil
+        if (heightChanged && viewType === "timeGridWeek") {
+            window.setTimeout(() => calendar.scrollToTime("07:00:00"), 0);
+        }
+    }
+
     function showMessage(box, type, text) {
         if (!box) return;
         box.className = `alert alert-${type}`;
@@ -70,7 +103,15 @@
         badge.className = "calendar-relative-day";
         if (days === 0) badge.classList.add("calendar-relative-day--today");
         else if (days < 0) badge.classList.add("calendar-relative-day--past");
-        badge.textContent = relativeDayLabel(days);
+        badge.title = relativeDayLabel(days);
+        // Texto completo e curto; o CSS escolhe qual mostrar conforme a largura
+        const full = document.createElement("span");
+        full.className = "calendar-relative-day__full";
+        full.textContent = relativeDayLabel(days);
+        const short = document.createElement("span");
+        short.className = "calendar-relative-day__short";
+        short.textContent = relativeDayShortLabel(days);
+        badge.append(full, short);
         target.insertAdjacentElement("afterend", badge);
     }
 
@@ -116,7 +157,16 @@
             buttonText: { listMonth: "Lista" },
             height: "auto",
             nowIndicator: true,
-            dayMaxEvents: 4,
+            dayMaxEvents: MOBILE_QUERY.matches ? 2 : 4,
+            allDayText: "Dia todo",
+            views: {
+                // Cabeçalho curto ("seg. 19"), que cabe em colunas estreitas
+                timeGridWeek: {
+                    dayHeaderFormat: { weekday: "short", day: "numeric" },
+                    scrollTime: "07:00:00",
+                },
+            },
+            windowResize: () => applyResponsiveOptions(calendar),
             navLinks: true,
             eventDisplay: "block",
             eventTimeFormat: { hour: "2-digit", minute: "2-digit", hour12: false },
@@ -188,7 +238,10 @@
                 }
             },
             dayHeaderDidMount: addRelativeDay,
-            datesSet: (info) => writeStorage(VIEW_STORAGE_KEY, info.view.type),
+            datesSet: (info) => {
+                writeStorage(VIEW_STORAGE_KEY, info.view.type);
+                applyResponsiveOptions(calendar);
+            },
         });
 
         if (statusFilter) {

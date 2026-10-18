@@ -1,117 +1,134 @@
 <%#
     Detalhes da atividade: usado na página de visualização (cms-Activity-V) e no
     pop-up de visualização (cms-Activity-V-modal, carregado em /cms-Activity-V/:id/detalhes).
+    Organização por afinidade: cabeçalho (o quê + quando), Agenda, Classificação e Anotações.
     Sem style="" inline (bloqueado pela CSP): as cores vêm de data-* e são aplicadas
     por /scripts/sphere-colors.js.
 %>
-<div class="activity-view-badges mb-3">
-    <span class="badge badge-pill color-badge"
-        data-bg-color="<%= activity.status_color_code %>" data-text-color="auto">
-        <%= activity.status_name || (activity.status === 1 ? 'Ativo' : 'Inativo') %>
-    </span>
-    <span class="badge badge-pill <%= activity.traffic_light_class %> ml-1">
-        <%= activity.next_activity_day_label %>
-    </span>
-    <% if (activity.recurrence_description) { %>
-        <span class="badge badge-pill badge-light border ml-1">
-            <i class="fas fa-redo-alt mr-1" aria-hidden="true"></i> Recorrente
-        </span>
-    <% } %>
-</div>
+<%
+    const relativeDays = (days) => {
+        if (days === null || days === undefined) return '';
+        if (days === 0) return 'hoje';
+        if (days === 1) return 'amanhã';
+        if (days === -1) return 'ontem';
+        return days > 0 ? `em ${days} dias` : `há ${-days} dias`;
+    };
+    const timeText = activity.scheduled_time ? activity.scheduled_time.slice(0, 5) : null;
+    const periodText = activity.day_period ? activity.day_period.replace(/^\d+\s*-\s*/, '') : null;
+%>
+<article class="activity-view">
+    <!-- Cabeçalho: descrição e bloco da próxima data (com esfera e status) -->
+    <header class="av-header">
+        <h3 class="av-title"><%= activity.description %></h3>
 
-<div class="row">
-    <!-- Informações Obrigatórias -->
-    <div class="col-lg-6 mb-3">
-        <div class="card h-100">
-            <div class="card-header bg-light font-weight-bold">
-                <i class="fas fa-check-circle text-primary mr-1" aria-hidden="true"></i> Informações Obrigatórias
+        <div class="av-next">
+            <i class="far fa-calendar-alt av-next__icon" aria-hidden="true"></i>
+            <div class="av-next__body">
+                <div class="av-next__date">
+                    <%= activity.next_activity_date_br || '-' %><% if (timeText) { %> · <%= timeText %><% } %>
+                    <span class="badge badge-pill <%= activity.traffic_light_class %> av-next__badge">
+                        <%= activity.next_activity_day_label %>
+                    </span>
+                </div>
+                <div class="av-next__hint <%= activity.days_next_activity < 0 ? 'text-danger' : '' %>">
+                    Próxima atividade<% if (activity.days_next_activity !== null) { %> · <%= relativeDays(activity.days_next_activity) %><% } %>
+                </div>
             </div>
-            <div class="card-body">
-                <dl class="row mb-0 activity-view-list">
-                    <dt class="col-sm-5 text-muted">Esfera da Vida:</dt>
-                    <dd class="col-sm-7 font-weight-bold">
-                        <% if (activity.life_sphere_color) { %>
-                            <span class="color-dot mr-1" data-bg-color="<%= activity.life_sphere_color %>" aria-hidden="true"></span>
-                        <% } %>
-                        <%= activity.life_sphere %>
-                    </dd>
-
-                    <dt class="col-sm-5 text-muted">Descrição:</dt>
-                    <dd class="col-sm-7"><%= activity.description %></dd>
-
-                    <dt class="col-sm-5 text-muted">Relevância:</dt>
-                    <dd class="col-sm-7">
-                        <span class="badge badge-info"><%= activity.relevance %></span>
-                    </dd>
-
-                    <dt class="col-sm-5 text-muted">Próxima Atividade:</dt>
-                    <dd class="col-sm-7 font-weight-bold">
-                        <%= activity.next_activity_date_br || '-' %>
-                        <% if (activity.days_next_activity !== null) { %>
-                            <span class="small font-weight-normal <%= activity.days_next_activity < 0 ? 'text-danger' : 'text-muted' %>">
-                                (<%= activity.days_next_activity %> dias)
-                            </span>
-                        <% } %>
-                    </dd>
-
-                    <dt class="col-sm-5 text-muted">Prazo Final:</dt>
-                    <dd class="col-sm-7">
-                        <%= activity.final_deadline_br || '-' %>
-                        <% if (activity.days_final_deadline !== null) { %>
-                            <span class="small text-muted">(<%= activity.days_final_deadline %> dias)</span>
-                        <% } %>
-                    </dd>
-                </dl>
+            <!-- Coluna à direita: esfera, status e repetição, alinhados à direita -->
+            <div class="av-next__meta">
+                <span class="av-sphere">
+                    <% if (activity.life_sphere_color) { %>
+                        <span class="color-dot" data-bg-color="<%= activity.life_sphere_color %>" aria-hidden="true"></span>
+                    <% } %>
+                    <%= activity.life_sphere %>
+                </span>
+                <!-- Status no mesmo padrão neutro da consulta (não compete com o selo do dia) -->
+                <span class="badge activity-status-badge">
+                    <%= activity.status_name || (activity.status === 1 ? 'Ativo' : 'Inativo') %>
+                </span>
+                <% if (activity.recurrence_description) { %>
+                    <span class="av-recurrent">
+                        <i class="fas fa-redo-alt" aria-hidden="true"></i> Recorrente
+                    </span>
+                <% } %>
             </div>
         </div>
-    </div>
+    </header>
 
-    <!-- Informações Complementares -->
-    <div class="col-lg-6 mb-3">
-        <div class="card h-100">
-            <div class="card-header bg-light font-weight-bold">
-                <i class="fas fa-info-circle text-primary mr-1" aria-hidden="true"></i> Informações Complementares
-            </div>
-            <div class="card-body">
-                <dl class="row mb-0 activity-view-list">
-                    <dt class="col-sm-5 text-muted">Período do Dia:</dt>
-                    <dd class="col-sm-7"><%= activity.day_period || '-' %></dd>
-
-                    <dt class="col-sm-5 text-muted">Horário:</dt>
-                    <dd class="col-sm-7"><%= activity.scheduled_time ? activity.scheduled_time.slice(0, 5) : '-' %></dd>
-
-                    <dt class="col-sm-5 text-muted">Repetição:</dt>
-                    <dd class="col-sm-7">
+    <div class="row">
+        <!-- Agenda: quando acontece -->
+        <section class="col-lg-6 av-section" aria-labelledby="av-agenda-<%= activity.id %>">
+            <h4 class="av-section__title" id="av-agenda-<%= activity.id %>">Agenda</h4>
+            <dl class="av-list">
+                <div class="av-item">
+                    <dt><i class="far fa-clock" aria-hidden="true"></i> Horário</dt>
+                    <dd>
+                        <%= timeText || 'Sem horário definido' %><% if (periodText) { %>
+                            <span class="av-muted">· <%= periodText %></span><% } %>
+                    </dd>
+                </div>
+                <div class="av-item">
+                    <dt><i class="far fa-calendar-check" aria-hidden="true"></i> Prazo final</dt>
+                    <dd>
+                        <% if (activity.final_deadline_br) { %>
+                            <%= activity.final_deadline_br %>
+                            <span class="av-muted <%= activity.days_final_deadline < 0 ? 'text-danger' : '' %>">
+                                · <%= relativeDays(activity.days_final_deadline) %>
+                            </span>
+                        <% } else { %>
+                            <span class="av-muted">Sem prazo final</span>
+                        <% } %>
+                    </dd>
+                </div>
+                <div class="av-item">
+                    <dt><i class="fas fa-redo-alt" aria-hidden="true"></i> Repetição</dt>
+                    <dd>
                         <% if (activity.recurrence_description) { %>
-                            <i class="fas fa-redo-alt text-muted mr-1" aria-hidden="true"></i>
                             <%= activity.recurrence_description %>
                             <% if (activity.next_occurrence_date) { %>
-                                <span class="d-block small text-muted">
+                                <span class="d-block av-muted">
                                     Ocorrência seguinte: <%= activity.next_occurrence_date.split('-').reverse().join('/') %>
                                 </span>
                             <% } %>
                         <% } else { %>
-                            Não se repete
+                            <span class="av-muted">Não se repete</span>
                         <% } %>
                     </dd>
+                </div>
+            </dl>
+        </section>
 
-                    <dt class="col-sm-5 text-muted">Tipo de Ação:</dt>
-                    <dd class="col-sm-7"><%= activity.action_type || '-' %></dd>
+        <!-- Classificação: do que se trata -->
+        <section class="col-lg-6 av-section" aria-labelledby="av-class-<%= activity.id %>">
+            <h4 class="av-section__title" id="av-class-<%= activity.id %>">Classificação</h4>
+            <dl class="av-list">
+                <div class="av-item">
+                    <dt><i class="fas fa-heart" aria-hidden="true"></i> Esfera da Vida</dt>
+                    <dd><%= activity.life_sphere %></dd>
+                </div>
+                <div class="av-item">
+                    <dt><i class="fas fa-flag" aria-hidden="true"></i> Relevância</dt>
+                    <dd><%= activity.relevance %></dd>
+                </div>
+                <div class="av-item">
+                    <dt><i class="fas fa-layer-group" aria-hidden="true"></i> Tipo de Ação</dt>
+                    <dd><%- activity.action_type ? '' : '<span class="av-muted">Não informado</span>' %><%= activity.action_type || '' %></dd>
+                </div>
+                <div class="av-item">
+                    <dt><i class="fas fa-folder" aria-hidden="true"></i> Organização por Tema</dt>
+                    <dd><%- activity.theme_organization ? '' : '<span class="av-muted">Não informado</span>' %><%= activity.theme_organization || '' %></dd>
+                </div>
+            </dl>
+        </section>
+    </div>
 
-                    <dt class="col-sm-5 text-muted">Organização por Tema:</dt>
-                    <dd class="col-sm-7"><%= activity.theme_organization || '-' %></dd>
-                </dl>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Anotações -->
-<div class="card mb-0">
-    <div class="card-header bg-light font-weight-bold">
-        <i class="fas fa-sticky-note text-primary mr-1" aria-hidden="true"></i> Anotações / Próximas Atividades
-    </div>
-    <div class="card-body">
-        <p class="mb-0 activity-notes"><%= activity.notes || 'Nenhuma anotação registrada.' %></p>
-    </div>
-</div>
+    <!-- Anotações -->
+    <section class="av-section av-section--notes" aria-labelledby="av-notes-<%= activity.id %>">
+        <h4 class="av-section__title" id="av-notes-<%= activity.id %>">Anotações</h4>
+        <% if (activity.notes) { %>
+            <p class="mb-0 activity-notes"><%= activity.notes %></p>
+        <% } else { %>
+            <p class="mb-0 av-muted">Nenhuma anotação registrada.</p>
+        <% } %>
+    </section>
+</article>

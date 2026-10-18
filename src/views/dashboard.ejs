@@ -1,17 +1,24 @@
 <%- include('parts/head') %>
 
 <main class="container py-4">
-    <div class="row align-items-center mb-4">
-        <div class="col-md-7">
-            <h1 class="h3 mb-1">Dashboard</h1>
-            <p class="text-muted">Visão geral e status das atividades em andamento.</p>
+    <!-- Cabeçalho no padrão das telas de consulta: botões pequenos só com ícone -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="h3 mb-1 text-dark">Dashboard</h1>
+            <p class="text-muted mb-0">Visão geral e status das atividades em andamento.</p>
         </div>
-        <div class="col-md-5 text-md-right">
-            <a class="btn btn-primary" href="/cms-Activity-Q">
-                <i class="fas fa-tasks mr-1" aria-hidden="true"></i> Gerenciar Atividades
+        <div class="d-flex align-items-center flex-shrink-0 ml-2">
+            <a class="btn btn-sm btn-outline-secondary mr-1" href="/cms-Activity-Q"
+                title="Gerenciar Atividades" aria-label="Gerenciar Atividades">
+                <i class="fas fa-tasks" aria-hidden="true"></i>
             </a>
-            <a class="btn btn-outline-primary ml-1" href="/cms-Activity-C">
-                <i class="fas fa-plus mr-1" aria-hidden="true"></i> Nova Atividade
+            <a class="btn btn-sm btn-outline-secondary mr-1" href="/cms-Calendar"
+                title="Calendário" aria-label="Calendário">
+                <i class="far fa-calendar-alt" aria-hidden="true"></i>
+            </a>
+            <a class="btn btn-sm btn-outline-primary" href="/cms-Activity-C"
+                title="Nova Atividade" aria-label="Nova Atividade">
+                <i class="fas fa-plus" aria-hidden="true"></i>
             </a>
         </div>
     </div>

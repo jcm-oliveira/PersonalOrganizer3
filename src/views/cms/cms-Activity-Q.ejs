@@ -33,14 +33,6 @@
     <div class="table-responsive shadow-sm bg-white rounded activity-table-wrap">
         <table class="table table-sm table-hover table-activity mb-0">
             <thead>
-                <!-- Linha superior de agrupamento de cabeçalho -->
-                <tr class="table-activity-group">
-                    <th colspan="5" class="text-left px-3">INFORMAÇÕES OBRIGATÓRIAS</th>
-                    <th colspan="5" class="text-left px-3">INFORMAÇÕES COMPLEMENTARES</th>
-                    <th colspan="1" class="text-center">STATUS</th>
-                    <th colspan="3" class="text-center">FAROL</th>
-                    <th colspan="1" class="text-center">AÇÕES</th>
-                </tr>
                 <!-- Linha inferior de colunas específicas com ícones acima dos textos -->
                 <tr class="text-center">
                     <th style="min-width: 220px;" class="text-left">
@@ -67,10 +59,22 @@
                             <span class="activity-th-label">Próxima Atividade</span>
                         </span>
                     </th>
+                    <th style="min-width: 70px;">
+                        <span class="activity-th-content">
+                            <i class="fas fa-stopwatch activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Faltam (dias)<span class="sr-only"> para a próxima atividade</span></span>
+                        </span>
+                    </th>
                     <th style="min-width: 100px;">
                         <span class="activity-th-content">
                             <i class="far fa-calendar-check activity-th-icon" aria-hidden="true"></i>
                             <span class="activity-th-label">Prazo Final</span>
+                        </span>
+                    </th>
+                    <th style="min-width: 70px;">
+                        <span class="activity-th-content">
+                            <i class="fas fa-hourglass-half activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Faltam (dias)<span class="sr-only"> para o prazo final</span></span>
                         </span>
                     </th>
 
@@ -111,22 +115,10 @@
                             <span class="activity-th-label">Status</span>
                         </span>
                     </th>
-                    <th style="min-width: 70px;">
-                        <span class="activity-th-content">
-                            <i class="fas fa-stopwatch activity-th-icon" aria-hidden="true"></i>
-                            <span class="activity-th-label">Dias próx.</span>
-                        </span>
-                    </th>
-                    <th style="min-width: 70px;">
-                        <span class="activity-th-content">
-                            <i class="fas fa-hourglass-half activity-th-icon" aria-hidden="true"></i>
-                            <span class="activity-th-label">Dias prazo</span>
-                        </span>
-                    </th>
                     <th style="min-width: 115px;">
                         <span class="activity-th-content">
-                            <i class="fas fa-calendar-day activity-th-icon" aria-hidden="true"></i>
-                            <span class="activity-th-label">Dia Próx.</span>
+                            <i class="fas fa-traffic-light activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Farol</span>
                         </span>
                     </th>
                     <th style="min-width: 170px;">
@@ -200,9 +192,20 @@
                             <%= act.next_activity_date_br || '-' %>
                         </td>
 
+                        <!-- Faltam (dias) para a próxima atividade -->
+                        <td class="c-days-next align-middle text-center">
+                            <span class="d-inline-block rounded-circle mr-1" style="width: 8px; height: 8px; background-color: <%= act.traffic_light_dot_color %>;"></span>
+                            <%= act.days_next_activity !== null ? act.days_next_activity : '-' %>
+                        </td>
+
                         <!-- Prazo Final -->
                         <td class="c-deadline align-middle text-center">
                             <%= act.final_deadline_br || '-' %>
+                        </td>
+
+                        <!-- Faltam (dias) para o prazo final -->
+                        <td class="c-days-deadline align-middle text-center">
+                            <%= act.days_final_deadline !== null ? act.days_final_deadline : '-' %>
                         </td>
 
                         <!-- Período do dia -->
@@ -237,18 +240,7 @@
                             </span>
                         </td>
 
-                        <!-- Dias Próx. Atividade com indicador circular (dot) -->
-                        <td class="c-days-next align-middle text-center">
-                            <span class="d-inline-block rounded-circle mr-1" style="width: 8px; height: 8px; background-color: <%= act.traffic_light_dot_color %>;"></span>
-                            <%= act.days_next_activity !== null ? act.days_next_activity : '-' %>
-                        </td>
-
-                        <!-- Dias Prazo Final -->
-                        <td class="c-days-deadline align-middle text-center">
-                            <%= act.days_final_deadline !== null ? act.days_final_deadline : '-' %>
-                        </td>
-
-                        <!-- Dia Próx. Atividade (ATRASADO, HOJE, AMANHÃ, dia da semana ou MAIS DE 15 DIAS) -->
+                        <!-- Farol: ATRASADO, HOJE, AMANHÃ, dia da semana ou MAIS DE 15 DIAS -->
                         <td class="c-dayprox align-middle text-center font-weight-bold">
                             <span class="badge <%= act.traffic_light_class %>">
                                 <%= act.next_activity_day_label %>

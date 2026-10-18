@@ -198,18 +198,6 @@ main {
     padding: 0.45rem 0.4rem;
 }
 
-/* Linha superior de agrupamento de cabeçalho */
-.table-activity thead .table-activity-group th {
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: #6c757d;
-    background-color: #eef2f6;
-    border-bottom: 2px solid #dee2e6;
-    padding: 0.35rem 0.5rem;
-}
-
 /* Ícone acima do texto no cabeçalho */
 .activity-th-content {
     display: flex;
@@ -562,10 +550,6 @@ a.hbar-label:focus {
 .table-activity thead th {
     border-top: 0;
     border-bottom: 1px solid #dee2e6;
-}
-
-.table-activity thead .table-activity-group th {
-    border-bottom: 1px solid #e9ecef;
 }
 
 .table-activity tbody td {

@@ -148,6 +148,20 @@
                     .filter(Boolean)
                     .join(" · ");
             },
+            // Clique abre a visualização em pop-up (Ctrl/Shift + clique abre a página em nova aba)
+            eventClick: (info) => {
+                const { jsEvent } = info;
+                if (
+                    jsEvent.ctrlKey ||
+                    jsEvent.metaKey ||
+                    jsEvent.shiftKey ||
+                    !window.ActivityViewModal
+                ) {
+                    return;
+                }
+                jsEvent.preventDefault();
+                window.ActivityViewModal.open(info.event.extendedProps.activityId);
+            },
             eventDrop: async (info) => {
                 const event = info.event;
                 const when = event.allDay

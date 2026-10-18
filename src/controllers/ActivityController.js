@@ -368,6 +368,30 @@ function recurrenceInfo(act) {
     };
 }
 
+// Atividade com os campos calculados exibidos na visualização (página e pop-up)
+async function loadActivityForView(rawId) {
+    const id = parseId(rawId);
+    const [rawActivity, lookups] = await Promise.all([
+        Activity.selectActivityById(id),
+        loadLookupOptions(),
+    ]);
+    if (!rawActivity) {
+        throw new HttpError(404, "Atividade não encontrada.");
+    }
+
+    const statusMap = new Map((lookups.activityStatuses || []).map((s) => [s.id, s]));
+    const resolveSphereColor = buildSphereColorResolver(lookups.lifeSphereColors);
+    const statusObj = statusMap.get(rawActivity.status);
+    return {
+        ...enrichActivity(rawActivity),
+        status_name: statusObj?.name || (rawActivity.status === 1 ? "Ativo" : "Inativo"),
+        status_color_code:
+            statusObj?.color_code || (rawActivity.status === 1 ? "#28a745" : "#6c757d"),
+        ...resolveSphereColor(rawActivity.life_sphere),
+        ...recurrenceInfo(rawActivity),
+    };
+}
+
 // "all" = sem filtro | "visible" = status visíveis por padrão | número = id do status
 function toStatusCriteria(status) {
     if (status === STATUS_FILTER_ALL) return null;
@@ -457,33 +481,19 @@ module.exports = {
     //                 VIEW ROUTINE (V)
     //------------------------------------------------
 
+    // Página completa: abrir em nova aba ou link direto
     async loadViewPage(req, res) {
-        const id = parseId(req.params.id);
-        const [rawActivity, lookups] = await Promise.all([
-            Activity.selectActivityById(id),
-            loadLookupOptions(),
-        ]);
-        if (!rawActivity) {
-            throw new HttpError(404, "Atividade não encontrada.");
-        }
-
-        const statusMap = new Map((lookups.activityStatuses || []).map((s) => [s.id, s]));
-        const resolveSphereColor = buildSphereColorResolver(lookups.lifeSphereColors);
-        const enriched = enrichActivity(rawActivity);
-        const statusObj = statusMap.get(rawActivity.status);
-        const activity = {
-            ...enriched,
-            status_name: statusObj?.name || (rawActivity.status === 1 ? "Ativo" : "Inativo"),
-            status_color_code:
-                statusObj?.color_code || (rawActivity.status === 1 ? "#28a745" : "#6c757d"),
-            ...resolveSphereColor(rawActivity.life_sphere),
-            ...recurrenceInfo(rawActivity),
-        };
-
+        const activity = await loadActivityForView(req.params.id);
         return res.render("cms/cms-Activity-V", {
-            title: `Visualizar Atividade nº ${id}`,
+            title: `Visualizar Atividade nº ${activity.id}`,
             activity,
         });
+    },
+
+    // Fragmento HTML (sem layout) para o pop-up de visualização
+    async loadViewFragment(req, res) {
+        const activity = await loadActivityForView(req.params.id);
+        return res.render("cms/cms-Activity-V-fragment", { activity });
     },
 
     //------------------------------------------------

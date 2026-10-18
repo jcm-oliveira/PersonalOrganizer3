@@ -501,3 +501,298 @@ a.hbar-label:focus {
     font-size: 0.85em;
     margin-right: 0.3rem;
 }
+
+/* ---------- Visualização da atividade (página e pop-up) ---------- */
+
+.color-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    vertical-align: middle;
+}
+
+.activity-notes {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.activity-view-list dd {
+    overflow-wrap: anywhere;
+}
+
+/* Celular: o pop-up ocupa a tela inteira, com rolagem só no conteúdo */
+@media (max-width: 575.98px) {
+    .activity-view-modal .modal-dialog {
+        max-width: none;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+    }
+
+    .activity-view-modal .modal-content {
+        height: 100%;
+        border: 0;
+        border-radius: 0;
+    }
+
+    .activity-view-modal .modal-dialog-scrollable,
+    .activity-view-modal .modal-dialog-scrollable .modal-content {
+        max-height: 100%;
+    }
+
+    .activity-view-modal .modal-body {
+        padding: 0.75rem;
+    }
+
+    .activity-view-modal .modal-footer .btn {
+        flex: 1 1 0;
+    }
+}
+
+/* ---------- Consulta de atividades: tabela sem linhas verticais ---------- */
+
+.table-activity th,
+.table-activity td {
+    border-left: 0;
+    border-right: 0;
+}
+
+.table-activity thead th {
+    border-top: 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.table-activity thead .table-activity-group th {
+    border-bottom: 1px solid #e9ecef;
+}
+
+.table-activity tbody td {
+    border-top: 1px solid #edf0f2;
+}
+
+/* ---------- Botões de ícone discretos (ações por linha) ---------- */
+
+.row-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    font-size: 0.8rem;
+    line-height: 1;
+    opacity: 0.6;
+    cursor: pointer;
+    transition:
+        opacity 0.15s ease,
+        background-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.btn-icon:hover,
+.btn-icon:focus-visible {
+    opacity: 1;
+    background-color: rgba(127, 127, 127, 0.18);
+    color: inherit;
+    text-decoration: none;
+}
+
+.btn-icon:focus {
+    outline: none;
+}
+
+.btn-icon:focus-visible {
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5);
+}
+
+/* Linhas sem cor de esfera: realce azul ao passar o mouse */
+.table-activity tbody tr:not(.activity-row--sphere) .btn-icon {
+    color: #495057;
+}
+
+.table-activity tbody tr:not(.activity-row--sphere) .btn-icon:hover,
+.table-activity tbody tr:not(.activity-row--sphere) .btn-icon:focus-visible {
+    color: #007bff;
+    background-color: #e7f1ff;
+}
+
+/* Concluir ocorrência: um pouco mais visível, em verde */
+.btn-icon--success {
+    opacity: 0.85;
+}
+
+.table-activity tbody tr:not(.activity-row--sphere) .btn-icon--success,
+.table-activity tbody tr:not(.activity-row--sphere) .btn-icon--success:hover {
+    color: #28a745;
+}
+
+.table-activity tbody tr:not(.activity-row--sphere) .btn-icon--success:hover {
+    background-color: #e6f4ea;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn-icon {
+        transition: none;
+    }
+}
+
+/* ---------- Consulta de atividades no celular: cada linha vira um cartão ----------
+   Mesmo HTML da tabela, reorganizado por CSS. Mostra o essencial (descrição, selo
+   Dia Próx., resumo e ações); o restante fica no pop-up de visualização. */
+
+/* Resumo do cartão: só existe no celular */
+.table-activity .c-mobile-summary {
+    display: none;
+}
+
+@media (max-width: 767.98px) {
+    .activity-table-wrap {
+        overflow: visible;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .table-activity,
+    .table-activity tbody {
+        display: block;
+        width: 100%;
+    }
+
+    .table-activity thead {
+        display: none;
+    }
+
+    .table-activity tbody tr {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            "desc    dayprox"
+            "summary summary"
+            "actions actions";
+        /* Sem column-gap: em linhas "table-danger" só as células são pintadas */
+        column-gap: 0;
+        margin-bottom: 0.75rem;
+        border: 1px solid #e3e7eb;
+        border-radius: 10px;
+        background-color: #ffffff;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+    }
+
+    /* Linha sem atividades (mensagem) */
+    .table-activity tbody tr:only-child > td[colspan] {
+        grid-column: 1 / -1;
+    }
+
+    .table-activity tbody td {
+        display: block;
+        border: 0;
+        padding: 0;
+        text-align: left !important;
+        font-size: 0.9rem;
+    }
+
+    .table-activity .c-sphere,
+    .table-activity .c-relevance,
+    .table-activity .c-next,
+    .table-activity .c-deadline,
+    .table-activity .c-period,
+    .table-activity .c-time,
+    .table-activity .c-recurrence,
+    .table-activity .c-action,
+    .table-activity .c-theme,
+    .table-activity .c-status,
+    .table-activity .c-days-next,
+    .table-activity .c-days-deadline {
+        display: none;
+    }
+
+    .table-activity .c-desc {
+        grid-area: desc;
+        padding: 0.75rem 0.75rem 0.25rem 0.9rem;
+        font-size: 1rem;
+        line-height: 1.3;
+        overflow-wrap: anywhere;
+    }
+
+    .table-activity .c-dayprox {
+        grid-area: dayprox;
+        padding: 0.8rem 0.9rem 0 0;
+        text-align: right !important;
+    }
+
+    .table-activity .c-dayprox .badge {
+        font-size: 0.72rem;
+        padding: 0.35em 0.6em;
+    }
+
+    .table-activity .c-mobile-summary {
+        display: block;
+        grid-area: summary;
+        padding: 0 0.9rem 0.6rem;
+    }
+
+    .table-activity .card-line {
+        margin-top: 0.2rem;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+    }
+
+    .table-activity .card-line--date {
+        font-weight: 600;
+    }
+
+    .table-activity .card-line .fa-calendar-alt,
+    .table-activity .card-line .fa-redo-alt {
+        width: 1rem;
+        opacity: 0.7;
+    }
+
+    .table-activity .card-muted {
+        font-size: 0.82rem;
+        opacity: 0.8;
+    }
+
+    /* Ações: linha própria, botões em tamanho de toque */
+    .table-activity .c-actions {
+        grid-area: actions;
+        padding: 0.25rem 0.5rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .table-activity .row-actions {
+        display: flex;
+        justify-content: space-around;
+        gap: 0.25rem;
+    }
+
+    .table-activity .btn-icon {
+        width: 44px;
+        height: 40px;
+        font-size: 1rem;
+        opacity: 0.75;
+    }
+
+    .activity-pagination {
+        gap: 0.5rem;
+    }
+}
+
+/* Impressão: mantém a tabela */
+@media print {
+    .table-activity .c-mobile-summary {
+        display: none !important;
+    }
+}

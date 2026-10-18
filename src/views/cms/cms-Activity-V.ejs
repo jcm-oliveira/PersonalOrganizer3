@@ -1,130 +1,31 @@
 <%- include('../parts/head') %>
 
+<!-- Página de visualização: usada ao abrir em nova aba ou por link direto.
+     Nas telas de Atividades e Calendário, a visualização abre em pop-up. -->
 <main class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-1">Atividade nº <%= activity.id %></h1>
-            <span class="badge badge-pill badge-light font-weight-bold" style="<%= activity.status_color_code ? 'color: ' + activity.status_color_code + '; border: 1px solid currentColor;' : '' %>">
-                <%= activity.status_name || (activity.status === 1 ? 'Ativo' : 'Inativo') %>
-            </span>
-            <span class="badge badge-pill <%= activity.traffic_light_class %> ml-1">
-                <%= activity.next_activity_day_label %>
-            </span>
-        </div>
-        <div class="d-flex align-items-center">
-            <button type="button" class="btn btn-sm btn-outline-danger mr-1" data-toggle="modal" data-target="#deleteModal"
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+        <h1 class="h3 mb-2 mr-3">Atividade nº <%= activity.id %></h1>
+        <div class="d-flex flex-wrap align-items-center mb-2">
+            <button type="button" class="btn btn-sm btn-outline-danger mr-1 mb-1" data-toggle="modal" data-target="#deleteModal"
                 title="Excluir Atividade" aria-label="Excluir Atividade">
                 <i class="fas fa-trash-alt mr-1" aria-hidden="true"></i> Excluir
             </button>
-            <a class="btn btn-sm btn-outline-primary mr-1" href="/cms-Activity-U/<%= activity.id %>"
+            <a class="btn btn-sm btn-outline-primary mr-1 mb-1" href="/cms-Activity-U/<%= activity.id %>"
                 title="Editar Atividade" aria-label="Editar Atividade">
                 <i class="fas fa-pen mr-1" aria-hidden="true"></i> Editar
             </a>
-            <a class="btn btn-sm btn-outline-secondary" href="/cms-Activity-Q"
+            <a class="btn btn-sm btn-outline-secondary mb-1" href="/cms-Activity-Q"
                 title="Voltar à Lista" aria-label="Voltar à Lista">
                 <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Voltar
             </a>
         </div>
     </div>
 
-    <div class="row">
-        <!-- Coluna Esquerda: Informações Principais -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-light font-weight-bold">
-                    <i class="fas fa-check-circle text-primary mr-1" aria-hidden="true"></i> Informações Obrigatórias
-                </div>
-                <div class="card-body">
-                    <dl class="row mb-0">
-                        <dt class="col-sm-5 text-muted">Esfera da Vida:</dt>
-                        <dd class="col-sm-7 font-weight-bold">
-                            <% if (activity.life_sphere_color) { %>
-                                <span class="d-inline-block rounded-circle mr-1" style="width: 12px; height: 12px; vertical-align: middle; background-color: <%= activity.life_sphere_color %>;"></span>
-                            <% } %>
-                            <%= activity.life_sphere %>
-                        </dd>
-
-                        <dt class="col-sm-5 text-muted">Descrição:</dt>
-                        <dd class="col-sm-7"><%= activity.description %></dd>
-
-                        <dt class="col-sm-5 text-muted">Relevância:</dt>
-                        <dd class="col-sm-7">
-                            <span class="badge badge-info"><%= activity.relevance %></span>
-                        </dd>
-
-                        <dt class="col-sm-5 text-muted">Próxima Atividade:</dt>
-                        <dd class="col-sm-7 font-weight-bold">
-                            <%= activity.next_activity_date_formatted || '-' %>
-                            <% if (activity.days_next_activity !== null) { %>
-                                <span class="small <%= activity.days_next_activity < 0 ? 'text-danger' : 'text-muted' %>">
-                                    (<%= activity.days_next_activity %> dias)
-                                </span>
-                            <% } %>
-                        </dd>
-
-                        <dt class="col-sm-5 text-muted">Prazo Final:</dt>
-                        <dd class="col-sm-7">
-                            <%= activity.final_deadline_formatted || '-' %>
-                            <% if (activity.days_final_deadline !== null) { %>
-                                <span class="small text-muted">(<%= activity.days_final_deadline %> dias)</span>
-                            <% } %>
-                        </dd>
-                    </dl>
-                </div>
-            </div>
-        </div>
-
-        <!-- Coluna Direita: Informações Complementares -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-light font-weight-bold">
-                    <i class="fas fa-info-circle text-primary mr-1" aria-hidden="true"></i> Informações Complementares
-                </div>
-                <div class="card-body">
-                    <dl class="row mb-0">
-                        <dt class="col-sm-5 text-muted">Período do Dia:</dt>
-                        <dd class="col-sm-7"><%= activity.day_period || '-' %></dd>
-
-                        <dt class="col-sm-5 text-muted">Horário:</dt>
-                        <dd class="col-sm-7"><%= activity.scheduled_time ? activity.scheduled_time.slice(0, 5) : '-' %></dd>
-
-                        <dt class="col-sm-5 text-muted">Repetição:</dt>
-                        <dd class="col-sm-7">
-                            <% if (activity.recurrence_description) { %>
-                                <i class="fas fa-redo-alt text-muted mr-1" aria-hidden="true"></i>
-                                <%= activity.recurrence_description %>
-                                <% if (activity.next_occurrence_date) { %>
-                                    <span class="d-block small text-muted">
-                                        Ocorrência seguinte: <%= activity.next_occurrence_date.split('-').reverse().join('/') %>
-                                    </span>
-                                <% } %>
-                            <% } else { %>
-                                Não se repete
-                            <% } %>
-                        </dd>
-
-                        <dt class="col-sm-5 text-muted">Tipo de Ação:</dt>
-                        <dd class="col-sm-7"><%= activity.action_type || '-' %></dd>
-
-                        <dt class="col-sm-5 text-muted">Organização por Tema:</dt>
-                        <dd class="col-sm-7"><%= activity.theme_organization || '-' %></dd>
-                    </dl>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Anotações -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light font-weight-bold">
-            <i class="fas fa-sticky-note text-primary mr-1" aria-hidden="true"></i> Anotações / Próximas Atividades
-        </div>
-        <div class="card-body">
-            <p class="mb-0" style="white-space: pre-wrap;"><%= activity.notes || 'Nenhuma anotação registrada.' %></p>
-        </div>
-    </div>
+    <%- include('cms-Activity-V-details', { activity }) %>
 
     <%- include('cms-Activity-D', { activityId: activity.id }) %>
 </main>
+
+<script src="/scripts/sphere-colors.js" defer></script>
 
 <%- include('../parts/footer') %>

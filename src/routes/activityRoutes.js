@@ -9,6 +9,7 @@ routes.post("/cms-Activity-C", ActivityController.insertActivityPage);
 routes.get("/cms-Activity-C/:id", ActivityController.loadUpdatePage);
 routes.get("/cms-Activity-U/:id", ActivityController.loadUpdatePage);
 routes.get("/cms-Activity-V/:id", ActivityController.loadViewPage);
+routes.get("/cms-Activity-V/:id/detalhes", ActivityController.loadViewFragment);
 routes.post("/cms-Activity-U/:id", ActivityController.updateActivityPage);
 routes.get("/cms-Calendar", ActivityController.loadCalendarPage);
 routes.get("/cms-Calendar/events", ActivityController.loadCalendarEvents);

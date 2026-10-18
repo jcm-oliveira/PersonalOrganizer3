@@ -50,6 +50,16 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             /class="badge activity-status-badge" style="background-color: #28a745; color: #212529;"/,
         );
         assert.match(res.text, /href="\/cms-Activity-U\/1"/);
+        // Datas exibidas em dd/mm/aaaa (o atributo do botão Remarcar continua em ISO)
+        assert.match(res.text, />\s*10\/10\/2026\s*</);
+        assert.match(res.text, />\s*15\/10\/2026\s*</);
+        assert.match(res.text, /data-next-date="2026-10-10"/);
+        assert.doesNotMatch(res.text, /table-bordered/);
+        // Cartão no celular: resumo com data, prazo, esfera, relevância e status
+        const summary = res.text.match(/<td class="c-mobile-summary">([\s\S]*?)<\/td>/)[1];
+        assert.match(summary, /10\/10\/2026 · 14:00/);
+        assert.match(summary, /Prazo 15\/10\/2026/);
+        assert.match(summary, /Profissão e Carreira · Prioridade · /);
         assert.match(res.text, /Dia Próx\./);
         assert.match(res.text, />\s*ATRASADO\s*</); // Data 2026-10-10 é anterior a 2026-10-13
     });
@@ -769,6 +779,62 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             .query({ start: "2020-01-01", end: "2026-01-01" })
             .expect(400);
         assert.equal(select.mock.callCount(), 0);
+    });
+
+    it("retorna o fragmento da visualização para o pop-up, sem layout", async () => {
+        mock.method(Activity, "selectActivityById", async () => ({
+            id: 7,
+            life_sphere: "Profissão e Carreira",
+            description: "Revisar <contrato>",
+            relevance: "Prioridade",
+            next_activity_date: "2026-10-20",
+            final_deadline: null,
+            day_period: null,
+            scheduled_time: null,
+            action_type: null,
+            theme_organization: null,
+            notes: "Linha 1\nLinha 2",
+            status: 1,
+            recurrence_rule: null,
+        }));
+
+        const res = await request(app).get("/cms-Activity-V/7/detalhes").expect(200);
+
+        assert.doesNotMatch(res.text, /<html|<nav|<script/);
+        assert.match(res.text, /data-activity-view-title="Atividade nº 7"/);
+        assert.match(res.text, /Revisar &lt;contrato&gt;/); // valores escapados
+        assert.match(res.text, /20\/10\/2026/);
+        assert.match(res.text, /class="mb-0 activity-notes">Linha 1\nLinha 2</);
+        assert.doesNotMatch(res.text, /style="/); // sem estilo inline (CSP)
+    });
+
+    it("retorna 404 no fragmento de atividade inexistente", async () => {
+        mock.method(Activity, "selectActivityById", async () => null);
+        await request(app).get("/cms-Activity-V/999/detalhes").expect(404);
+    });
+
+    it("consulta e calendário abrem a visualização em pop-up", async () => {
+        mock.method(Activity, "countActivities", async () => 1);
+        mock.method(Activity, "selectActivities", async () => [
+            {
+                id: 7,
+                life_sphere: "Profissão e Carreira",
+                description: "Revisar contrato",
+                relevance: "Normal",
+                next_activity_date: "2026-10-20",
+                final_deadline: null,
+                status: 1,
+            },
+        ]);
+
+        const list = await request(app).get("/cms-Activity-Q?status=all").expect(200);
+        assert.equal(list.text.match(/data-activity-view="7"/g).length, 2); // descrição + botão
+        assert.match(list.text, /id="activityViewModal"/);
+        assert.match(list.text, /src="\/scripts\/activity-view-modal.js"/);
+
+        const calendar = await request(app).get("/cms-Calendar").expect(200);
+        assert.match(calendar.text, /id="activityViewModal"/);
+        assert.match(calendar.text, /src="\/scripts\/activity-view-modal.js"/);
     });
 
     it("exclui uma atividade com exclusão lógica", async () => {

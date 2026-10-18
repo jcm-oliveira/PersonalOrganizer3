@@ -28,6 +28,9 @@
         });
     }
 
+    // Disponível para conteúdo carregado depois (ex.: pop-up de visualização)
+    window.applySphereColors = applySphereColors;
+
     if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", () => applySphereColors(document));
     } else {

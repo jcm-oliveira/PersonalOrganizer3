@@ -1,0 +1,4 @@
+<%# Fragmento HTML (sem layout) carregado no pop-up de visualização: GET /cms-Activity-V/:id/detalhes %>
+<div data-activity-view-title="Atividade nº <%= activity.id %>" data-activity-id="<%= activity.id %>">
+    <%- include('cms-Activity-V-details', { activity }) %>
+</div>

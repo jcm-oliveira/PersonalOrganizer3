@@ -210,6 +210,12 @@ function toDateOnlyString(value) {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
+/** "YYYY-MM-DD" -> "dd/mm/aaaa" (null quando não houver data) */
+function formatDateBr(dateStr) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(dateStr || "");
+    return match ? `${match[3]}/${match[2]}/${match[1]}` : null;
+}
+
 /**
  * Calcula a diferença em dias entre uma data e a data de referência (hoje).
  * Retorna número inteiro de dias (positivo = futuro, 0 = hoje, negativo = atrasado).
@@ -314,6 +320,9 @@ function enrichActivity(activity, referenceDate = new Date()) {
         ...activity,
         next_activity_date_formatted: nextDate,
         final_deadline_formatted: finalDate,
+        // Para exibição: dd/mm/aaaa
+        next_activity_date_br: formatDateBr(nextDate),
+        final_deadline_br: formatDateBr(finalDate),
         days_next_activity: daysNext,
         days_final_deadline: daysFinal,
         traffic_light: trafficLight,

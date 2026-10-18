@@ -30,8 +30,8 @@
     <%- include('../parts/messages') %>
 
     <!-- Tabela Estilo Planilha / Painel de Vôo -->
-    <div class="table-responsive shadow-sm bg-white rounded">
-        <table class="table table-sm table-bordered table-hover table-activity mb-0">
+    <div class="table-responsive shadow-sm bg-white rounded activity-table-wrap">
+        <table class="table table-sm table-hover table-activity mb-0">
             <thead>
                 <!-- Linha superior de agrupamento de cabeçalho -->
                 <tr class="table-activity-group">
@@ -154,8 +154,8 @@
                     <tr class="<%= rowClass %>"
                         <% if (hasSphereColor) { %>data-bg-color="<%= act.life_sphere_color %>" data-text-color="<%= act.life_sphere_text_color %>"<% } %>>
                         <!-- Descrição (destaque em negrito) -->
-                        <td class="align-middle text-left">
-                            <a href="/cms-Activity-V/<%= act.id %>" class="activity-desc-link">
+                        <td class="c-desc align-middle text-left">
+                            <a href="/cms-Activity-V/<%= act.id %>" class="activity-desc-link" data-activity-view="<%= act.id %>">
                                 <%= act.description %>
                             </a>
                             <% if (act.recurrence_description) { %>
@@ -166,114 +166,135 @@
                             <% } %>
                         </td>
 
+                        <!-- Resumo para o cartão no celular (oculto na tabela; ver main.css) -->
+                        <td class="c-mobile-summary">
+                            <div class="card-line card-line--date">
+                                <i class="far fa-calendar-alt" aria-hidden="true"></i>
+                                <%= act.next_activity_date_br || '-' %><% if (act.scheduled_time) { %> · <%= act.scheduled_time.slice(0, 5) %><% } %>
+                                <% if (act.final_deadline_br) { %>
+                                    <span class="card-muted">· Prazo <%= act.final_deadline_br %></span>
+                                <% } %>
+                            </div>
+                            <div class="card-line card-muted">
+                                <%= act.life_sphere %> · <%= act.relevance %> · <%= act.status_name || (act.status === 1 ? 'Ativo' : 'Inativo') %>
+                            </div>
+                            <% if (act.recurrence_description) { %>
+                                <div class="card-line card-muted">
+                                    <i class="fas fa-redo-alt" aria-hidden="true"></i> <%= act.recurrence_description %>
+                                </div>
+                            <% } %>
+                        </td>
+
                         <!-- Esfera da Vida -->
-                        <td class="align-middle text-center">
+                        <td class="c-sphere align-middle text-center">
                             <%= act.life_sphere %>
                         </td>
 
                         <!-- Relevância -->
-                        <td class="align-middle text-center">
+                        <td class="c-relevance align-middle text-center">
                             <%= act.relevance %>
                         </td>
 
                         <!-- Próxima Atividade -->
-                        <td class="align-middle text-center">
-                            <%= act.next_activity_date_formatted || '-' %>
+                        <td class="c-next align-middle text-center">
+                            <%= act.next_activity_date_br || '-' %>
                         </td>
 
                         <!-- Prazo Final -->
-                        <td class="align-middle text-center">
-                            <%= act.final_deadline_formatted || '-' %>
+                        <td class="c-deadline align-middle text-center">
+                            <%= act.final_deadline_br || '-' %>
                         </td>
 
                         <!-- Período do dia -->
-                        <td class="align-middle text-center">
+                        <td class="c-period align-middle text-center">
                             <%= act.day_period || '-' %>
                         </td>
 
                         <!-- Horário -->
-                        <td class="align-middle text-center">
+                        <td class="c-time align-middle text-center">
                             <%= act.scheduled_time ? act.scheduled_time.slice(0, 5) : '-' %>
                         </td>
 
                         <!-- Repetição (regra da atividade recorrente) -->
-                        <td class="align-middle text-center">
+                        <td class="c-recurrence align-middle text-center">
                             <%= act.recurrence_description || '-' %>
                         </td>
 
                         <!-- Tipo de Ação -->
-                        <td class="align-middle text-center">
+                        <td class="c-action align-middle text-center">
                             <%= act.action_type || '-' %>
                         </td>
 
                         <!-- Organização por tema -->
-                        <td class="align-middle text-center">
+                        <td class="c-theme align-middle text-center">
                             <%= act.theme_organization || '-' %>
                         </td>
 
                         <!-- Status -->
-                        <td class="align-middle text-center">
+                        <td class="c-status align-middle text-center">
                             <span class="badge activity-status-badge" style="background-color: <%= act.status_color_code %>; color: <%= act.status_text_color %>;">
                                 <%= act.status_name || (act.status === 1 ? 'Ativo' : 'Inativo') %>
                             </span>
                         </td>
 
                         <!-- Dias Próx. Atividade com indicador circular (dot) -->
-                        <td class="align-middle text-center">
+                        <td class="c-days-next align-middle text-center">
                             <span class="d-inline-block rounded-circle mr-1" style="width: 8px; height: 8px; background-color: <%= act.traffic_light_dot_color %>;"></span>
                             <%= act.days_next_activity !== null ? act.days_next_activity : '-' %>
                         </td>
 
                         <!-- Dias Prazo Final -->
-                        <td class="align-middle text-center">
+                        <td class="c-days-deadline align-middle text-center">
                             <%= act.days_final_deadline !== null ? act.days_final_deadline : '-' %>
                         </td>
 
                         <!-- Dia Próx. Atividade (ATRASADO, HOJE, AMANHÃ, dia da semana ou MAIS DE 15 DIAS) -->
-                        <td class="align-middle text-center font-weight-bold">
+                        <td class="c-dayprox align-middle text-center font-weight-bold">
                             <span class="badge <%= act.traffic_light_class %>">
                                 <%= act.next_activity_day_label %>
                             </span>
                         </td>
 
-                        <!-- Ações (botões compactos de ícones nos moldes de Projetos) -->
-                        <td class="align-middle text-center text-nowrap">
-                            <a class="btn btn-sm btn-outline-secondary mr-1" href="/cms-Activity-V/<%= act.id %>"
-                                title="Visualizar atividade" aria-label="Visualizar atividade">
-                                <i class="fas fa-search" aria-hidden="true"></i>
-                            </a>
-                            <a class="btn btn-sm btn-outline-primary mr-1" href="/cms-Activity-U/<%= act.id %>"
-                                title="Editar atividade" aria-label="Editar atividade">
-                                <i class="fas fa-pen" aria-hidden="true"></i>
-                            </a>
-                            <button type="button" class="btn btn-sm btn-outline-primary mr-1"
-                                data-toggle="modal" data-target="#rescheduleModal"
-                                data-activity-id="<%= act.id %>"
-                                data-activity-description="<%= act.description %>"
-                                data-next-date="<%= act.next_activity_date_formatted || '' %>"
-                                title="Remarcar atividade" aria-label="Remarcar atividade">
-                                <i class="far fa-calendar-alt" aria-hidden="true"></i>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-primary"
-                                data-toggle="modal" data-target="#statusModal"
-                                data-activity-id="<%= act.id %>"
-                                data-activity-description="<%= act.description %>"
-                                data-status="<%= act.status %>"
-                                title="Status da atividade" aria-label="Status da atividade">
-                                <i class="fas fa-sync-alt" aria-hidden="true"></i>
-                            </button>
-                            <% if (act.recurrence_description) { %>
-                                <button type="button" class="btn btn-sm btn-outline-success ml-1"
-                                    data-toggle="modal" data-target="#occurrenceModal"
+                        <!-- Ações: botões de ícone discretos (cor só ao passar o mouse) -->
+                        <td class="c-actions align-middle text-center text-nowrap">
+                            <div class="row-actions">
+                                <a class="btn-icon" href="/cms-Activity-V/<%= act.id %>" data-activity-view="<%= act.id %>"
+                                    title="Visualizar atividade" aria-label="Visualizar atividade">
+                                    <i class="fas fa-search" aria-hidden="true"></i>
+                                </a>
+                                <a class="btn-icon" href="/cms-Activity-U/<%= act.id %>"
+                                    title="Editar atividade" aria-label="Editar atividade">
+                                    <i class="fas fa-pen" aria-hidden="true"></i>
+                                </a>
+                                <button type="button" class="btn-icon"
+                                    data-toggle="modal" data-target="#rescheduleModal"
                                     data-activity-id="<%= act.id %>"
                                     data-activity-description="<%= act.description %>"
-                                    data-recurrence="<%= act.recurrence_description %>"
                                     data-next-date="<%= act.next_activity_date_formatted || '' %>"
-                                    data-next-occurrence="<%= act.next_occurrence_date || '' %>"
-                                    title="Concluir ocorrência" aria-label="Concluir ocorrência">
-                                    <i class="fas fa-check" aria-hidden="true"></i>
+                                    title="Remarcar atividade" aria-label="Remarcar atividade">
+                                    <i class="far fa-calendar-alt" aria-hidden="true"></i>
                                 </button>
-                            <% } %>
+                                <button type="button" class="btn-icon"
+                                    data-toggle="modal" data-target="#statusModal"
+                                    data-activity-id="<%= act.id %>"
+                                    data-activity-description="<%= act.description %>"
+                                    data-status="<%= act.status %>"
+                                    title="Status da atividade" aria-label="Status da atividade">
+                                    <i class="fas fa-sync-alt" aria-hidden="true"></i>
+                                </button>
+                                <% if (act.recurrence_description) { %>
+                                    <button type="button" class="btn-icon btn-icon--success"
+                                        data-toggle="modal" data-target="#occurrenceModal"
+                                        data-activity-id="<%= act.id %>"
+                                        data-activity-description="<%= act.description %>"
+                                        data-recurrence="<%= act.recurrence_description %>"
+                                        data-next-date="<%= act.next_activity_date_formatted || '' %>"
+                                        data-next-occurrence="<%= act.next_occurrence_date || '' %>"
+                                        title="Concluir ocorrência" aria-label="Concluir ocorrência">
+                                        <i class="fas fa-check" aria-hidden="true"></i>
+                                    </button>
+                                <% } %>
+                            </div>
                         </td>
                     </tr>
                 <% }) %>
@@ -282,7 +303,7 @@
     </div>
 
     <!-- Paginação -->
-    <nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Paginação">
+    <nav class="d-flex flex-wrap justify-content-between align-items-center mt-3 activity-pagination" aria-label="Paginação">
         <span class="text-muted small">
             Exibindo <%= pagination.firstItem %>–<%= pagination.lastItem %> de <%= pagination.total %> registros
         </span>
@@ -306,9 +327,11 @@
     <%- include('cms-Activity-R') %>
     <%- include('cms-Activity-S') %>
     <%- include('cms-Activity-O') %>
+    <%- include('../parts/activity-view-modal') %>
 </main>
 
 <script src="/scripts/sphere-colors.js" defer></script>
 <script src="/scripts/activity-quick-actions.js" defer></script>
+<script src="/scripts/activity-view-modal.js" defer></script>
 
 <%- include('../parts/footer') %>

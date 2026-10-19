@@ -120,7 +120,14 @@
         if (!event.allDay) body.scheduled_time = toTimeString(event.start);
         const response = await fetch(url, {
             method: "POST",
-            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                // Token CSRF da sessão (meta "csrf-token" em parts/head.ejs)
+                "X-CSRF-Token":
+                    document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ||
+                    "",
+            },
             body: JSON.stringify(body),
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);

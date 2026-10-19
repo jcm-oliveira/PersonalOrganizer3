@@ -25,13 +25,13 @@
                     const description = `${row.label}: ${row.total} ${row.total === 1 ? 'atividade' : 'atividades'} (${row.percent}%)`;
                 %>
                     <li class="hbar-row" title="<%= description %>">
-                        <% if (row.href) { %>
+                        <% if ((row.href && can('activities', 'view'))) { %>
                             <a class="hbar-label" href="<%= row.href %>">
                         <% } else { %>
                             <span class="hbar-label">
                         <% } %>
                             <% if (row.icon) { %><i class="fas <%= row.icon %> text-muted mr-1" aria-hidden="true"></i><% } %><%= row.label %>
-                        <% if (row.href) { %></a><% } else { %></span><% } %>
+                        <% if ((row.href && can('activities', 'view'))) { %></a><% } else { %></span><% } %>
                         <span class="hbar-track" aria-hidden="true">
                             <span class="hbar-bar" data-bar-width="<%= row.width %>" data-bg-color="<%= row.color %>"></span>
                         </span>

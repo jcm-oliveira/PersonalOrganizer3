@@ -1,0 +1,22 @@
+<%- include('../parts/head') %>
+
+<main class="container py-4">
+    <form method="post" action="/cms-AccessProfile-C" novalidate>
+        <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1 class="h3 mb-0">Novo Perfil de Acesso</h1>
+            <div class="d-flex align-items-center">
+                <button type="submit" class="btn btn-sm btn-primary mr-1" title="Salvar perfil" aria-label="Salvar perfil">
+                    <i class="fas fa-save mr-1" aria-hidden="true"></i> Salvar
+                </button>
+                <a class="btn btn-sm btn-outline-secondary" href="/cms-AccessProfile-Q" title="Voltar à lista" aria-label="Voltar à lista">
+                    <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Voltar
+                </a>
+            </div>
+        </div>
+
+        <%- include('cms-AccessProfile-I') %>
+    </form>
+</main>
+
+<%- include('../parts/footer') %>

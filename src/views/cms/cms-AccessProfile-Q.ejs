@@ -1,0 +1,166 @@
+<%- include('../parts/head') %>
+<% const hasFilter = Boolean(filter.search || filter.status !== '1'); %>
+
+<main class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="h3 mb-0 text-dark">Perfis de Acesso</h1>
+            <% if (hasFilter) { %>
+                <span class="badge badge-info mt-1">Filtros aplicados</span>
+                <a href="/cms-AccessProfile-Q" class="small text-danger ml-2">Limpar</a>
+            <% } %>
+        </div>
+        <div class="d-flex align-items-center">
+            <button type="button" class="btn btn-sm <%= hasFilter ? 'btn-primary' : 'btn-outline-secondary' %> mr-1"
+                data-toggle="modal" data-target="#filterModal" title="Filtrar" aria-label="Filtrar">
+                <i class="fas fa-filter" aria-hidden="true"></i>
+            </button>
+            <% if (can('profiles', 'create')) { %>
+                <a class="btn btn-sm btn-outline-primary" href="/cms-AccessProfile-C" title="Novo Perfil de Acesso" aria-label="Novo Perfil de Acesso">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                </a>
+            <% } %>
+        </div>
+    </div>
+
+    <%- include('../parts/messages') %>
+
+    <div class="table-responsive shadow-sm bg-white rounded">
+        <table class="table table-sm table-hover table-activity mb-0">
+            <thead>
+                <tr>
+                    <th class="text-left">
+                        <span class="activity-th-content activity-th-content--left">
+                            <i class="fas fa-user-shield activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Perfil</span>
+                        </span>
+                    </th>
+                    <th class="text-left d-none d-md-table-cell">
+                        <span class="activity-th-content activity-th-content--left">
+                            <i class="fas fa-align-left activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Descrição</span>
+                        </span>
+                    </th>
+                    <th class="text-center">
+                        <span class="activity-th-content">
+                            <i class="fas fa-users activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Usuários</span>
+                        </span>
+                    </th>
+                    <th class="text-center">
+                        <span class="activity-th-content">
+                            <i class="fas fa-toggle-on activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Status</span>
+                        </span>
+                    </th>
+                    <th class="text-center">
+                        <span class="activity-th-content">
+                            <i class="fas fa-tools activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Ações</span>
+                        </span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (items.length === 0) { %>
+                    <tr><td colspan="5" class="text-center py-4 text-muted">Nenhum perfil encontrado.</td></tr>
+                <% } %>
+                <% items.forEach((p) => { const isSystem = Number(p.is_system) === 1; %>
+                    <tr>
+                        <td class="align-middle">
+                            <span class="font-weight-bold"><%= p.name %></span>
+                            <% if (isSystem) { %>
+                                <span class="badge badge-dark ml-1" title="Perfil do sistema: acesso total, não pode ser alterado">
+                                    <i class="fas fa-lock mr-1" aria-hidden="true"></i>Sistema
+                                </span>
+                            <% } %>
+                        </td>
+                        <td class="align-middle text-muted d-none d-md-table-cell"><%= p.description || '-' %></td>
+                        <td class="align-middle text-center">
+                            <% if (can('users', 'view')) { %>
+                                <a href="/cms-User-Q?status=all&amp;profileId=<%= p.id %>" title="Ver usuários com este perfil"><%= p.user_count %></a>
+                            <% } else { %>
+                                <%= p.user_count %>
+                            <% } %>
+                        </td>
+                        <td class="align-middle text-center">
+                            <span class="badge <%= p.status === 1 ? 'badge-success' : 'badge-secondary' %>">
+                                <%= p.status === 1 ? 'Ativo' : 'Inativo' %>
+                            </span>
+                        </td>
+                        <td class="align-middle text-center text-nowrap">
+                            <div class="row-actions">
+                                <% if (isSystem || !can('profiles', 'update')) { %>
+                                    <a class="btn-icon" href="/cms-AccessProfile-U/<%= p.id %>" title="Visualizar permissões" aria-label="Visualizar permissões">
+                                        <i class="fas fa-search" aria-hidden="true"></i>
+                                    </a>
+                                <% } else { %>
+                                    <a class="btn-icon" href="/cms-AccessProfile-U/<%= p.id %>" title="Editar perfil" aria-label="Editar perfil">
+                                        <i class="fas fa-pen" aria-hidden="true"></i>
+                                    </a>
+                                <% } %>
+                                <% if (!isSystem && can('profiles', 'delete')) { %>
+                                    <button type="button" class="btn-icon" data-toggle="modal" data-target="#confirmDeleteModal"
+                                        data-delete-action="/cms-AccessProfile-D/<%= p.id %>" data-delete-name="<%= p.name %>"
+                                        title="Excluir perfil" aria-label="Excluir perfil">
+                                        <i class="fas fa-trash-alt" aria-hidden="true"></i>
+                                    </button>
+                                <% } %>
+                            </div>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+
+    <%- include('../parts/list-pagination', { pagination }) %>
+
+    <!-- Filtros -->
+    <div class="modal fade" id="filterModal" tabindex="-1" role="dialog" aria-labelledby="filterModalTitle" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form class="modal-content" method="get" action="/cms-AccessProfile-Q">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalTitle">Filtrar perfis de acesso</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="filterSearch">Nome ou descrição</label>
+                        <input type="text" class="form-control" id="filterSearch" name="search" maxlength="150" value="<%= filter.search %>">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-sm-6 mb-0">
+                            <label for="filterStatus">Status</label>
+                            <select class="form-control" id="filterStatus" name="status">
+                                <option value="1" <%= filter.status === '1' ? 'selected' : '' %>>Ativos</option>
+                                <option value="0" <%= filter.status === '0' ? 'selected' : '' %>>Inativos</option>
+                                <option value="all" <%= filter.status === 'all' ? 'selected' : '' %>>Todos</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-sm-6 mb-0">
+                            <label for="filterPerPage">Itens por página</label>
+                            <select class="form-control" id="filterPerPage" name="perPage">
+                                <% pageSizes.forEach((size) => { %>
+                                    <option value="<%= size %>" <%= filter.perPage === size ? 'selected' : '' %>><%= size %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-link" href="/cms-AccessProfile-Q">Limpar</a>
+                    <button type="submit" class="btn btn-primary">Aplicar filtros</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <%- include('../parts/confirm-delete-modal', { entityLabel: 'o perfil' }) %>
+</main>
+
+<script src="/scripts/confirm-delete.js" defer></script>
+
+<%- include('../parts/footer') %>

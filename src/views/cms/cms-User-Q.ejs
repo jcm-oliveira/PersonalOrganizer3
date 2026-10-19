@@ -1,0 +1,195 @@
+<%- include('../parts/head') %>
+<%
+    const hasFilter = Boolean(filter.search || filter.status !== '1' || filter.profileId);
+    const initialsOf = (name) => String(name || '').trim().split(/\s+/).filter(Boolean).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+    const formatDateTime = (value) => {
+        if (!value) return 'Nunca';
+        const d = new Date(value);
+        if (Number.isNaN(d.getTime())) return '-';
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+%>
+
+<main class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="h3 mb-0 text-dark">Usuários</h1>
+            <% if (hasFilter) { %>
+                <span class="badge badge-info mt-1">Filtros aplicados</span>
+                <a href="/cms-User-Q" class="small text-danger ml-2">Limpar</a>
+            <% } %>
+        </div>
+        <div class="d-flex align-items-center">
+            <button type="button" class="btn btn-sm <%= hasFilter ? 'btn-primary' : 'btn-outline-secondary' %> mr-1"
+                data-toggle="modal" data-target="#filterModal" title="Filtrar" aria-label="Filtrar">
+                <i class="fas fa-filter" aria-hidden="true"></i>
+            </button>
+            <% if (can('users', 'create')) { %>
+                <a class="btn btn-sm btn-outline-primary" href="/cms-User-C" title="Novo Usuário" aria-label="Novo Usuário">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                </a>
+            <% } %>
+        </div>
+    </div>
+
+    <%- include('../parts/messages') %>
+
+    <div class="table-responsive shadow-sm bg-white rounded">
+        <table class="table table-sm table-hover table-activity mb-0">
+            <thead>
+                <tr>
+                    <th class="text-left">
+                        <span class="activity-th-content activity-th-content--left">
+                            <i class="fas fa-user activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Usuário</span>
+                        </span>
+                    </th>
+                    <th class="text-left d-none d-md-table-cell">
+                        <span class="activity-th-content activity-th-content--left">
+                            <i class="fas fa-phone activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Telefone</span>
+                        </span>
+                    </th>
+                    <th class="text-left">
+                        <span class="activity-th-content activity-th-content--left">
+                            <i class="fas fa-user-shield activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Perfis de acesso</span>
+                        </span>
+                    </th>
+                    <th class="text-center d-none d-lg-table-cell">
+                        <span class="activity-th-content">
+                            <i class="fas fa-sign-in-alt activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Último acesso</span>
+                        </span>
+                    </th>
+                    <th class="text-center">
+                        <span class="activity-th-content">
+                            <i class="fas fa-toggle-on activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Status</span>
+                        </span>
+                    </th>
+                    <th class="text-center">
+                        <span class="activity-th-content">
+                            <i class="fas fa-tools activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Ações</span>
+                        </span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (items.length === 0) { %>
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">Nenhum usuário encontrado.</td>
+                    </tr>
+                <% } %>
+                <% items.forEach((u) => { %>
+                    <tr>
+                        <td class="align-middle">
+                            <div class="user-cell">
+                                <% if (u.photoUrl) { %>
+                                    <img class="user-avatar" src="<%= u.photoUrl %>" alt="" loading="lazy">
+                                <% } else { %>
+                                    <span class="user-avatar user-avatar--initials" aria-hidden="true"><%= initialsOf(u.name) %></span>
+                                <% } %>
+                                <div class="user-cell__text">
+                                    <span class="user-cell__name"><%= u.name %><% if (currentUser && currentUser.id === u.id) { %> <span class="badge badge-light border">você</span><% } %></span>
+                                    <span class="user-cell__email"><%= u.email %></span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="align-middle d-none d-md-table-cell"><%= u.phone || '-' %></td>
+                        <td class="align-middle">
+                            <% if (u.profile_names) { %>
+                                <%= u.profile_names %>
+                            <% } else { %>
+                                <span class="text-muted">Sem perfil (sem acesso às telas)</span>
+                            <% } %>
+                        </td>
+                        <td class="align-middle text-center d-none d-lg-table-cell small"><%= formatDateTime(u.last_login_at) %></td>
+                        <td class="align-middle text-center">
+                            <span class="badge <%= u.status === 1 ? 'badge-success' : 'badge-secondary' %>">
+                                <%= u.status === 1 ? 'Ativo' : 'Inativo' %>
+                            </span>
+                        </td>
+                        <td class="align-middle text-center text-nowrap">
+                            <div class="row-actions">
+                                <% if (can('users', 'update')) { %>
+                                    <a class="btn-icon" href="/cms-User-U/<%= u.id %>" title="Editar usuário" aria-label="Editar usuário">
+                                        <i class="fas fa-pen" aria-hidden="true"></i>
+                                    </a>
+                                <% } %>
+                                <% if (can('users', 'delete') && !(currentUser && currentUser.id === u.id)) { %>
+                                    <button type="button" class="btn-icon" data-toggle="modal" data-target="#confirmDeleteModal"
+                                        data-delete-action="/cms-User-D/<%= u.id %>" data-delete-name="<%= u.name %>"
+                                        title="Excluir usuário" aria-label="Excluir usuário">
+                                        <i class="fas fa-trash-alt" aria-hidden="true"></i>
+                                    </button>
+                                <% } %>
+                            </div>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+
+    <%- include('../parts/list-pagination', { pagination }) %>
+
+    <!-- Filtros -->
+    <div class="modal fade" id="filterModal" tabindex="-1" role="dialog" aria-labelledby="filterModalTitle" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form class="modal-content" method="get" action="/cms-User-Q">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalTitle">Filtrar usuários</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="filterSearch">Nome, e-mail ou telefone</label>
+                        <input type="text" class="form-control" id="filterSearch" name="search" maxlength="150" value="<%= filter.search %>">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-sm-6">
+                            <label for="filterProfile">Perfil de acesso</label>
+                            <select class="form-control" id="filterProfile" name="profileId">
+                                <option value="">Todos</option>
+                                <% profiles.forEach((p) => { %>
+                                    <option value="<%= p.id %>" <%= filter.profileId === p.id ? 'selected' : '' %>><%= p.name %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+                        <div class="form-group col-sm-6">
+                            <label for="filterStatus">Status</label>
+                            <select class="form-control" id="filterStatus" name="status">
+                                <option value="1" <%= filter.status === '1' ? 'selected' : '' %>>Ativos</option>
+                                <option value="0" <%= filter.status === '0' ? 'selected' : '' %>>Inativos</option>
+                                <option value="all" <%= filter.status === 'all' ? 'selected' : '' %>>Todos</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="filterPerPage">Itens por página</label>
+                        <select class="form-control" id="filterPerPage" name="perPage">
+                            <% pageSizes.forEach((size) => { %>
+                                <option value="<%= size %>" <%= filter.perPage === size ? 'selected' : '' %>><%= size %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-link" href="/cms-User-Q">Limpar</a>
+                    <button type="submit" class="btn btn-primary">Aplicar filtros</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <%- include('../parts/confirm-delete-modal', { entityLabel: 'o usuário' }) %>
+</main>
+
+<script src="/scripts/confirm-delete.js" defer></script>
+
+<%- include('../parts/footer') %>

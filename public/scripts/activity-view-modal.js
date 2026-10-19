@@ -26,7 +26,9 @@
         }
         const seq = ++requestSeq;
         field("title").textContent = `Atividade nº ${id}`;
-        field("edit-link").setAttribute("href", `/cms-Activity-U/${encodeURIComponent(id)}`);
+        // O botão Editar só existe para quem pode alterar atividades
+        const editLink = field("edit-link");
+        if (editLink) editLink.setAttribute("href", `/cms-Activity-U/${encodeURIComponent(id)}`);
         showMessage("Carregando...");
         window.jQuery(modal).modal("show");
 

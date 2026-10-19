@@ -1,0 +1,121 @@
+<%# Campos do formulário de Usuário compartilhados por C (inserção) e U (alteração) %>
+<%
+    const checkedProfiles = new Set([].concat(values.profile_ids || []).map(String));
+    const initials = String(values.name || '').trim().split(/\s+/).filter(Boolean).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+%>
+<div class="row">
+    <!-- Foto -->
+    <div class="col-md-3 mb-3">
+        <div class="user-photo-field">
+            <div class="user-photo-preview" id="userPhotoPreview">
+                <img id="userPhotoImg" src="<%= photoUrl || '' %>" alt="Foto do usuário" class="<%= photoUrl ? '' : 'd-none' %>">
+                <span id="userPhotoInitials" class="<%= photoUrl ? 'd-none' : '' %>" aria-hidden="true"><%= initials || '?' %></span>
+            </div>
+            <label class="btn btn-sm btn-outline-secondary mt-2 mb-1" for="photo">
+                <i class="fas fa-camera mr-1" aria-hidden="true"></i> <%= photoUrl ? 'Trocar foto' : 'Escolher foto' %>
+            </label>
+            <input type="file" class="sr-only" id="photo" name="photo" accept="image/jpeg,image/png,image/webp">
+            <small class="form-text text-muted">JPG, PNG ou WebP, até 2 MB.</small>
+            <% if (errors.photo) { %><div class="invalid-feedback d-block"><%= errors.photo %></div><% } %>
+            <% if (photoUrl) { %>
+                <div class="custom-control custom-checkbox mt-1">
+                    <input type="checkbox" class="custom-control-input" id="remove_photo" name="remove_photo" value="1">
+                    <label class="custom-control-label small" for="remove_photo">Remover foto</label>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Dados do usuário -->
+    <div class="col-md-9">
+        <h5 class="text-primary border-bottom pb-2 mb-3">
+            <i class="fas fa-id-card text-primary mr-1" aria-hidden="true"></i> Dados do usuário
+        </h5>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="name">Nome <span class="text-danger">*</span></label>
+                <input type="text" class="form-control <%= errors.name ? 'is-invalid' : '' %>" id="name" name="name"
+                    value="<%= values.name || '' %>" maxlength="150" required autocomplete="off">
+                <% if (errors.name) { %><div class="invalid-feedback"><%= errors.name %></div><% } %>
+            </div>
+            <div class="form-group col-md-6">
+                <label for="email">E-mail <span class="text-danger">*</span></label>
+                <input type="email" class="form-control <%= errors.email ? 'is-invalid' : '' %>" id="email" name="email"
+                    value="<%= values.email || '' %>" maxlength="190" required autocomplete="off">
+                <small class="form-text text-muted">Usado para entrar no sistema.</small>
+                <% if (errors.email) { %><div class="invalid-feedback"><%= errors.email %></div><% } %>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="phone">Telefone</label>
+                <input type="tel" class="form-control <%= errors.phone ? 'is-invalid' : '' %>" id="phone" name="phone"
+                    value="<%= values.phone || '' %>" maxlength="30" placeholder="(00) 00000-0000" autocomplete="off">
+                <% if (errors.phone) { %><div class="invalid-feedback"><%= errors.phone %></div><% } %>
+            </div>
+            <div class="form-group col-md-6">
+                <label for="status">Status</label>
+                <select class="form-control <%= errors.status ? 'is-invalid' : '' %>" id="status" name="status">
+                    <option value="1" <%= String(values.status) === '1' ? 'selected' : '' %>>Ativo (pode entrar no sistema)</option>
+                    <option value="0" <%= String(values.status) === '0' ? 'selected' : '' %>>Inativo (acesso bloqueado)</option>
+                </select>
+                <% if (errors.status) { %><div class="invalid-feedback"><%= errors.status %></div><% } %>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="description">Descrição</label>
+            <textarea class="form-control <%= errors.description ? 'is-invalid' : '' %>" id="description" name="description"
+                rows="2" maxlength="2000" placeholder="Função, área ou observações sobre o acesso..."><%= values.description || '' %></textarea>
+            <% if (errors.description) { %><div class="invalid-feedback"><%= errors.description %></div><% } %>
+        </div>
+
+        <!-- Senha -->
+        <h5 class="text-primary border-bottom pb-2 mb-3 mt-4">
+            <i class="fas fa-key text-primary mr-1" aria-hidden="true"></i> <%= isCreate ? 'Senha de acesso' : 'Redefinir senha' %>
+        </h5>
+        <% if (!isCreate) { %>
+            <p class="small text-muted">Deixe em branco para manter a senha atual. Ao redefinir, as sessões abertas do usuário são encerradas.</p>
+        <% } %>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="password"><%= isCreate ? 'Senha' : 'Nova senha' %><% if (isCreate) { %> <span class="text-danger">*</span><% } %></label>
+                <input type="password" class="form-control <%= errors.password ? 'is-invalid' : '' %>" id="password" name="password"
+                    minlength="<%= passwordMin %>" maxlength="128" autocomplete="new-password" <%= isCreate ? 'required' : '' %>>
+                <small class="form-text text-muted">Mínimo de <%= passwordMin %> caracteres.</small>
+                <% if (errors.password) { %><div class="invalid-feedback"><%= errors.password %></div><% } %>
+            </div>
+            <div class="form-group col-md-6">
+                <label for="password_confirm">Confirme a senha</label>
+                <input type="password" class="form-control <%= errors.password_confirm ? 'is-invalid' : '' %>" id="password_confirm"
+                    name="password_confirm" maxlength="128" autocomplete="new-password">
+                <% if (errors.password_confirm) { %><div class="invalid-feedback"><%= errors.password_confirm %></div><% } %>
+            </div>
+        </div>
+
+        <!-- Perfis de acesso -->
+        <h5 class="text-primary border-bottom pb-2 mb-2 mt-4">
+            <i class="fas fa-user-shield text-primary mr-1" aria-hidden="true"></i> Perfis de acesso
+        </h5>
+        <p class="small text-muted mb-2">As permissões dos perfis marcados se somam. Sem perfil, o usuário entra mas não vê nenhuma tela.</p>
+        <% if (errors.profile_ids) { %><div class="alert alert-danger py-2"><%= errors.profile_ids %></div><% } %>
+        <% if (profiles.length === 0) { %>
+            <p class="text-muted">Nenhum perfil ativo cadastrado.</p>
+        <% } %>
+        <div class="profile-options">
+            <% profiles.forEach((p) => { const checked = checkedProfiles.has(String(p.id)); %>
+                <div class="custom-control custom-checkbox profile-option <%= Number(p.is_system) === 1 ? 'profile-option--system' : '' %>">
+                    <input type="checkbox" class="custom-control-input" id="profile_<%= p.id %>" name="profile_ids" value="<%= p.id %>" <%= checked ? 'checked' : '' %>>
+                    <label class="custom-control-label" for="profile_<%= p.id %>">
+                        <span class="profile-option__name">
+                            <%= p.name %>
+                            <% if (Number(p.is_system) === 1) { %><span class="badge badge-dark ml-1">Acesso total</span><% } %>
+                        </span>
+                        <% if (p.description) { %><span class="profile-option__desc"><%= p.description %></span><% } %>
+                    </label>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+</div>
+
+<script src="/scripts/user-form.js" defer></script>

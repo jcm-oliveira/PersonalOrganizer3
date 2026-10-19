@@ -1,0 +1,106 @@
+<%# Campos do formulário de Perfil de Acesso (C e U), com a matriz de permissões %>
+<%
+    const isSystem = Boolean(profile && Number(profile.is_system) === 1);
+    const readOnly = isSystem || (!isCreate && !can('profiles', 'update'));
+    const checked = new Set([].concat(values.checked || []));
+    const groups = [...new Set(resources.map((r) => r.group))];
+%>
+<% if (isSystem) { %>
+    <div class="alert alert-info">
+        <i class="fas fa-lock mr-1" aria-hidden="true"></i>
+        Este é o perfil <strong>Administrador</strong> do sistema: tem acesso total a todas as telas e ações
+        (inclusive telas criadas no futuro) e não pode ser alterado nem excluído.
+    </div>
+<% } else if (readOnly) { %>
+    <div class="alert alert-secondary py-2">Você pode consultar este perfil, mas não alterá-lo.</div>
+<% } %>
+
+<fieldset <%= readOnly ? 'disabled' : '' %>>
+    <div class="form-row">
+        <div class="form-group col-md-6">
+            <label for="name">Nome do perfil <span class="text-danger">*</span></label>
+            <input type="text" class="form-control <%= errors.name ? 'is-invalid' : '' %>" id="name" name="name"
+                value="<%= values.name || '' %>" maxlength="100" required placeholder="Ex.: Consulta, Operador, Gestor...">
+            <% if (errors.name) { %><div class="invalid-feedback"><%= errors.name %></div><% } %>
+        </div>
+        <div class="form-group col-md-6">
+            <label for="status">Status</label>
+            <select class="form-control" id="status" name="status">
+                <option value="1" <%= String(values.status) === '1' ? 'selected' : '' %>>Ativo</option>
+                <option value="0" <%= String(values.status) === '0' ? 'selected' : '' %>>Inativo (permissões deixam de valer)</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="description">Descrição</label>
+        <textarea class="form-control <%= errors.description ? 'is-invalid' : '' %>" id="description" name="description"
+            rows="2" maxlength="2000" placeholder="Para quem é este perfil e o que ele permite..."><%= values.description || '' %></textarea>
+        <% if (errors.description) { %><div class="invalid-feedback"><%= errors.description %></div><% } %>
+    </div>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-end border-bottom pb-2 mb-2 mt-4">
+        <h5 class="text-primary mb-0">
+            <i class="fas fa-th-list text-primary mr-1" aria-hidden="true"></i> Permissões por tela
+        </h5>
+        <% if (!readOnly) { %>
+            <div class="perm-bulk">
+                <button type="button" class="btn btn-link btn-sm p-0 mr-3" data-perm-bulk="view">Só visualizar tudo</button>
+                <button type="button" class="btn btn-link btn-sm p-0 mr-3" data-perm-bulk="all">Marcar tudo</button>
+                <button type="button" class="btn btn-link btn-sm p-0" data-perm-bulk="none">Limpar</button>
+            </div>
+        <% } %>
+    </div>
+    <p class="small text-muted mb-2">
+        <strong>Visualizar</strong> dá acesso à tela em modo consulta. Marcar Inserir, Alterar ou Excluir marca
+        Visualizar automaticamente.
+    </p>
+
+    <div class="table-responsive">
+        <table class="table table-sm perm-matrix mb-0" id="permMatrix">
+            <thead>
+                <tr>
+                    <th scope="col" class="text-left">Tela</th>
+                    <% actions.forEach((a) => { %>
+                        <th scope="col" class="text-center"><%= a.label %></th>
+                    <% }) %>
+                </tr>
+            </thead>
+            <% groups.forEach((group) => { %>
+                <tbody>
+                    <tr class="perm-matrix__group"><th colspan="<%= actions.length + 1 %>" scope="rowgroup"><%= group %></th></tr>
+                    <% resources.filter((r) => r.group === group).forEach((r) => { %>
+                        <tr data-perm-row="<%= r.key %>">
+                            <th scope="row" class="text-left font-weight-normal">
+                                <%= r.label %>
+                                <% if (r.hint) { %><span class="perm-matrix__hint"><%= r.hint %></span><% } %>
+                            </th>
+                            <% actions.forEach((a) => {
+                                const value = `${r.key}:${a.key}`;
+                                const available = r.actions.includes(a.key);
+                                const isChecked = isSystem || checked.has(value);
+                            %>
+                                <td class="text-center align-middle">
+                                    <% if (available) { %>
+                                        <div class="custom-control custom-checkbox perm-check">
+                                            <input type="checkbox" class="custom-control-input" id="perm_<%= r.key %>_<%= a.key %>"
+                                                name="perm" value="<%= value %>" data-action="<%= a.key %>" <%= isChecked ? 'checked' : '' %>>
+                                            <label class="custom-control-label" for="perm_<%= r.key %>_<%= a.key %>">
+                                                <span class="sr-only"><%= a.label %> em <%= r.label %></span>
+                                            </label>
+                                        </div>
+                                    <% } else { %>
+                                        <span class="text-muted" title="Ação não disponível nesta tela">—</span>
+                                    <% } %>
+                                </td>
+                            <% }) %>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            <% }) %>
+        </table>
+    </div>
+</fieldset>
+
+<% if (!readOnly) { %>
+    <script src="/scripts/profile-form.js" defer></script>
+<% } %>

@@ -1196,3 +1196,237 @@ a.hbar-label:focus {
     background-color: #ffffff;
     border: 1px solid rgba(0, 0, 0, 0.15);
 }
+
+/* ---------- Login e primeiro acesso ---------- */
+
+.auth-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 120px);
+    padding: 2rem 1rem;
+    background-color: #f4f6f9;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 2rem 1.75rem;
+    border-radius: 12px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
+
+.auth-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1.5rem;
+}
+
+.auth-title {
+    margin: 0;
+    font-family: "IBM Plex Sans", "Inter", sans-serif;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: #212529;
+}
+
+.auth-subtitle {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.auth-help {
+    margin: 1rem 0 0;
+    font-size: 0.8rem;
+    color: #8a96a3;
+    text-align: center;
+}
+
+/* ---------- Usuário logado no menu ---------- */
+
+.nav-user {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-user__avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.nav-user__avatar--initials {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #ffffff;
+    background-color: #5b8fd6;
+}
+
+.nav-user__name {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ---------- Cadastro de usuários ---------- */
+
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 200px;
+}
+
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.user-avatar--initials {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #ffffff;
+    background-color: #8fa9c9;
+}
+
+.user-cell__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.user-cell__name {
+    font-weight: 600;
+    color: #212529;
+}
+
+.user-cell__email {
+    font-size: 0.8rem;
+    color: #6c757d;
+    overflow-wrap: anywhere;
+}
+
+.user-photo-field {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.user-photo-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: #e9eef5;
+    border: 1px solid #dee2e6;
+}
+
+.user-photo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-photo-preview span {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #8fa9c9;
+}
+
+.profile-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 0.5rem;
+}
+
+.profile-option {
+    padding: 0.6rem 0.75rem 0.6rem 2.2rem;
+    border: 1px solid #e3e7eb;
+    border-radius: 8px;
+    background-color: #ffffff;
+}
+
+.profile-option--system {
+    background-color: #f8f9fa;
+}
+
+.profile-option .custom-control-label {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.profile-option__name {
+    font-weight: 600;
+}
+
+.profile-option__desc {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+/* ---------- Perfis de acesso: matriz de permissões ---------- */
+
+.perm-matrix {
+    font-size: 0.9rem;
+}
+
+.perm-matrix thead th {
+    border-top: 0;
+    border-bottom: 1px solid #dee2e6;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #495057;
+    white-space: nowrap;
+}
+
+.perm-matrix .perm-matrix__group th {
+    padding-top: 0.9rem;
+    border-top: 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8a96a3;
+}
+
+.perm-matrix tbody td,
+.perm-matrix tbody th[scope="row"] {
+    border-top: 1px solid #f1f3f5;
+}
+
+.perm-matrix__hint {
+    display: block;
+    font-size: 0.75rem;
+    color: #8a96a3;
+}
+
+.perm-check {
+    display: inline-block;
+    min-height: 1.25rem;
+    padding-left: 1.5rem;
+}
+
+fieldset:disabled .perm-check .custom-control-label::before {
+    opacity: 0.9;
+}

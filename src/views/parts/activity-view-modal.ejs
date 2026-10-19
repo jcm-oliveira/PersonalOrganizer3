@@ -21,9 +21,11 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                <% if (can('activities', 'update')) { %>
                 <a class="btn btn-primary" href="#" data-field="edit-link">
                     <i class="fas fa-pen mr-1" aria-hidden="true"></i> Editar
                 </a>
+                <% } %>
             </div>
         </div>
     </div>

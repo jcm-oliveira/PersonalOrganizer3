@@ -6,6 +6,7 @@ const assert = require("node:assert/strict");
 const request = require("supertest");
 const Activity = require("../src/model/ActivityModel");
 const { createApp } = require("../src/app");
+const { TEST_ADMIN } = require("./helpers");
 const {
     buildRecurrence,
     nextOccurrence,
@@ -14,7 +15,7 @@ const {
     describeRecurrence,
 } = require("../src/validation/recurrence");
 
-const app = createApp();
+const app = createApp({ currentUser: TEST_ADMIN, csrf: false });
 
 const baseActivity = {
     id: 20,

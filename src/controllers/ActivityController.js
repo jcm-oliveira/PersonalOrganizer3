@@ -8,6 +8,7 @@ const {
     ActivityStatusModel,
 } = require("../model/LookupModels");
 const { HttpError } = require("../errors/HttpError");
+const { can } = require("../security/permissions");
 const {
     PAGE_SIZES,
     DEFAULT_ACTIVITY_STATUS_ID,
@@ -659,6 +660,8 @@ module.exports = {
         }
         const { start, end } = parsed.data;
         const inRange = (date) => Boolean(date) && date >= start && date < end;
+        // Só quem pode alterar no Calendário consegue arrastar para remarcar
+        const canReschedule = can(req.user, "calendar", "update");
 
         const [rawActivities, lookups] = await Promise.all([
             Activity.selectActivitiesForCalendar({
@@ -694,7 +697,7 @@ module.exports = {
                     start: time ? `${nextDate}T${time}` : nextDate,
                     allDay: !time,
                     url: `/cms-Activity-V/${act.id}`,
-                    editable: true,
+                    editable: canReschedule,
                     ...(color ? { backgroundColor: color, borderColor: color, textColor } : {}),
                     extendedProps: { ...extendedProps, kind: "next" },
                 });

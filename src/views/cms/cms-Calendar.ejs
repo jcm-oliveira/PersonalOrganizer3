@@ -7,10 +7,12 @@
 <main class="container-fluid py-4 px-lg-5">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h3 mb-0 text-dark">Calendário</h1>
+        <% if (can('activities', 'create')) { %>
         <a class="btn btn-sm btn-outline-primary" href="/cms-Activity-C"
             title="Nova Atividade" aria-label="Nova Atividade">
             <i class="fas fa-plus" aria-hidden="true"></i>
         </a>
+        <% } %>
     </div>
 
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
@@ -50,10 +52,12 @@
         <div id="activityCalendar"
             data-events-url="/cms-Calendar/events"
             data-reschedule-url-prefix="/cms-Calendar/events/"></div>
+        <% if (can('calendar', 'update')) { %>
         <p class="small text-muted mt-2 mb-0">
             <i class="fas fa-arrows-alt mr-1" aria-hidden="true"></i>
             Arraste uma atividade para outro dia (ou horário, na visão semanal) para remarcá-la. No celular, toque e segure antes de arrastar.
         </p>
+        <% } %>
     </div>
     <%- include('../parts/activity-view-modal') %>
 </main>

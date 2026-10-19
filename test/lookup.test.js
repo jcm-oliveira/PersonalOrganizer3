@@ -14,8 +14,9 @@ const {
     ActivityStatusModel,
 } = require("../src/model/LookupModels");
 const { createApp } = require("../src/app");
+const { TEST_ADMIN } = require("./helpers");
 
-const app = createApp();
+const app = createApp({ currentUser: TEST_ADMIN, csrf: false });
 
 describe("Módulo de Cadastros de Apoio", () => {
     afterEach(() => mock.restoreAll());

@@ -9,22 +9,35 @@ const {
     ActivityStatusController,
 } = require("../controllers/LookupControllers");
 
+const { requirePermission } = require("../middlewares/auth");
+const { LOOKUP_PREFIX_RESOURCE } = require("../security/permissions");
+
 const router = express.Router();
 
+// Cada cadastro usa a tela correspondente nos perfis de acesso (security/permissions.js)
 function registerLookupRoutes(prefix, controller) {
-    router.get(`/${prefix}-Q`, (req, res, next) => controller.loadShowPage(req, res).catch(next));
-    router.get(`/${prefix}-C`, (req, res, next) => controller.loadInsertPage(req, res).catch(next));
-    router.post(`/${prefix}-C`, (req, res, next) => controller.insertPage(req, res).catch(next));
-    router.get(`/${prefix}-C/:id`, (req, res, next) =>
+    const resource = LOOKUP_PREFIX_RESOURCE[prefix];
+    const allow = (action) => requirePermission(resource, action);
+
+    router.get(`/${prefix}-Q`, allow("view"), (req, res, next) =>
+        controller.loadShowPage(req, res).catch(next),
+    );
+    router.get(`/${prefix}-C`, allow("create"), (req, res, next) =>
+        controller.loadInsertPage(req, res).catch(next),
+    );
+    router.post(`/${prefix}-C`, allow("create"), (req, res, next) =>
+        controller.insertPage(req, res).catch(next),
+    );
+    router.get(`/${prefix}-C/:id`, allow("update"), (req, res, next) =>
         controller.loadUpdatePage(req, res).catch(next),
     );
-    router.get(`/${prefix}-V/:id`, (req, res, next) =>
+    router.get(`/${prefix}-V/:id`, allow("view"), (req, res, next) =>
         controller.loadViewPage(req, res).catch(next),
     );
-    router.post(`/${prefix}-U/:id`, (req, res, next) =>
+    router.post(`/${prefix}-U/:id`, allow("update"), (req, res, next) =>
         controller.updatePage(req, res).catch(next),
     );
-    router.post(`/${prefix}-D/:id`, (req, res, next) =>
+    router.post(`/${prefix}-D/:id`, allow("delete"), (req, res, next) =>
         controller.deletePage(req, res).catch(next),
     );
 }

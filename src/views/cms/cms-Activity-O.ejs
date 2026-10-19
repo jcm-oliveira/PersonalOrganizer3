@@ -2,6 +2,7 @@
 <div class="modal fade" id="occurrenceModal" tabindex="-1" role="dialog" aria-labelledby="occurrenceModalTitle" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <form class="modal-content" method="post" action="" data-action-prefix="/cms-Activity-O/">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
             <div class="modal-header">
                 <h5 class="modal-title" id="occurrenceModalTitle">
                     <i class="fas fa-check text-muted mr-1" aria-hidden="true"></i> Concluir ocorrência

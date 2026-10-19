@@ -8,18 +8,24 @@
             <p class="text-muted mb-0">Visão geral e status das atividades em andamento.</p>
         </div>
         <div class="d-flex align-items-center flex-shrink-0 ml-2">
+            <% if (can('activities', 'view')) { %>
             <a class="btn btn-sm btn-outline-secondary mr-1" href="/cms-Activity-Q"
                 title="Gerenciar Atividades" aria-label="Gerenciar Atividades">
                 <i class="fas fa-tasks" aria-hidden="true"></i>
             </a>
+            <% } %>
+            <% if (can('calendar', 'view')) { %>
             <a class="btn btn-sm btn-outline-secondary mr-1" href="/cms-Calendar"
                 title="Calendário" aria-label="Calendário">
                 <i class="far fa-calendar-alt" aria-hidden="true"></i>
             </a>
+            <% } %>
+            <% if (can('activities', 'create')) { %>
             <a class="btn btn-sm btn-outline-primary" href="/cms-Activity-C"
                 title="Nova Atividade" aria-label="Nova Atividade">
                 <i class="fas fa-plus" aria-hidden="true"></i>
             </a>
+            <% } %>
         </div>
     </div>
 
@@ -29,7 +35,9 @@
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-light font-weight-bold d-flex justify-content-between align-items-center">
                     <span><i class="fas fa-chart-pie text-primary mr-1" aria-hidden="true"></i> Status das Atividades</span>
+                    <% if (can('activities', 'view')) { %>
                     <a href="/cms-Activity-Q" class="small text-primary">Ver todas</a>
+                    <% } %>
                 </div>
                 <div class="card-body p-0">
                     <table class="table table-sm table-hover mb-0">

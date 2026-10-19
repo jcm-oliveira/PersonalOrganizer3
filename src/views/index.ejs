@@ -1,4 +1,51 @@
 <%- include('parts/head') %>
+<%
+    // Atalhos conforme as permissões do usuário logado (perfis de acesso)
+    const sections = [
+        {
+            title: 'Gestão',
+            col: 'col-md-4 mb-3',
+            items: [
+                { resource: 'activities', href: '/cms-Activity-Q', icon: 'fas fa-tasks', title: 'Atividades',
+                  text: 'Cadastre e acompanhe atividades, prazos, farol de vencimento e prioridades.' },
+                { resource: 'calendar', href: '/cms-Calendar', icon: 'far fa-calendar-alt', title: 'Calendário',
+                  text: 'Veja as atividades e prazos finais por mês, semana ou lista e remarque arrastando.' },
+                { resource: 'dashboard', href: '/dashboard', icon: 'fas fa-chart-pie', title: 'Dashboard',
+                  text: 'Veja os indicadores e o quadrante com status e prazos das atividades.' },
+            ],
+        },
+        {
+            title: 'Cadastros de Apoio',
+            col: 'col-md-4 col-sm-6 mb-3',
+            items: [
+                { resource: 'life_sphere', href: '/cms-LifeSphere-Q', icon: 'fas fa-heart', title: 'Esferas da Vida',
+                  text: 'Áreas da vida e cores de destaque.' },
+                { resource: 'relevance', href: '/cms-Relevance-Q', icon: 'fas fa-flag', title: 'Relevâncias',
+                  text: 'Níveis de prioridade das tarefas.' },
+                { resource: 'day_period', href: '/cms-DayPeriod-Q', icon: 'fas fa-sun', title: 'Períodos do Dia',
+                  text: 'Manhã, tarde ou noite.' },
+                { resource: 'action_type', href: '/cms-ActionType-Q', icon: 'fas fa-layer-group', title: 'Tipos de Ação',
+                  text: 'Natureza de execução da atividade.' },
+                { resource: 'theme_organization', href: '/cms-ThemeOrganization-Q', icon: 'fas fa-folder', title: 'Organização por Tema',
+                  text: 'Agrupadores vinculados às esferas.' },
+                { resource: 'activity_status', href: '/cms-ActivityStatus-Q', icon: 'fas fa-toggle-on', title: 'Status de Atividade',
+                  text: 'Situações de fluxo, cores e visibilidade padrão.' },
+            ],
+        },
+        {
+            title: 'Acesso ao Sistema',
+            col: 'col-md-4 col-sm-6 mb-3',
+            items: [
+                { resource: 'users', href: '/cms-User-Q', icon: 'fas fa-users', title: 'Usuários',
+                  text: 'Pessoas com acesso ao sistema, foto e perfis de acesso.' },
+                { resource: 'profiles', href: '/cms-AccessProfile-Q', icon: 'fas fa-user-shield', title: 'Perfis de Acesso',
+                  text: 'Permissões por tela: visualizar, inserir, alterar e excluir.' },
+            ],
+        },
+    ]
+        .map((section) => ({ ...section, items: section.items.filter((item) => can(item.resource, 'view')) }))
+        .filter((section) => section.items.length > 0);
+%>
 
 <main class="container py-5">
     <%# Cabeçalho: logo Personal Organizer %>
@@ -11,122 +58,31 @@
         </div>
     </header>
 
-    <%# Acesso rápido aos módulos (Gestão e Cadastros) %>
+    <%# Acesso rápido aos módulos que o usuário pode usar %>
     <nav class="mt-5" aria-label="Acesso rápido">
-        <h2 class="dashboard-section-title">Gestão</h2>
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <a class="card dashboard-shortcut h-100" href="/cms-Activity-Q">
-                    <div class="card-body">
-                        <span class="dashboard-shortcut-icon" aria-hidden="true">
-                            <i class="fas fa-tasks"></i>
-                        </span>
-                        <span class="dashboard-shortcut-title">Atividades</span>
-                        <span class="dashboard-shortcut-text">
-                            Cadastre e acompanhe atividades, prazos, farol de vencimento e prioridades.
-                        </span>
-                    </div>
-                </a>
+        <% if (sections.length === 0) { %>
+            <div class="alert alert-info">
+                Seu usuário ainda não tem acesso a nenhuma tela. Fale com um administrador do sistema.
             </div>
-
-            <div class="col-md-4 mb-3">
-                <a class="card dashboard-shortcut h-100" href="/cms-Calendar">
-                    <div class="card-body">
-                        <span class="dashboard-shortcut-icon" aria-hidden="true">
-                            <i class="far fa-calendar-alt"></i>
-                        </span>
-                        <span class="dashboard-shortcut-title">Calendário</span>
-                        <span class="dashboard-shortcut-text">
-                            Veja as atividades e prazos finais por mês, semana ou lista e remarque arrastando.
-                        </span>
+        <% } %>
+        <% sections.forEach((section, index) => { %>
+            <h2 class="dashboard-section-title <%= index > 0 ? 'mt-4' : '' %>"><%= section.title %></h2>
+            <div class="row">
+                <% section.items.forEach((item) => { %>
+                    <div class="<%= section.col %>">
+                        <a class="card dashboard-shortcut h-100" href="<%= item.href %>">
+                            <div class="card-body">
+                                <span class="dashboard-shortcut-icon" aria-hidden="true">
+                                    <i class="<%= item.icon %>"></i>
+                                </span>
+                                <span class="dashboard-shortcut-title"><%= item.title %></span>
+                                <span class="dashboard-shortcut-text"><%= item.text %></span>
+                            </div>
+                        </a>
                     </div>
-                </a>
+                <% }) %>
             </div>
-
-            <div class="col-md-4 mb-3">
-                <a class="card dashboard-shortcut h-100" href="/dashboard">
-                    <div class="card-body">
-                        <span class="dashboard-shortcut-icon" aria-hidden="true">
-                            <i class="fas fa-chart-pie"></i>
-                        </span>
-                        <span class="dashboard-shortcut-title">Dashboard</span>
-                        <span class="dashboard-shortcut-text">
-                            Veja os indicadores e o quadrante com status e prazos das atividades.
-                        </span>
-                    </div>
-                </a>
-            </div>
-        </div>
-
-        <h2 class="dashboard-section-title mt-4">Cadastros de Apoio</h2>
-        <div class="row">
-            <div class="col-md-4 col-sm-6 mb-3">
-                <a class="card dashboard-shortcut h-100" href="/cms-LifeSphere-Q">
-                    <div class="card-body">
-                        <span class="dashboard-shortcut-icon" aria-hidden="true">
-                            <i class="fas fa-heart"></i>
-                        </span>
-                        <span class="dashboard-shortcut-title">Esferas da Vida</span>
-                        <span class="dashboard-shortcut-text">Áreas da vida e cores de destaque.</span>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-4 col-sm-6 mb-3">
-                <a class="card dashboard-shortcut h-100" href="/cms-Relevance-Q">
-                    <div class="card-body">
-                        <span class="dashboard-shortcut-icon" aria-hidden="true">
-                            <i class="fas fa-flag"></i>
-                        </span>
-                        <span class="dashboard-shortcut-title">Relevâncias</span>
-                        <span class="dashboard-shortcut-text">Níveis de prioridade das tarefas.</span>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-4 col-sm-6 mb-3">
-                <a class="card dashboard-shortcut h-100" href="/cms-DayPeriod-Q">
-                    <div class="card-body">
-                        <span class="dashboard-shortcut-icon" aria-hidden="true">
-                            <i class="fas fa-sun"></i>
-                        </span>
-                        <span class="dashboard-shortcut-title">Períodos do Dia</span>
-                        <span class="dashboard-shortcut-text">Manhã, tarde ou noite.</span>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-4 col-sm-6 mb-3">
-                <a class="card dashboard-shortcut h-100" href="/cms-ActionType-Q">
-                    <div class="card-body">
-                        <span class="dashboard-shortcut-icon" aria-hidden="true">
-                            <i class="fas fa-layer-group"></i>
-                        </span>
-                        <span class="dashboard-shortcut-title">Tipos de Ação</span>
-                        <span class="dashboard-shortcut-text">Natureza de execução da atividade.</span>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-4 col-sm-6 mb-3">
-                <a class="card dashboard-shortcut h-100" href="/cms-ThemeOrganization-Q">
-                    <div class="card-body">
-                        <span class="dashboard-shortcut-icon" aria-hidden="true">
-                            <i class="fas fa-folder"></i>
-                        </span>
-                        <span class="dashboard-shortcut-title">Organização por Tema</span>
-                        <span class="dashboard-shortcut-text">Agrupadores vinculados às esferas.</span>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-4 col-sm-6 mb-3">
-                <a class="card dashboard-shortcut h-100" href="/cms-ActivityStatus-Q">
-                    <div class="card-body">
-                        <span class="dashboard-shortcut-icon" aria-hidden="true">
-                            <i class="fas fa-toggle-on"></i>
-                        </span>
-                        <span class="dashboard-shortcut-title">Status de Atividade</span>
-                        <span class="dashboard-shortcut-text">Situações de fluxo, cores e visibilidade padrão.</span>
-                    </div>
-                </a>
-            </div>
-        </div>
+        <% }) %>
     </nav>
 </main>
 

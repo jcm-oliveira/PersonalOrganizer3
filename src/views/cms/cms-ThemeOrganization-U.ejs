@@ -1,14 +1,17 @@
 <%- include('../parts/head') %>
 
 <main class="container py-4">
-    <form method="post" action="/cms-ThemeOrganization-U/<%= itemId %>">
+    <form method="post" action="/cms-ThemeOrganization-U/<%= itemId %>
+        <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h1 class="h3 mb-0">Editar Organização por Tema nº <%= itemId %></h1>
             <div class="d-flex align-items-center">
+                <% if (can('theme_organization', 'delete')) { %>
                 <button type="button" class="btn btn-sm btn-outline-danger mr-1" data-toggle="modal" data-target="#deleteModal"
                     title="Excluir" aria-label="Excluir">
                     <i class="fas fa-trash-alt mr-1" aria-hidden="true"></i> Excluir
                 </button>
+                <% } %>
                 <a class="btn btn-sm btn-outline-secondary mr-1" href="/cms-ThemeOrganization-V/<%= itemId %>"
                     title="Visualizar" aria-label="Visualizar">
                     <i class="fas fa-search mr-1" aria-hidden="true"></i> Visualizar
@@ -81,7 +84,8 @@
     <!-- Modal Exclusão -->
     <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalTitle" aria-hidden="true">
         <div class="modal-dialog" role="document">
-            <form class="modal-content" method="post" action="/cms-ThemeOrganization-D/<%= itemId %>">
+            <form class="modal-content" method="post" action="/cms-ThemeOrganization-D/<%= itemId %>
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">">
                 <div class="modal-header">
                     <h5 class="modal-title" id="deleteModalTitle">Excluir Organização por Tema</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">

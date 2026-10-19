@@ -7,8 +7,9 @@ const request = require("supertest");
 const Activity = require("../src/model/ActivityModel");
 const Lookups = require("../src/model/LookupModels");
 const { createApp } = require("../src/app");
+const { TEST_ADMIN } = require("./helpers");
 
-const app = createApp();
+const app = createApp({ currentUser: TEST_ADMIN, csrf: false });
 
 describe("Módulo Activity (Painel de Vôo)", () => {
     afterEach(() => mock.restoreAll());

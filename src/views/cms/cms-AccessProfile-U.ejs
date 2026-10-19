@@ -1,0 +1,25 @@
+<%- include('../parts/head') %>
+<% const editable = Number(profile.is_system) !== 1 && can('profiles', 'update'); %>
+
+<main class="container py-4">
+    <form method="post" action="/cms-AccessProfile-U/<%= profile.id %>" novalidate>
+        <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+            <h1 class="h3 mb-2 mr-3"><%= editable ? 'Editar' : 'Perfil de Acesso:' %> <%= editable ? `Perfil de Acesso nº ${profile.id}` : profile.name %></h1>
+            <div class="d-flex align-items-center mb-2">
+                <% if (editable) { %>
+                    <button type="submit" class="btn btn-sm btn-primary mr-1" title="Salvar perfil" aria-label="Salvar perfil">
+                        <i class="fas fa-save mr-1" aria-hidden="true"></i> Salvar
+                    </button>
+                <% } %>
+                <a class="btn btn-sm btn-outline-secondary" href="/cms-AccessProfile-Q" title="Voltar à lista" aria-label="Voltar à lista">
+                    <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Voltar
+                </a>
+            </div>
+        </div>
+
+        <%- include('cms-AccessProfile-I') %>
+    </form>
+</main>
+
+<%- include('../parts/footer') %>

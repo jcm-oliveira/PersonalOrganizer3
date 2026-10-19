@@ -20,10 +20,12 @@
                 title="Imprimir" aria-label="Imprimir">
                 <i class="fas fa-print" aria-hidden="true"></i>
             </button>
+            <% if (can('activities', 'create')) { %>
             <a class="btn btn-sm btn-outline-primary" href="/cms-Activity-C"
                 title="Nova Atividade" aria-label="Nova Atividade">
                 <i class="fas fa-plus" aria-hidden="true"></i>
             </a>
+            <% } %>
         </div>
     </div>
 
@@ -254,6 +256,7 @@
                                     title="Visualizar atividade" aria-label="Visualizar atividade">
                                     <i class="fas fa-search" aria-hidden="true"></i>
                                 </a>
+                                <% if (can('activities', 'update')) { %>
                                 <a class="btn-icon" href="/cms-Activity-U/<%= act.id %>"
                                     title="Editar atividade" aria-label="Editar atividade">
                                     <i class="fas fa-pen" aria-hidden="true"></i>
@@ -285,6 +288,7 @@
                                         title="Concluir ocorrência" aria-label="Concluir ocorrência">
                                         <i class="fas fa-check" aria-hidden="true"></i>
                                     </button>
+                                <% } %>
                                 <% } %>
                             </div>
                         </td>

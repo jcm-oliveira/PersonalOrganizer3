@@ -1,0 +1,41 @@
+<%- include('../parts/head') %>
+
+<main class="auth-page">
+    <div class="auth-card">
+        <div class="auth-brand">
+            <img src="/images/logo-personal-organizer.svg" alt="" width="56" height="56">
+            <div>
+                <h1 class="auth-title">Personal Organizer</h1>
+                <p class="auth-subtitle">Entre para continuar</p>
+            </div>
+        </div>
+
+        <% if (message) { %>
+            <div class="alert alert-info py-2" role="status"><%= message %></div>
+        <% } %>
+        <% if (error) { %>
+            <div class="alert alert-danger py-2" role="alert"><%= error %></div>
+        <% } %>
+
+        <form method="post" action="/login" novalidate>
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+            <input type="hidden" name="next" value="<%= next %>">
+            <div class="form-group">
+                <label for="email">E-mail</label>
+                <input type="email" class="form-control" id="email" name="email" value="<%= email %>"
+                    autocomplete="username" required autofocus maxlength="190">
+            </div>
+            <div class="form-group">
+                <label for="password">Senha</label>
+                <input type="password" class="form-control" id="password" name="password"
+                    autocomplete="current-password" required maxlength="200">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">
+                <i class="fas fa-sign-in-alt mr-1" aria-hidden="true"></i> Entrar
+            </button>
+        </form>
+        <p class="auth-help">Esqueceu a senha? Peça a um administrador do sistema para redefini-la.</p>
+    </div>
+</main>
+
+<%- include('../parts/footer') %>

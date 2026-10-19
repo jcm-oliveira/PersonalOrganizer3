@@ -1,0 +1,23 @@
+<%- include('../parts/head') %>
+
+<main class="container py-4">
+    <form method="post" action="/cms-User-U/<%= user.id %>" enctype="multipart/form-data" novalidate>
+        <%# O token CSRF precisa ser o primeiro campo: é lido junto com o upload %>
+        <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+            <h1 class="h3 mb-2 mr-3">Editar Usuário nº <%= user.id %></h1>
+            <div class="d-flex align-items-center mb-2">
+                <button type="submit" class="btn btn-sm btn-primary mr-1" title="Salvar usuário" aria-label="Salvar usuário">
+                    <i class="fas fa-save mr-1" aria-hidden="true"></i> Salvar
+                </button>
+                <a class="btn btn-sm btn-outline-secondary" href="/cms-User-Q" title="Voltar à lista" aria-label="Voltar à lista">
+                    <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Voltar
+                </a>
+            </div>
+        </div>
+
+        <%- include('cms-User-I') %>
+    </form>
+</main>
+
+<%- include('../parts/footer') %>

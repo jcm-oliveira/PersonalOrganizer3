@@ -1,0 +1,51 @@
+<%- include('../parts/head') %>
+
+<!-- Primeiro acesso: só aparece enquanto não existe nenhum usuário cadastrado -->
+<main class="auth-page">
+    <div class="auth-card">
+        <div class="auth-brand">
+            <img src="/images/logo-personal-organizer.svg" alt="" width="56" height="56">
+            <div>
+                <h1 class="auth-title">Primeiro acesso</h1>
+                <p class="auth-subtitle">Crie o usuário administrador do sistema</p>
+            </div>
+        </div>
+
+        <p class="small text-muted">
+            Este usuário terá o perfil <strong>Administrador</strong> (acesso total). Depois, ele
+            poderá cadastrar os demais usuários e perfis de acesso.
+        </p>
+
+        <form method="post" action="/setup" novalidate>
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+            <div class="form-group">
+                <label for="name">Nome <span class="text-danger">*</span></label>
+                <input type="text" class="form-control <%= errors.name ? 'is-invalid' : '' %>" id="name" name="name"
+                    value="<%= values.name || '' %>" maxlength="150" required autofocus autocomplete="name">
+                <% if (errors.name) { %><div class="invalid-feedback"><%= errors.name %></div><% } %>
+            </div>
+            <div class="form-group">
+                <label for="email">E-mail <span class="text-danger">*</span></label>
+                <input type="email" class="form-control <%= errors.email ? 'is-invalid' : '' %>" id="email" name="email"
+                    value="<%= values.email || '' %>" maxlength="190" required autocomplete="username">
+                <% if (errors.email) { %><div class="invalid-feedback"><%= errors.email %></div><% } %>
+            </div>
+            <div class="form-group">
+                <label for="password">Senha <span class="text-danger">*</span></label>
+                <input type="password" class="form-control <%= errors.password ? 'is-invalid' : '' %>" id="password"
+                    name="password" minlength="<%= passwordMin %>" maxlength="128" required autocomplete="new-password">
+                <small class="form-text text-muted">Mínimo de <%= passwordMin %> caracteres.</small>
+                <% if (errors.password) { %><div class="invalid-feedback"><%= errors.password %></div><% } %>
+            </div>
+            <div class="form-group">
+                <label for="password_confirm">Confirme a senha <span class="text-danger">*</span></label>
+                <input type="password" class="form-control <%= errors.password_confirm ? 'is-invalid' : '' %>"
+                    id="password_confirm" name="password_confirm" maxlength="128" required autocomplete="new-password">
+                <% if (errors.password_confirm) { %><div class="invalid-feedback"><%= errors.password_confirm %></div><% } %>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Criar administrador e entrar</button>
+        </form>
+    </div>
+</main>
+
+<%- include('../parts/footer') %>

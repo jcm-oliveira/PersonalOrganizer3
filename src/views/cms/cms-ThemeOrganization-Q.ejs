@@ -14,10 +14,12 @@
                 data-toggle="modal" data-target="#filterModal" title="Filtrar" aria-label="Filtrar">
                 <i class="fas fa-filter" aria-hidden="true"></i>
             </button>
+            <% if (can('theme_organization', 'create')) { %>
             <a class="btn btn-sm btn-outline-primary" href="/cms-ThemeOrganization-C"
                 title="Nova Organização por Tema" aria-label="Nova Organização por Tema">
                 <i class="fas fa-plus" aria-hidden="true"></i>
             </a>
+            <% } %>
         </div>
     </div>
 
@@ -103,10 +105,12 @@
                                 title="Visualizar" aria-label="Visualizar">
                                 <i class="fas fa-search" aria-hidden="true"></i>
                             </a>
+                            <% if (can('theme_organization', 'update')) { %>
                             <a class="btn btn-sm btn-outline-primary" href="/cms-ThemeOrganization-C/<%= it.id %>"
                                 title="Editar" aria-label="Editar">
                                 <i class="fas fa-pen" aria-hidden="true"></i>
                             </a>
+                            <% } %>
                         </td>
                     </tr>
                 <% }) %>

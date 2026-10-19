@@ -1,22 +1,47 @@
 const express = require("express");
 const ActivityController = require("../controllers/ActivityController");
+const { requirePermission, requireAnyPermission } = require("../middlewares/auth");
 
 const routes = express.Router();
 
-routes.get("/cms-Activity-Q", ActivityController.loadShowPage);
-routes.get("/cms-Activity-C", ActivityController.loadInsertPage);
-routes.post("/cms-Activity-C", ActivityController.insertActivityPage);
-routes.get("/cms-Activity-C/:id", ActivityController.loadUpdatePage);
-routes.get("/cms-Activity-U/:id", ActivityController.loadUpdatePage);
-routes.get("/cms-Activity-V/:id", ActivityController.loadViewPage);
-routes.get("/cms-Activity-V/:id/detalhes", ActivityController.loadViewFragment);
-routes.post("/cms-Activity-U/:id", ActivityController.updateActivityPage);
-routes.get("/cms-Calendar", ActivityController.loadCalendarPage);
-routes.get("/cms-Calendar/events", ActivityController.loadCalendarEvents);
-routes.post("/cms-Calendar/events/:id/reschedule", ActivityController.rescheduleCalendarEvent);
-routes.post("/cms-Activity-R/:id", ActivityController.rescheduleActivityPage);
-routes.post("/cms-Activity-O/:id", ActivityController.completeOccurrencePage);
-routes.post("/cms-Activity-S/:id", ActivityController.changeActivityStatusPage);
-routes.post("/cms-Activity-D/:id", ActivityController.deleteActivityPage);
+const view = requirePermission("activities", "view");
+const create = requirePermission("activities", "create");
+const update = requirePermission("activities", "update");
+const remove = requirePermission("activities", "delete");
+// Detalhes da atividade: abertos pela consulta e também pelo calendário
+const viewDetails = requireAnyPermission([
+    ["activities", "view"],
+    ["calendar", "view"],
+]);
+
+routes.get("/cms-Activity-Q", view, ActivityController.loadShowPage);
+routes.get("/cms-Activity-C", create, ActivityController.loadInsertPage);
+routes.post("/cms-Activity-C", create, ActivityController.insertActivityPage);
+routes.get("/cms-Activity-C/:id", update, ActivityController.loadUpdatePage);
+routes.get("/cms-Activity-U/:id", update, ActivityController.loadUpdatePage);
+routes.get("/cms-Activity-V/:id", viewDetails, ActivityController.loadViewPage);
+routes.get("/cms-Activity-V/:id/detalhes", viewDetails, ActivityController.loadViewFragment);
+routes.post("/cms-Activity-U/:id", update, ActivityController.updateActivityPage);
+// Remarcar, concluir ocorrência e mudar status são alterações da atividade
+routes.post("/cms-Activity-R/:id", update, ActivityController.rescheduleActivityPage);
+routes.post("/cms-Activity-O/:id", update, ActivityController.completeOccurrencePage);
+routes.post("/cms-Activity-S/:id", update, ActivityController.changeActivityStatusPage);
+routes.post("/cms-Activity-D/:id", remove, ActivityController.deleteActivityPage);
+
+routes.get(
+    "/cms-Calendar",
+    requirePermission("calendar", "view"),
+    ActivityController.loadCalendarPage,
+);
+routes.get(
+    "/cms-Calendar/events",
+    requirePermission("calendar", "view"),
+    ActivityController.loadCalendarEvents,
+);
+routes.post(
+    "/cms-Calendar/events/:id/reschedule",
+    requirePermission("calendar", "update"),
+    ActivityController.rescheduleCalendarEvent,
+);
 
 module.exports = routes;

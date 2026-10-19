@@ -14,14 +14,18 @@
             <% } %>
         </div>
         <div class="d-flex align-items-center">
+            <% if (canLookup(routePrefix, 'delete')) { %>
             <button type="button" class="btn btn-sm btn-outline-danger mr-1" data-toggle="modal" data-target="#deleteModal"
                 title="Excluir" aria-label="Excluir">
                 <i class="fas fa-trash-alt mr-1" aria-hidden="true"></i> Excluir
             </button>
-            <a class="btn btn-sm btn-outline-primary mr-1" href="/<%= routePrefix %>-U/<%= item.id %>"
+            <% } %>
+            <% if (canLookup(routePrefix, 'update')) { %>
+            <a class="btn btn-sm btn-outline-primary mr-1" href="/<%= routePrefix %>-C/<%= item.id %>"
                 title="Editar" aria-label="Editar">
                 <i class="fas fa-pen mr-1" aria-hidden="true"></i> Editar
             </a>
+            <% } %>
             <a class="btn btn-sm btn-outline-secondary" href="/<%= routePrefix %>-Q"
                 title="Voltar à Lista" aria-label="Voltar à Lista">
                 <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Voltar
@@ -72,7 +76,8 @@
     <!-- Modal Exclusão -->
     <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalTitle" aria-hidden="true">
         <div class="modal-dialog" role="document">
-            <form class="modal-content" method="post" action="/<%= routePrefix %>-D/<%= item.id %>">
+            <form class="modal-content" method="post" action="/<%= routePrefix %>
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">-D/<%= item.id %>">
                 <div class="modal-header">
                     <h5 class="modal-title" id="deleteModalTitle">Excluir <%= entityName %></h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">

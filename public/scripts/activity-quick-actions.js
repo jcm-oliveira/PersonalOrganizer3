@@ -40,8 +40,6 @@
             badge.className = "badge badge-danger";
             badge.textContent = "ATRASADO";
         }
-        const dot = row.querySelector(".c-days-next .rounded-circle");
-        if (dot) dot.style.backgroundColor = "#343a40";
         // Sem a cor da Esfera da Vida, a linha atrasada fica vermelha (igual ao servidor)
         if (!row.classList.contains("activity-row--sphere")) row.classList.add("table-danger");
     }

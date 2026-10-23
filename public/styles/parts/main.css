@@ -20,6 +20,15 @@ h5,
     margin-right: 2rem;
 }
 
+/* Consulta de atividades: dias até a data, abaixo dela e discreto ("(5 dias)") */
+.table-activity .activity-days {
+    display: block;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    opacity: 0.65;
+    white-space: nowrap;
+}
+
 /* Espaçamento maior entre os itens do menu principal (telas médias e maiores) */
 @media (min-width: 768px) {
     .navbar-expand-md .navbar-nav .nav-item + .nav-item {
@@ -697,9 +706,7 @@ a.hbar-label:focus {
     .table-activity .c-recurrence,
     .table-activity .c-action,
     .table-activity .c-theme,
-    .table-activity .c-status,
-    .table-activity .c-days-next,
-    .table-activity .c-days-deadline {
+    .table-activity .c-status {
         display: none;
     }
 

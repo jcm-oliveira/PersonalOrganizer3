@@ -67,25 +67,12 @@
                             <span class="activity-th-label">Próxima Atividade</span>
                         </span>
                     </th>
-                    <th style="min-width: 70px;">
-                        <span class="activity-th-content">
-                            <i class="fas fa-stopwatch activity-th-icon" aria-hidden="true"></i>
-                            <span class="activity-th-label">Faltam (dias)<span class="sr-only"> para a próxima atividade</span></span>
-                        </span>
-                    </th>
                     <th style="min-width: 100px;">
                         <span class="activity-th-content">
                             <i class="far fa-calendar-check activity-th-icon" aria-hidden="true"></i>
                             <span class="activity-th-label">Prazo Final</span>
                         </span>
                     </th>
-                    <th style="min-width: 70px;">
-                        <span class="activity-th-content">
-                            <i class="fas fa-hourglass-half activity-th-icon" aria-hidden="true"></i>
-                            <span class="activity-th-label">Faltam (dias)<span class="sr-only"> para o prazo final</span></span>
-                        </span>
-                    </th>
-
                     <th style="min-width: 105px;">
                         <span class="activity-th-content">
                             <i class="fas fa-sun activity-th-icon" aria-hidden="true"></i>
@@ -132,9 +119,18 @@
                 </tr>
             </thead>
             <tbody>
+                <%
+                    // Dias até a data, exibidos abaixo dela: "(hoje)", "(1 dia)", "(5 dias)", "(há 2 dias)"
+                    const daysText = (days) => {
+                        if (days === 0) return '(hoje)';
+                        const n = Math.abs(days);
+                        const label = `${n} ${n === 1 ? 'dia' : 'dias'}`;
+                        return days > 0 ? `(${label})` : `(há ${label})`;
+                    };
+                %>
                 <% if (activities.length === 0) { %>
                     <tr>
-                        <td colspan="15" class="text-center py-4 text-muted">
+                        <td colspan="13" class="text-center py-4 text-muted">
                             Nenhuma atividade encontrada com os filtros selecionados.
                         </td>
                     </tr>
@@ -196,25 +192,20 @@
                             <%= act.relevance %>
                         </td>
 
-                        <!-- Próxima Atividade -->
+                        <!-- Próxima Atividade, com os dias que faltam logo abaixo (discreto) -->
                         <td class="c-next align-middle text-center">
                             <%= act.next_activity_date_br || '-' %>
+                            <% if (act.days_next_activity !== null) { %>
+                                <span class="activity-days"><%= daysText(act.days_next_activity) %></span>
+                            <% } %>
                         </td>
 
-                        <!-- Faltam (dias) para a próxima atividade -->
-                        <td class="c-days-next align-middle text-center">
-                            <span class="d-inline-block rounded-circle mr-1" style="width: 8px; height: 8px; background-color: <%= act.traffic_light_dot_color %>;"></span>
-                            <%= act.days_next_activity !== null ? act.days_next_activity : '-' %>
-                        </td>
-
-                        <!-- Prazo Final -->
+                        <!-- Prazo Final, com os dias que faltam logo abaixo (discreto) -->
                         <td class="c-deadline align-middle text-center">
                             <%= act.final_deadline_br || '-' %>
-                        </td>
-
-                        <!-- Faltam (dias) para o prazo final -->
-                        <td class="c-days-deadline align-middle text-center">
-                            <%= act.days_final_deadline !== null ? act.days_final_deadline : '-' %>
+                            <% if (act.days_final_deadline !== null) { %>
+                                <span class="activity-days"><%= daysText(act.days_final_deadline) %></span>
+                            <% } %>
                         </td>
 
                         <!-- Período do dia -->

@@ -65,7 +65,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.match(summary, /Prazo 15\/10\/2026/);
         assert.match(summary, /Profissão e Carreira · Prioridade · /);
         assert.match(res.text, />\s*ATRASADO\s*</); // Data 2026-10-10 é anterior a 2026-10-13
-        // Colunas: "Faltam (dias)" logo após cada data, "Farol" e sem a linha de agrupamento
+        // Colunas: "Farol" primeiro, sem colunas "Faltam (dias)" e sem a linha de agrupamento
         const labels = [...res.text.matchAll(/activity-th-label">([^<]+)/g)].map((m) =>
             m[1].trim(),
         );
@@ -75,9 +75,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             "Esfera da Vida",
             "Relevância",
             "Próxima Atividade",
-            "Faltam (dias)",
             "Prazo Final",
-            "Faltam (dias)",
             "Período do dia",
             "Horário",
             "Repetição",
@@ -88,17 +86,26 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         ]);
         assert.doesNotMatch(res.text, /INFORMAÇÕES OBRIGATÓRIAS|table-activity-group|Dia Próx\./);
         const cells = [...res.text.matchAll(/<td class="(c-[a-z-]+)/g)].map((m) => m[1]);
-        assert.deepEqual(cells.slice(0, 9), [
+        assert.deepEqual(cells.slice(0, 7), [
             "c-dayprox",
             "c-desc",
             "c-mobile-summary",
             "c-sphere",
             "c-relevance",
             "c-next",
-            "c-days-next",
             "c-deadline",
-            "c-days-deadline",
         ]);
+        // Dias até a data, abaixo dela e entre parênteses (as duas datas já passaram)
+        const nextCell = res.text.match(/<td class="c-next[^"]*">([\s\S]*?)<\/td>/)[1];
+        assert.match(
+            nextCell,
+            /10\/10\/2026\s*<span class="activity-days">\(há \d+ dias?\)<\/span>/,
+        );
+        const deadlineCell = res.text.match(/<td class="c-deadline[^"]*">([\s\S]*?)<\/td>/)[1];
+        assert.match(
+            deadlineCell,
+            /15\/10\/2026\s*<span class="activity-days">\(há \d+ dias?\)<\/span>/,
+        );
     });
 
     it("renderiza a tela de dashboard com o quadrante de status das atividades", async () => {

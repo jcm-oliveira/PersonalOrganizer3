@@ -37,6 +37,12 @@
             <thead>
                 <!-- Linha inferior de colunas específicas com ícones acima dos textos -->
                 <tr class="text-center">
+                    <th style="min-width: 115px;">
+                        <span class="activity-th-content">
+                            <i class="fas fa-traffic-light activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Farol</span>
+                        </span>
+                    </th>
                     <th style="min-width: 220px;" class="text-left">
                         <span class="activity-th-content activity-th-content--left">
                             <i class="fas fa-align-left activity-th-icon" aria-hidden="true"></i>
@@ -117,12 +123,6 @@
                             <span class="activity-th-label">Status</span>
                         </span>
                     </th>
-                    <th style="min-width: 115px;">
-                        <span class="activity-th-content">
-                            <i class="fas fa-traffic-light activity-th-icon" aria-hidden="true"></i>
-                            <span class="activity-th-label">Farol</span>
-                        </span>
-                    </th>
                     <th style="min-width: 170px;">
                         <span class="activity-th-content">
                             <i class="fas fa-tools activity-th-icon" aria-hidden="true"></i>
@@ -147,6 +147,13 @@
                 %>
                     <tr class="<%= rowClass %>"
                         <% if (hasSphereColor) { %>data-bg-color="<%= act.life_sphere_color %>" data-text-color="<%= act.life_sphere_text_color %>"<% } %>>
+                        <!-- Farol: ATRASADO, HOJE, AMANHÃ, dia da semana ou MAIS DE 15 DIAS -->
+                        <td class="c-dayprox align-middle text-center font-weight-bold">
+                            <span class="badge <%= act.traffic_light_class %>">
+                                <%= act.next_activity_day_label %>
+                            </span>
+                        </td>
+
                         <!-- Descrição (destaque em negrito) -->
                         <td class="c-desc align-middle text-left">
                             <a href="/cms-Activity-V/<%= act.id %>" class="activity-desc-link" data-activity-view="<%= act.id %>">
@@ -239,13 +246,6 @@
                         <td class="c-status align-middle text-center">
                             <span class="badge activity-status-badge" style="background-color: <%= act.status_color_code %>; color: <%= act.status_text_color %>;">
                                 <%= act.status_name || (act.status === 1 ? 'Ativo' : 'Inativo') %>
-                            </span>
-                        </td>
-
-                        <!-- Farol: ATRASADO, HOJE, AMANHÃ, dia da semana ou MAIS DE 15 DIAS -->
-                        <td class="c-dayprox align-middle text-center font-weight-bold">
-                            <span class="badge <%= act.traffic_light_class %>">
-                                <%= act.next_activity_day_label %>
                             </span>
                         </td>
 

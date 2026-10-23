@@ -67,6 +67,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             m[1].trim(),
         );
         assert.deepEqual(labels, [
+            "Farol",
             "Descrição",
             "Esfera da Vida",
             "Relevância",
@@ -80,12 +81,12 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             "Tipo de Ação",
             "Organização por tema",
             "Status",
-            "Farol",
             "Ações",
         ]);
         assert.doesNotMatch(res.text, /INFORMAÇÕES OBRIGATÓRIAS|table-activity-group|Dia Próx\./);
         const cells = [...res.text.matchAll(/<td class="(c-[a-z-]+)/g)].map((m) => m[1]);
-        assert.deepEqual(cells.slice(0, 8), [
+        assert.deepEqual(cells.slice(0, 9), [
+            "c-dayprox",
             "c-desc",
             "c-mobile-summary",
             "c-sphere",

@@ -6,7 +6,7 @@
 <div class="form-row">
     <div class="form-group col-md-4">
         <label for="life_sphere">
-            <i class="fas fa-heart text-muted mr-1" aria-hidden="true"></i> Esfera da Vida <span class="text-danger">*</span>
+            Esfera da Vida <span class="text-danger">*</span>
             <span id="life_sphere_badge" class="badge ml-1 border d-none"></span>
         </label>
         <select class="form-control <%= errors.life_sphere ? 'is-invalid' : '' %>" id="life_sphere" name="life_sphere" required autofocus>
@@ -24,7 +24,7 @@
 
     <div class="form-group col-md-5">
         <label for="description">
-            <i class="fas fa-align-left text-muted mr-1" aria-hidden="true"></i> Descrição <span class="text-danger">*</span>
+            Descrição <span class="text-danger">*</span>
         </label>
         <input type="text" class="form-control <%= errors.description ? 'is-invalid' : '' %>" id="description"
             name="description" maxlength="255" value="<%= values.description || '' %>" required
@@ -34,7 +34,7 @@
 
     <div class="form-group col-md-3">
         <label for="relevance">
-            <i class="fas fa-flag text-muted mr-1" aria-hidden="true"></i> Relevância <span class="text-danger">*</span>
+            Relevância <span class="text-danger">*</span>
         </label>
         <select class="form-control <%= errors.relevance ? 'is-invalid' : '' %>" id="relevance" name="relevance" required>
             <% relevanceOptions.forEach((rel) => { %>
@@ -48,7 +48,7 @@
 <div class="form-row">
     <div class="form-group col-md-4">
         <label for="next_activity_date">
-            <i class="far fa-calendar-alt text-muted mr-1" aria-hidden="true"></i> Próxima Atividade (Data) <span class="text-danger">*</span>
+            Próxima Atividade (Data) <span class="text-danger">*</span>
         </label>
         <input type="date" class="form-control <%= errors.next_activity_date ? 'is-invalid' : '' %>"
             id="next_activity_date" name="next_activity_date" value="<%= values.next_activity_date || '' %>" required>
@@ -57,7 +57,7 @@
 
     <div class="form-group col-md-4">
         <label for="final_deadline">
-            <i class="far fa-calendar-check text-muted mr-1" aria-hidden="true"></i> Prazo Final
+            Prazo Final
         </label>
         <input type="date" class="form-control <%= errors.final_deadline ? 'is-invalid' : '' %>"
             id="final_deadline" name="final_deadline" value="<%= values.final_deadline || '' %>">
@@ -66,7 +66,7 @@
 
     <div class="form-group col-md-4">
         <label for="status">
-            <i class="fas fa-toggle-on text-muted mr-1" aria-hidden="true"></i> Status
+            Status
         </label>
         <select class="form-control <%= errors.status ? 'is-invalid' : '' %>" id="status" name="status">
             <% if (typeof activityStatuses !== 'undefined' && activityStatuses.length > 0) { %>
@@ -91,7 +91,7 @@
 <div class="form-row">
     <div class="form-group col-md-4">
         <label for="day_period">
-            <i class="fas fa-sun text-muted mr-1" aria-hidden="true"></i> Período do Dia
+            Período do Dia
         </label>
         <select class="form-control <%= errors.day_period ? 'is-invalid' : '' %>" id="day_period" name="day_period">
             <option value="">(Nenhum)</option>
@@ -104,7 +104,7 @@
 
     <div class="form-group col-md-4">
         <label for="scheduled_time">
-            <i class="far fa-clock text-muted mr-1" aria-hidden="true"></i> Horário
+            Horário
         </label>
         <input type="time" class="form-control <%= errors.scheduled_time ? 'is-invalid' : '' %>"
             id="scheduled_time" name="scheduled_time" value="<%= values.scheduled_time || '' %>">
@@ -113,7 +113,7 @@
 
     <div class="form-group col-md-4">
         <label for="action_type">
-            <i class="fas fa-layer-group text-muted mr-1" aria-hidden="true"></i> Tipo de Ação
+            Tipo de Ação
         </label>
         <select class="form-control <%= errors.action_type ? 'is-invalid' : '' %>" id="action_type" name="action_type">
             <option value="">(Nenhum)</option>
@@ -128,7 +128,7 @@
 <div class="form-row">
     <div class="form-group col-md-6">
         <label for="theme_organization">
-            <i class="fas fa-folder text-muted mr-1" aria-hidden="true"></i> Organização por Tema
+            Organização por Tema
         </label>
         <select class="form-control <%= errors.theme_organization ? 'is-invalid' : '' %>"
             id="theme_organization" name="theme_organization">
@@ -155,7 +155,7 @@
 
     <div class="form-group col-md-6">
         <label for="notes">
-            <i class="fas fa-sticky-note text-muted mr-1" aria-hidden="true"></i> Anotações / Próximas Atividades
+            Anotações / Próximas Atividades
         </label>
         <textarea class="form-control <%= errors.notes ? 'is-invalid' : '' %>" id="notes" name="notes"
             rows="3" maxlength="5000" placeholder="Anotações complementares..."><%= values.notes || '' %></textarea>

@@ -20,13 +20,20 @@ h5,
     margin-right: 2rem;
 }
 
-/* Consulta de atividades: dias até a data, abaixo dela e discreto ("(5 dias)") */
-.table-activity .activity-days {
+/* Consulta de atividades: informação complementar abaixo do valor da célula, discreta
+   (dias até a data, ex.: "(5 dias)"; relevância abaixo do tipo de ação) */
+.table-activity .activity-subtext {
     display: block;
     font-size: 0.75rem;
     line-height: 1.2;
     opacity: 0.65;
     white-space: nowrap;
+}
+
+/* Na descrição (texto mais longo, à esquerda), a esfera pode quebrar linha */
+.table-activity .c-desc .activity-subtext {
+    margin-top: 0.15rem;
+    white-space: normal;
 }
 
 /* Espaçamento maior entre os itens do menu principal (telas médias e maiores) */
@@ -697,16 +704,16 @@ a.hbar-label:focus {
         font-size: 0.9rem;
     }
 
-    .table-activity .c-sphere,
-    .table-activity .c-relevance,
+    /* A esfera abaixo da descrição já aparece no resumo do cartão */
+    .table-activity .c-action,
     .table-activity .c-next,
     .table-activity .c-deadline,
     .table-activity .c-period,
     .table-activity .c-time,
     .table-activity .c-recurrence,
-    .table-activity .c-action,
     .table-activity .c-theme,
-    .table-activity .c-status {
+    .table-activity .c-status,
+    .table-activity .c-desc .activity-subtext {
         display: none;
     }
 

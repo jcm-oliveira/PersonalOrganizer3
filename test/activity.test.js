@@ -72,39 +72,49 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.deepEqual(labels, [
             "Farol",
             "Descrição",
-            "Esfera da Vida",
-            "Relevância",
+            "Tipo de Ação",
             "Próxima Atividade",
             "Prazo Final",
             "Período do dia",
             "Horário",
             "Repetição",
-            "Tipo de Ação",
             "Organização por tema",
             "Status",
             "Ações",
         ]);
         assert.doesNotMatch(res.text, /INFORMAÇÕES OBRIGATÓRIAS|table-activity-group|Dia Próx\./);
         const cells = [...res.text.matchAll(/<td class="(c-[a-z-]+)/g)].map((m) => m[1]);
-        assert.deepEqual(cells.slice(0, 7), [
+        assert.deepEqual(cells.slice(0, 6), [
             "c-dayprox",
             "c-desc",
             "c-mobile-summary",
-            "c-sphere",
-            "c-relevance",
+            "c-action",
             "c-next",
             "c-deadline",
         ]);
+        // Descrição com a Esfera da Vida abaixo, discreta (sem coluna própria)
+        const descCell = res.text.match(/<td class="c-desc[^"]*">([\s\S]*?)<\/td>/)[1];
+        assert.match(
+            descCell,
+            /Reunião de Governança[\s\S]*<span class="activity-subtext" title="Esfera da Vida">[\s\S]*Profissão e Carreira<\/span>/,
+        );
+        assert.doesNotMatch(descCell, /Compromisso|Prioridade/);
+        // Tipo de ação com a relevância abaixo, discreta
+        const actionCell = res.text.match(/<td class="c-action[^"]*">([\s\S]*?)<\/td>/)[1];
+        assert.match(
+            actionCell,
+            /Compromisso\s*<span class="activity-subtext" title="Relevância">[\s\S]*Prioridade<\/span>/,
+        );
         // Dias até a data, abaixo dela e entre parênteses (as duas datas já passaram)
         const nextCell = res.text.match(/<td class="c-next[^"]*">([\s\S]*?)<\/td>/)[1];
         assert.match(
             nextCell,
-            /10\/10\/2026\s*<span class="activity-days">\(há \d+ dias?\)<\/span>/,
+            /10\/10\/2026\s*<span class="activity-subtext">\(há \d+ dias?\)<\/span>/,
         );
         const deadlineCell = res.text.match(/<td class="c-deadline[^"]*">([\s\S]*?)<\/td>/)[1];
         assert.match(
             deadlineCell,
-            /15\/10\/2026\s*<span class="activity-days">\(há \d+ dias?\)<\/span>/,
+            /15\/10\/2026\s*<span class="activity-subtext">\(há \d+ dias?\)<\/span>/,
         );
     });
 

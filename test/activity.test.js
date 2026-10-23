@@ -235,6 +235,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                 final_deadline: "2026-10-30",
                 day_period: "1 - Manhã",
                 scheduled_time: "09:30",
+                duration_hours: "1,5",
                 periodicity: "Única",
                 action_type: "Tarefa",
                 theme_organization: "[TI] - Projetos",
@@ -253,6 +254,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             final_deadline: "2026-10-30",
             day_period: "1 - Manhã",
             scheduled_time: "09:30:00",
+            duration_hours: 1.5,
             recurrence_rule: null,
             action_type: "Tarefa",
             theme_organization: "[TI] - Projetos",
@@ -654,6 +656,102 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.match(res.text, /id="activityCalendar"\s+data-events-url="\/cms-Calendar\/events"/);
         assert.match(res.text, /fullcalendar@5\.11\.5\/main\.min\.js"\s+integrity="sha384-/);
         assert.match(res.text, /src="\/scripts\/activity-calendar.js"/);
+    });
+
+    it("no calendário, o término do evento é o horário de início + a duração", async () => {
+        mockLookupsWithStatuses();
+        mock.method(Activity, "selectActivitiesForCalendar", async () => [
+            {
+                id: 7,
+                life_sphere: "Profissão e Carreira",
+                description: "Reunião de 1h30",
+                relevance: "Prioridade",
+                next_activity_date: "2026-10-20",
+                scheduled_time: "09:00:00",
+                duration_hours: "1.50", // MySQL devolve DECIMAL como texto
+                status: 1,
+            },
+            {
+                id: 8,
+                life_sphere: "Profissão e Carreira",
+                description: "Plantão noturno",
+                relevance: "Normal",
+                next_activity_date: "2026-10-21",
+                scheduled_time: "23:30:00",
+                duration_hours: "2.00",
+                status: 1,
+            },
+            {
+                id: 9,
+                life_sphere: "Profissão e Carreira",
+                description: "Dia inteiro com duração",
+                relevance: "Normal",
+                next_activity_date: "2026-10-22",
+                scheduled_time: null,
+                duration_hours: "3.00",
+                status: 1,
+            },
+        ]);
+
+        const res = await request(app)
+            .get("/cms-Calendar/events")
+            .query({ start: "2026-10-18", end: "2026-10-25" })
+            .expect(200);
+
+        const byId = Object.fromEntries(res.body.map((e) => [e.id, e]));
+        assert.equal(byId["7"].start, "2026-10-20T09:00:00");
+        assert.equal(byId["7"].end, "2026-10-20T10:30:00");
+        // Passa da meia-noite: termina no dia seguinte
+        assert.equal(byId["8"].end, "2026-10-22T01:30:00");
+        // Sem horário: evento de dia inteiro, a duração não se aplica
+        assert.equal(byId["9"].allDay, true);
+        assert.equal("end" in byId["9"], false);
+    });
+
+    it("valida a duração em horas no formulário de atividade", async () => {
+        const insert = mock.method(Activity, "insertActivity", async () => 1);
+        const send = (duration_hours) =>
+            request(app).post("/cms-Activity-C").type("form").send({
+                life_sphere: "Profissão e Carreira",
+                description: "Com duração",
+                duration_hours,
+                status: "1",
+            });
+
+        for (const invalid of ["0", "25", "1,3", "abc", "-1"]) {
+            const res = await send(invalid).expect(422);
+            assert.match(res.text, /id="duration_hours"/);
+        }
+        assert.equal(insert.mock.callCount(), 0);
+
+        await send("0,75").expect(303);
+        await send("").expect(303);
+        assert.equal(insert.mock.calls[0].arguments[0].duration_hours, 0.75);
+        assert.equal(insert.mock.calls[1].arguments[0].duration_hours, null);
+    });
+
+    it("mostra o horário de término e a duração na visualização da atividade", async () => {
+        mock.method(Activity, "selectActivityById", async () => ({
+            id: 7,
+            life_sphere: "Profissão e Carreira",
+            description: "Reunião de 1h30",
+            relevance: "Prioridade",
+            next_activity_date: "2026-10-20",
+            final_deadline: null,
+            day_period: null,
+            scheduled_time: "09:00:00",
+            duration_hours: "1.50",
+            action_type: null,
+            theme_organization: null,
+            notes: null,
+            status: 1,
+            recurrence_rule: null,
+        }));
+
+        const res = await request(app).get("/cms-Activity-V/7/detalhes").expect(200);
+
+        assert.match(res.text, /09:00 às 10:30/);
+        assert.match(res.text, /· 1h30/);
     });
 
     it("retorna as atividades como eventos do calendário com a cor da esfera", async () => {

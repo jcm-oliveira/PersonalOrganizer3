@@ -13,7 +13,10 @@
         if (days === -1) return 'ontem';
         return days > 0 ? `em ${days} dias` : `há ${-days} dias`;
     };
-    const timeText = activity.scheduled_time ? activity.scheduled_time.slice(0, 5) : null;
+    // Horário de início e, com duração, o término (ex.: "09:00 às 10:30")
+    const timeText = activity.scheduled_time
+        ? activity.scheduled_time.slice(0, 5) + (activity.scheduled_end_time ? ` às ${activity.scheduled_end_time}` : '')
+        : null;
     const periodText = activity.day_period ? activity.day_period.replace(/^\d+\s*-\s*/, '') : null;
 %>
 <article class="activity-view">
@@ -63,7 +66,8 @@
                 <div class="av-item">
                     <dt><i class="far fa-clock" aria-hidden="true"></i> Horário</dt>
                     <dd>
-                        <%= timeText || 'Sem horário definido' %><% if (periodText) { %>
+                        <%= timeText || 'Sem horário definido' %><% if (activity.duration_label) { %>
+                            <span class="av-muted">· <%= activity.duration_label %></span><% } %><% if (periodText) { %>
                             <span class="av-muted">· <%= periodText %></span><% } %>
                     </dd>
                 </div>

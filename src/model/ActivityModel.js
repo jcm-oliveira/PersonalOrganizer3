@@ -107,6 +107,7 @@ async function selectActivities({
             final_deadline,
             day_period,
             scheduled_time,
+            duration_hours,
             recurrence_rule,
             action_type,
             theme_organization,
@@ -173,6 +174,7 @@ async function selectActivitiesForCalendar({ start, end, status }) {
             final_deadline,
             day_period,
             scheduled_time,
+            duration_hours,
             recurrence_rule,
             action_type,
             theme_organization,
@@ -196,6 +198,7 @@ async function selectActivityById(id) {
             final_deadline,
             day_period,
             scheduled_time,
+            duration_hours,
             recurrence_rule,
             action_type,
             theme_organization,
@@ -324,12 +327,13 @@ async function insertActivity(data) {
             final_deadline,
             day_period,
             scheduled_time,
+            duration_hours,
             recurrence_rule,
             action_type,
             theme_organization,
             notes,
             status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const [result] = await pool.query(sql, [
         data.life_sphere,
@@ -339,6 +343,7 @@ async function insertActivity(data) {
         data.final_deadline,
         data.day_period,
         data.scheduled_time,
+        data.duration_hours ?? null,
         data.recurrence_rule ?? null,
         data.action_type,
         data.theme_organization,
@@ -363,6 +368,7 @@ async function updateActivity(id, data) {
             final_deadline = ?,
             day_period = ?,
             scheduled_time = ?,
+            duration_hours = ?,
             recurrence_rule = ?,
             action_type = ?,
             theme_organization = ?,
@@ -378,6 +384,7 @@ async function updateActivity(id, data) {
         data.final_deadline,
         data.day_period,
         data.scheduled_time,
+        data.duration_hours ?? null,
         data.recurrence_rule ?? null,
         data.action_type,
         data.theme_organization,

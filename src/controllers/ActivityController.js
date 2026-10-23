@@ -31,6 +31,7 @@ const {
     enrichActivity,
     getContrastTextColor,
     toDateOnlyString,
+    addDurationToDateTime,
 } = require("../validation/activitySchemas");
 const {
     buildRecurrence,
@@ -580,6 +581,11 @@ module.exports = {
                 final_deadline: finalDate,
                 day_period: activity.day_period || "",
                 scheduled_time: scheduledTime,
+                // Campo numérico do formulário: "1.5" (sem zeros à direita do DECIMAL)
+                duration_hours:
+                    activity.duration_hours === null || activity.duration_hours === undefined
+                        ? ""
+                        : String(Number(activity.duration_hours)),
                 action_type: activity.action_type || "",
                 theme_organization: activity.theme_organization || "",
                 notes: activity.notes || "",
@@ -685,6 +691,9 @@ module.exports = {
             const nextDate = toDateOnlyString(act.next_activity_date);
             const finalDate = toDateOnlyString(act.final_deadline);
             const time = act.scheduled_time ? String(act.scheduled_time).slice(0, 8) : null;
+            // Sem duração, o FullCalendar usa a duração padrão (1h) na visão semanal
+            const endOf = (date) =>
+                time ? addDurationToDateTime(date, time, act.duration_hours) : null;
             const { life_sphere_color: color, life_sphere_text_color: textColor } =
                 resolveSphereColor(act.life_sphere);
             const extendedProps = {
@@ -701,6 +710,7 @@ module.exports = {
                     id: String(act.id),
                     title: act.description,
                     start: time ? `${nextDate}T${time}` : nextDate,
+                    ...(endOf(nextDate) ? { end: endOf(nextDate) } : {}),
                     allDay: !time,
                     url: `/cms-Activity-V/${act.id}`,
                     editable: canReschedule,
@@ -718,6 +728,7 @@ module.exports = {
                             id: `occurrence-${act.id}-${date}`,
                             title: act.description,
                             start: time ? `${date}T${time}` : date,
+                            ...(endOf(date) ? { end: endOf(date) } : {}),
                             allDay: !time,
                             url: `/cms-Activity-V/${act.id}`,
                             editable: false,

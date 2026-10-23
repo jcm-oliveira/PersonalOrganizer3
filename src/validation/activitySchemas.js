@@ -117,6 +117,22 @@ const activityFormSchema = z.object({
             const parts = val.trim().split(":");
             return `${parts[0].padStart(2, "0")}:${parts[1].padStart(2, "0")}:00`;
         }),
+    // Duração em horas (aceita vírgula: "1,5"), em passos de 15 minutos
+    duration_hours: z
+        .string()
+        .trim()
+        .optional()
+        .transform((val) => (val ? val.replace(",", ".") : ""))
+        .refine((val) => val === "" || /^\d{1,2}(\.\d{1,2})?$/.test(val), {
+            message: "Duração inválida (em horas, ex.: 1,5).",
+        })
+        .transform((val) => (val === "" ? null : Number(val)))
+        .refine((val) => val === null || (val > 0 && val <= 24), {
+            message: "A duração deve ser maior que zero e de até 24 horas.",
+        })
+        .refine((val) => val === null || Number.isInteger(val * 4), {
+            message: "Use frações de 15 minutos (ex.: 0,25 · 0,5 · 1,75).",
+        }),
     action_type: z
         .string()
         .trim()
@@ -219,6 +235,37 @@ function toDateOnlyString(value) {
 function formatDateBr(dateStr) {
     const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(dateStr || "");
     return match ? `${match[3]}/${match[2]}/${match[1]}` : null;
+}
+
+/** Duração em minutos (o MySQL devolve DECIMAL como texto, ex.: "1.50"); null se não houver */
+function durationToMinutes(durationHours) {
+    const hours = Number(durationHours);
+    return durationHours === null || durationHours === undefined || !(hours > 0)
+        ? null
+        : Math.round(hours * 60);
+}
+
+/** 1.5 -> "1h30" | 2 -> "2h" | 0.75 -> "45min" (null quando não houver duração) */
+function formatDuration(durationHours) {
+    const minutes = durationToMinutes(durationHours);
+    if (minutes === null) return null;
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    if (h === 0) return `${m}min`;
+    return m === 0 ? `${h}h` : `${h}h${String(m).padStart(2, "0")}`;
+}
+
+/**
+ * Término = data e horário de início + duração ("YYYY-MM-DDTHH:MM:SS"). Calculado em UTC
+ * só como aritmética de calendário, para passar da meia-noite sem efeito de fuso.
+ */
+function addDurationToDateTime(dateStr, timeStr, durationHours) {
+    const minutes = durationToMinutes(durationHours);
+    const date = /^(\d{4})-(\d{2})-(\d{2})/.exec(dateStr || "");
+    const time = /^(\d{2}):(\d{2})/.exec(timeStr || "");
+    if (minutes === null || !date || !time) return null;
+    const start = Date.UTC(date[1], date[2] - 1, date[3], time[1], time[2]);
+    return new Date(start + minutes * 60 * 1000).toISOString().slice(0, 19);
 }
 
 /**
@@ -337,6 +384,15 @@ function enrichActivity(activity, referenceDate = new Date()) {
         next_activity_day_label: getNextActivityDayLabel(daysNext, referenceDate),
         traffic_light_class: trafficLightClass,
         traffic_light_dot_color: dotColor,
+        // Duração e horário de término (HH:MM), quando houver horário e duração.
+        // Só o horário interessa, então qualquer data serve de base para a soma.
+        duration_label: formatDuration(activity.duration_hours),
+        scheduled_end_time:
+            addDurationToDateTime(
+                "2000-01-01",
+                activity.scheduled_time,
+                activity.duration_hours,
+            )?.slice(11, 16) ?? null,
     };
 }
 
@@ -361,6 +417,8 @@ module.exports = {
     toFieldErrors,
     calculateDaysDiff,
     toDateOnlyString,
+    formatDuration,
+    addDurationToDateTime,
     enrichActivity,
     getNextActivityDayLabel,
     getContrastTextColor,

@@ -21,7 +21,7 @@ h5,
 }
 
 /* Consulta de atividades: informação complementar abaixo do valor da célula, discreta
-   (dias até a data, ex.: "(5 dias)"; relevância abaixo do tipo de ação) */
+   (dias até a data, ex.: "5 dias"; relevância abaixo do tipo de ação) */
 .table-activity .activity-subtext {
     display: block;
     font-size: 0.75rem;
@@ -34,6 +34,23 @@ h5,
 .table-activity .c-desc .activity-subtext {
     margin-top: 0.15rem;
     white-space: normal;
+}
+
+/* Próxima atividade: data e horário juntos; período do dia ao lado, bem discreto */
+.table-activity .activity-datetime {
+    white-space: nowrap;
+}
+
+/* Separador entre data e horário ("23/10/2026 | 14:00"), mais claro que o texto */
+.table-activity .activity-datetime__sep {
+    margin: 0 0.15rem;
+    opacity: 0.45;
+}
+
+.table-activity .activity-period {
+    font-size: 0.75rem;
+    opacity: 0.55;
+    white-space: nowrap;
 }
 
 /* Espaçamento maior entre os itens do menu principal (telas médias e maiores) */
@@ -708,8 +725,6 @@ a.hbar-label:focus {
     .table-activity .c-action,
     .table-activity .c-next,
     .table-activity .c-deadline,
-    .table-activity .c-period,
-    .table-activity .c-time,
     .table-activity .c-recurrence,
     .table-activity .c-theme,
     .table-activity .c-status,

@@ -55,7 +55,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         );
         assert.match(res.text, /href="\/cms-Activity-U\/1"/);
         // Datas exibidas em dd/mm/aaaa (o atributo do botão Remarcar continua em ISO)
-        assert.match(res.text, />\s*10\/10\/2026\s*</);
+        assert.match(res.text, />\s*10\/10\/2026 <span class="activity-datetime__sep"/); // horário ao lado
         assert.match(res.text, />\s*15\/10\/2026\s*</);
         assert.match(res.text, /data-next-date="2026-10-10"/);
         assert.doesNotMatch(res.text, /table-bordered/);
@@ -75,8 +75,6 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             "Tipo de Ação",
             "Próxima Atividade",
             "Prazo Final",
-            "Período do dia",
-            "Horário",
             "Repetição",
             "Organização por tema",
             "Status",
@@ -105,16 +103,22 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             actionCell,
             /Compromisso\s*<span class="activity-subtext" title="Relevância">[\s\S]*Prioridade<\/span>/,
         );
-        // Dias até a data, abaixo dela e entre parênteses (as duas datas já passaram)
+        // Próxima atividade: data e horário juntos, período do dia discreto (sem o prefixo
+        // "2 - ") e, abaixo, os dias sem parênteses (as duas datas já passaram)
         const nextCell = res.text.match(/<td class="c-next[^"]*">([\s\S]*?)<\/td>/)[1];
         assert.match(
             nextCell,
-            /10\/10\/2026\s*<span class="activity-subtext">\(há \d+ dias?\)<\/span>/,
+            /<span class="activity-datetime">10\/10\/2026 <span class="activity-datetime__sep" aria-hidden="true">\|<\/span> 14:00<\/span>/,
         );
+        assert.match(
+            nextCell,
+            /<span class="activity-period" title="Período do dia">[\s\S]*\(Tarde\)<\/span>/,
+        );
+        assert.match(nextCell, /<span class="activity-subtext">há \d+ dias?<\/span>/);
         const deadlineCell = res.text.match(/<td class="c-deadline[^"]*">([\s\S]*?)<\/td>/)[1];
         assert.match(
             deadlineCell,
-            /15\/10\/2026\s*<span class="activity-subtext">\(há \d+ dias?\)<\/span>/,
+            /15\/10\/2026\s*<span class="activity-subtext">há \d+ dias?<\/span>/,
         );
     });
 

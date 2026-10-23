@@ -67,18 +67,6 @@
                             <span class="activity-th-label">Prazo Final</span>
                         </span>
                     </th>
-                    <th style="min-width: 105px;">
-                        <span class="activity-th-content">
-                            <i class="fas fa-sun activity-th-icon" aria-hidden="true"></i>
-                            <span class="activity-th-label">Período do dia</span>
-                        </span>
-                    </th>
-                    <th style="min-width: 75px;">
-                        <span class="activity-th-content">
-                            <i class="far fa-clock activity-th-icon" aria-hidden="true"></i>
-                            <span class="activity-th-label">Horário</span>
-                        </span>
-                    </th>
                     <th style="min-width: 130px;">
                         <span class="activity-th-content">
                             <i class="fas fa-redo-alt activity-th-icon" aria-hidden="true"></i>
@@ -108,17 +96,17 @@
             </thead>
             <tbody>
                 <%
-                    // Dias até a data, exibidos abaixo dela: "(hoje)", "(1 dia)", "(5 dias)", "(há 2 dias)"
+                    // Dias até a data, exibidos abaixo dela: "hoje", "1 dia", "5 dias", "há 2 dias"
                     const daysText = (days) => {
-                        if (days === 0) return '(hoje)';
+                        if (days === 0) return 'hoje';
                         const n = Math.abs(days);
                         const label = `${n} ${n === 1 ? 'dia' : 'dias'}`;
-                        return days > 0 ? `(${label})` : `(há ${label})`;
+                        return days > 0 ? label : `há ${label}`;
                     };
                 %>
                 <% if (activities.length === 0) { %>
                     <tr>
-                        <td colspan="11" class="text-center py-4 text-muted">
+                        <td colspan="9" class="text-center py-4 text-muted">
                             Nenhuma atividade encontrada com os filtros selecionados.
                         </td>
                     </tr>
@@ -181,9 +169,17 @@
                             <% } %>
                         </td>
 
-                        <!-- Próxima Atividade, com os dias que faltam logo abaixo (discreto) -->
+                        <%
+                            // Período do dia sem o prefixo de ordenação ("2 - Tarde" -> "Tarde")
+                            const periodText = act.day_period ? act.day_period.replace(/^\d+\s*-\s*/, '') : null;
+                        %>
+                        <!-- Próxima Atividade: data e horário, período do dia (discreto) e,
+                             logo abaixo, os dias que faltam (discreto) -->
                         <td class="c-next align-middle text-center">
-                            <%= act.next_activity_date_br || '-' %>
+                            <span class="activity-datetime"><%= act.next_activity_date_br || '-' %><% if (act.scheduled_time) { %> <span class="activity-datetime__sep" aria-hidden="true">|</span> <%= act.scheduled_time.slice(0, 5) %><% } %></span>
+                            <% if (periodText) { %>
+                                <span class="activity-period" title="Período do dia"><span class="sr-only">Período do dia: </span>(<%= periodText %>)</span>
+                            <% } %>
                             <% if (act.days_next_activity !== null) { %>
                                 <span class="activity-subtext"><%= daysText(act.days_next_activity) %></span>
                             <% } %>
@@ -195,16 +191,6 @@
                             <% if (act.days_final_deadline !== null) { %>
                                 <span class="activity-subtext"><%= daysText(act.days_final_deadline) %></span>
                             <% } %>
-                        </td>
-
-                        <!-- Período do dia -->
-                        <td class="c-period align-middle text-center">
-                            <%= act.day_period || '-' %>
-                        </td>
-
-                        <!-- Horário -->
-                        <td class="c-time align-middle text-center">
-                            <%= act.scheduled_time ? act.scheduled_time.slice(0, 5) : '-' %>
                         </td>
 
                         <!-- Repetição (regra da atividade recorrente) -->

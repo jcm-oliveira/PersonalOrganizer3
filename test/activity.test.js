@@ -37,6 +37,9 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         const res = await request(app).get("/cms-Activity-Q").expect(200);
 
         assert.equal(select.mock.callCount(), 1);
+        // Padrão de 50 itens por página, já marcado no filtro
+        assert.equal(select.mock.calls[0].arguments[0].limit, 50);
+        assert.match(res.text, /<option value="50" selected>50<\/option>/);
         assert.match(res.text, /Atividades/);
         assert.match(res.text, /Reunião de Governança/);
         assert.match(res.text, /Profissão e Carreira/);

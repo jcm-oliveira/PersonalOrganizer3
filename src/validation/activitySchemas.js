@@ -1,6 +1,8 @@
 const { z } = require("zod");
 
 const PAGE_SIZES = [10, 25, 50, 100];
+// Consulta de atividades abre com 50 itens por página
+const DEFAULT_PAGE_SIZE = 50;
 
 const LIFE_SPHERES_WITH_COLORS = [
     { name: "Profissão e Carreira", color_code: "#007bff" },
@@ -65,7 +67,7 @@ const activityListQuerySchema = z.object({
     perPage: z.coerce
         .number()
         .refine((val) => PAGE_SIZES.includes(val))
-        .catch(PAGE_SIZES[0]),
+        .catch(DEFAULT_PAGE_SIZE),
 });
 
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;

@@ -1,8 +1,8 @@
 <%- include('../parts/head') %>
 
 <main class="container py-4">
-    <form method="post" action="/cms-Activity-U/<%= activityId %>
-        <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">">
+    <form method="post" action="/cms-Activity-U/<%= activityId %>">
+        <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h1 class="h3 mb-0">Editar Atividade nº <%= activityId %></h1>
             <div class="d-flex align-items-center">

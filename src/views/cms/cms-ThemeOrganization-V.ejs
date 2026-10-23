@@ -70,8 +70,8 @@
     <!-- Modal Exclusão -->
     <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalTitle" aria-hidden="true">
         <div class="modal-dialog" role="document">
-            <form class="modal-content" method="post" action="/cms-ThemeOrganization-D/<%= item.id %>
-                <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">">
+            <form class="modal-content" method="post" action="/cms-ThemeOrganization-D/<%= item.id %>">
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                 <div class="modal-header">
                     <h5 class="modal-title" id="deleteModalTitle">Excluir Organização por Tema</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">

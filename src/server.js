@@ -27,6 +27,20 @@
 })();
 // ===== FIM DO DIAGNÓSTICO =====
 
+app.set('trust proxy', 1);
+
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  store: sessionStore,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  },
+}));
+
 const env = require("./config/env");
 const { createApp } = require("./app");
 const { pool } = require("./db/config");

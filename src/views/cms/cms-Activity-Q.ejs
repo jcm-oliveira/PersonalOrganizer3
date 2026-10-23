@@ -51,12 +51,6 @@
                     </th>
                     <th style="min-width: 110px;">
                         <span class="activity-th-content">
-                            <i class="fas fa-layer-group activity-th-icon" aria-hidden="true"></i>
-                            <span class="activity-th-label">Tipo de Ação<span class="sr-only"> e tipo de atividade</span></span>
-                        </span>
-                    </th>
-                    <th style="min-width: 110px;">
-                        <span class="activity-th-content">
                             <i class="far fa-calendar-alt activity-th-icon" aria-hidden="true"></i>
                             <span class="activity-th-label">Próxima Atividade</span>
                         </span>
@@ -106,7 +100,7 @@
                 %>
                 <% if (activities.length === 0) { %>
                     <tr>
-                        <td colspan="9" class="text-center py-4 text-muted">
+                        <td colspan="8" class="text-center py-4 text-muted">
                             Nenhuma atividade encontrada com os filtros selecionados.
                         </td>
                     </tr>
@@ -137,8 +131,9 @@
                                     <span class="sr-only">Repete: <%= act.recurrence_description %></span>
                                 </span>
                             <% } %>
-                            <% if (act.life_sphere) { %>
-                                <span class="activity-subtext" title="Esfera da Vida"><span class="sr-only">Esfera da Vida: </span><%= act.life_sphere %></span>
+                            <%# Esfera da Vida e Tipo de Ação na mesma linha, separados por hífen %>
+                            <% if (act.life_sphere || act.action_type) { %>
+                                <span class="activity-subtext"><% if (act.life_sphere) { %><span title="Esfera da Vida"><span class="sr-only">Esfera da Vida: </span><%= act.life_sphere %></span><% } %><% if (act.life_sphere && act.action_type) { %><span aria-hidden="true"> - </span><% } %><% if (act.action_type) { %><span title="Tipo de Ação"><span class="sr-only">. Tipo de Ação: </span><%= act.action_type %></span><% } %></span>
                             <% } %>
                         </td>
 
@@ -161,14 +156,6 @@
                             <% } %>
                         </td>
 
-                        <!-- Tipo de Ação, com o tipo de atividade logo abaixo (discreto) -->
-                        <td class="c-action align-middle text-center">
-                            <%= act.action_type || '-' %>
-                            <% if (act.activity_type) { %>
-                                <span class="activity-subtext" title="Tipo de Atividade"><span class="sr-only">Tipo de Atividade: </span><%= act.activity_type %></span>
-                            <% } %>
-                        </td>
-
                         <%
                             // Período do dia sem o prefixo de ordenação ("2 - Tarde" -> "Tarde")
                             const periodText = act.day_period ? act.day_period.replace(/^\d+\s*-\s*/, '') : null;
@@ -176,7 +163,7 @@
                         <!-- Próxima Atividade: data e horário, período do dia (discreto) e,
                              logo abaixo, os dias que faltam (discreto) -->
                         <td class="c-next align-middle text-center">
-                            <span class="activity-datetime"><%= act.next_activity_date_br || '-' %><% if (act.scheduled_time) { %> <span class="activity-datetime__sep" aria-hidden="true">|</span> <%= act.scheduled_time.slice(0, 5) %><% } %></span>
+                            <span class="activity-datetime"><%= act.next_activity_date_br || '-' %><% if (act.scheduled_time) { %> <span class="activity-datetime__sep" aria-hidden="true">-</span> <%= act.scheduled_time.slice(0, 5) %><% } %></span>
                             <% if (periodText) { %>
                                 <span class="activity-period" title="Período do dia"><span class="sr-only">Período do dia: </span>(<%= periodText %>)</span>
                             <% } %>

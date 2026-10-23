@@ -41,7 +41,7 @@ h5,
     white-space: nowrap;
 }
 
-/* Separador entre data e horário ("23/10/2026 | 14:00"), mais claro que o texto */
+/* Separador entre data e horário ("23/10/2026 - 14:00"), mais claro que o texto */
 .table-activity .activity-datetime__sep {
     margin: 0 0.15rem;
     opacity: 0.45;
@@ -722,7 +722,6 @@ a.hbar-label:focus {
     }
 
     /* A esfera abaixo da descrição já aparece no resumo do cartão */
-    .table-activity .c-action,
     .table-activity .c-next,
     .table-activity .c-deadline,
     .table-activity .c-recurrence,

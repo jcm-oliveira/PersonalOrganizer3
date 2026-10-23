@@ -72,7 +72,6 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.deepEqual(labels, [
             "Farol",
             "Descrição",
-            "Tipo de Ação",
             "Próxima Atividade",
             "Prazo Final",
             "Repetição",
@@ -82,33 +81,28 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         ]);
         assert.doesNotMatch(res.text, /INFORMAÇÕES OBRIGATÓRIAS|table-activity-group|Dia Próx\./);
         const cells = [...res.text.matchAll(/<td class="(c-[a-z-]+)/g)].map((m) => m[1]);
-        assert.deepEqual(cells.slice(0, 6), [
+        assert.deepEqual(cells.slice(0, 5), [
             "c-dayprox",
             "c-desc",
             "c-mobile-summary",
-            "c-action",
             "c-next",
             "c-deadline",
         ]);
-        // Descrição com a Esfera da Vida abaixo, discreta (sem coluna própria)
+        // Descrição com Esfera da Vida e Tipo de Ação abaixo, discretos e separados por hífen
         const descCell = res.text.match(/<td class="c-desc[^"]*">([\s\S]*?)<\/td>/)[1];
         assert.match(
             descCell,
-            /Reunião de Governança[\s\S]*<span class="activity-subtext" title="Esfera da Vida">[\s\S]*Profissão e Carreira<\/span>/,
+            /Reunião de Governança[\s\S]*<span class="activity-subtext"><span title="Esfera da Vida">[\s\S]*Profissão e Carreira<\/span><span aria-hidden="true"> - <\/span><span title="Tipo de Ação">[\s\S]*Compromisso<\/span><\/span>/,
         );
-        assert.doesNotMatch(descCell, /Compromisso|Prioridade/);
-        // Tipo de ação com o tipo de atividade abaixo, discreto
-        const actionCell = res.text.match(/<td class="c-action[^"]*">([\s\S]*?)<\/td>/)[1];
-        assert.match(
-            actionCell,
-            /Compromisso\s*<span class="activity-subtext" title="Tipo de Atividade">[\s\S]*Prioridade<\/span>/,
-        );
+        assert.doesNotMatch(descCell, /Prioridade/);
+        // Sem coluna de Tipo de Atividade
+        assert.doesNotMatch(res.text, /class="c-activity-type/);
         // Próxima atividade: data e horário juntos, período do dia discreto (sem o prefixo
         // "2 - ") e, abaixo, os dias sem parênteses (as duas datas já passaram)
         const nextCell = res.text.match(/<td class="c-next[^"]*">([\s\S]*?)<\/td>/)[1];
         assert.match(
             nextCell,
-            /<span class="activity-datetime">10\/10\/2026 <span class="activity-datetime__sep" aria-hidden="true">\|<\/span> 14:00<\/span>/,
+            /<span class="activity-datetime">10\/10\/2026 <span class="activity-datetime__sep" aria-hidden="true">-<\/span> 14:00<\/span>/,
         );
         assert.match(
             nextCell,

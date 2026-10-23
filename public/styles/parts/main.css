@@ -1457,10 +1457,29 @@ fieldset:disabled .perm-check .custom-control-label::before {
     border-top: 1px solid #e9ecef;
 }
 
+.activity-reminder__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
 .activity-reminder__title {
     display: block;
     font-weight: 600;
     overflow-wrap: anywhere;
+}
+
+.activity-reminder__dismiss {
+    flex-shrink: 0;
+    padding: 0 0.25rem;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.activity-reminder__dismiss:hover,
+.activity-reminder__dismiss:focus {
+    color: #343a40;
 }
 
 .activity-reminder__when {

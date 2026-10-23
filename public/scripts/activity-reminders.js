@@ -3,8 +3,10 @@
 // Os avisos são buscados uma vez por página carregada e agendados no navegador. Não há
 // consulta periódica ao servidor, para não renovar a sessão indefinidamente.
 // O pop-up fica aberto até a hora da atividade (clique fora ou Esc não fecham) e cada
-// aviso some sozinho 5 min após o início. Um aviso fechado pelo usuário não volta a
-// aparecer neste navegador (localStorage); sem fechar, reaparece ao trocar de página.
+// aviso some sozinho 5 min após o início. Avisos próximos aparecem juntos, ordenados
+// pela hora de início; cada um pode ser dispensado sozinho ("Dispensar") ou todos de uma
+// vez. Um aviso dispensado não volta a aparecer neste navegador (localStorage); sem
+// dispensar, reaparece ao trocar de página.
 // "Notificar novamente em": grava na atividade uma nova antecedência (menor que o tempo
 // que falta) e reagenda o aviso para início - nova antecedência.
 (function () {
@@ -20,9 +22,18 @@
 
     let modal = null;
     let list = null;
+    let footerButton = null;
     let refreshTimer = null;
     let options = [];
+    // Avisos exibidos, na mesma ordem da lista (hora de início)
     const active = [];
+
+    // Estado do pop-up. O Bootstrap ignora "show"/"hide" durante a animação, então:
+    // aviso que chega enquanto o pop-up fecha espera em "pending" e o reabre ao final;
+    // pedido de fechar durante a abertura é atendido quando a abertura termina.
+    let modalState = "hidden"; // hidden | showing | shown | hiding
+    let closeWhenShown = false;
+    const pending = [];
 
     // "YYYY-MM-DDTHH:MM:SS" no horário local do navegador
     function parseLocal(iso) {
@@ -45,7 +56,7 @@
         }
     }
 
-    // Guarda os avisos fechados; descarta os de atividades que já começaram
+    // Guarda os avisos dispensados; descarta os de atividades que já começaram
     function saveDismissed(keys) {
         const now = Date.now();
         const dismissed = loadDismissed();
@@ -94,11 +105,21 @@
         return `${option ? option.label : `${minutes} minutos`} antes`;
     }
 
+    function openModal() {
+        closeWhenShown = false;
+        if (modalState === "hidden") window.jQuery(modal).modal("show");
+    }
+
+    function closeModal() {
+        if (modalState === "shown") window.jQuery(modal).modal("hide");
+        else if (modalState === "showing") closeWhenShown = true;
+    }
+
     function ensureModal() {
         if (modal) return;
         const wrapper = document.createElement("div");
         // Clique fora ou Esc não fecham: o aviso fica aberto até a hora da atividade
-        // (fecha pelo "OK, entendi" / "×" ou sozinho, 5 min após o início)
+        // (fecha pelos botões de dispensar / "×" ou sozinho, 5 min após o início)
         wrapper.innerHTML = `
             <div class="modal fade" id="activityReminderModal" tabindex="-1" role="dialog"
                 aria-labelledby="activityReminderTitle" aria-hidden="true"
@@ -124,17 +145,39 @@
             </div>`;
         modal = wrapper.firstElementChild;
         list = modal.querySelector(".activity-reminder-list");
+        footerButton = modal.querySelector(".modal-footer .btn");
         document.body.appendChild(modal);
 
-        // Ao fechar, os avisos exibidos não voltam; os reagendados já têm novo aviso
-        window.jQuery(modal).on("hidden.bs.modal", () => {
+        const $modal = window.jQuery(modal);
+        $modal.on("show.bs.modal", () => {
+            modalState = "showing";
+        });
+        $modal.on("shown.bs.modal", () => {
+            modalState = "shown";
+            if (closeWhenShown && active.length === 0) closeModal();
+            closeWhenShown = false;
+        });
+        $modal.on("hide.bs.modal", () => {
+            modalState = "hiding";
+        });
+        // Fechado (botões ou automático): os avisos que restaram contam como dispensados;
+        // os reagendados já têm novo aviso. Avisos que chegaram durante o fechamento
+        // reabrem o pop-up.
+        $modal.on("hidden.bs.modal", () => {
+            modalState = "hidden";
             saveDismissed(active.filter((r) => !r.snoozed).map(keyOf));
             active.forEach((r) => clearTimeout(r.expireTimer));
             active.length = 0;
             list.textContent = "";
             clearInterval(refreshTimer);
             refreshTimer = null;
+            pending.splice(0).forEach(show);
         });
+    }
+
+    // "OK, entendi" com um aviso; "Dispensar todos" com mais de um
+    function updateFooter() {
+        footerButton.textContent = active.length > 1 ? "Dispensar todos" : "OK, entendi";
     }
 
     function updateWhen(reminder) {
@@ -150,14 +193,17 @@
         }
     }
 
-    // 5 min após o início o aviso sai do pop-up; sem avisos, o pop-up fecha
-    function expire(reminder) {
+    // Tira um aviso da lista; sem avisos, o pop-up fecha (exceto na troca por um
+    // aviso reagendado da mesma atividade: keepOpen)
+    function removeReminder(reminder, { dismissed, keepOpen = false }) {
         const index = active.indexOf(reminder);
         if (index < 0) return;
-        saveDismissed([keyOf(reminder)]);
+        if (dismissed && !reminder.snoozed) saveDismissed([keyOf(reminder)]);
+        clearTimeout(reminder.expireTimer);
         reminder.itemEl.remove();
         active.splice(index, 1);
-        if (active.length === 0) window.jQuery(modal).modal("hide");
+        updateFooter();
+        if (active.length === 0 && !keepOpen) closeModal();
     }
 
     // Opções menores que o tempo que falta (as demais disparariam o aviso na hora)
@@ -236,47 +282,78 @@
         const item = document.createElement("li");
         item.className = "activity-reminder";
 
+        const header = document.createElement("div");
+        header.className = "activity-reminder__header";
+
         const title = document.createElement("a");
         title.className = "activity-reminder__title";
         title.href = reminder.url;
         title.textContent = reminder.title;
 
+        const dismissButton = document.createElement("button");
+        dismissButton.type = "button";
+        dismissButton.className = "btn btn-link btn-sm activity-reminder__dismiss";
+        dismissButton.textContent = "Dispensar";
+        dismissButton.setAttribute("aria-label", `Dispensar o aviso de ${reminder.title}`);
+        dismissButton.addEventListener("click", () =>
+            removeReminder(reminder, { dismissed: true }),
+        );
+
+        header.append(title, dismissButton);
+
         reminder.whenEl = document.createElement("div");
         reminder.whenEl.className = "activity-reminder__when";
 
-        item.append(title, reminder.whenEl);
+        item.append(header, reminder.whenEl);
         reminder.snoozeEl = canUpdate ? buildSnoozeField(reminder) : null;
         if (reminder.snoozeEl) item.appendChild(reminder.snoozeEl);
         updateWhen(reminder);
         return item;
     }
 
-    function show(data) {
-        if (loadDismissed()[keyOf(data)]) return; // fechado em outra aba
-        ensureModal();
-        if (active.some((r) => keyOf(r) === keyOf(data))) return;
-        // Novo aviso da mesma atividade (reagendado) substitui o anterior na lista
-        const previous = active.findIndex((r) => r.id === data.id);
-        const reminder = { ...data, snoozed: false };
-        const item = buildItem(reminder);
-        if (previous >= 0) {
-            clearTimeout(active[previous].expireTimer);
-            active[previous].itemEl.replaceWith(item);
-            active.splice(previous, 1);
+    // Insere na lista pela hora de início (empate: título)
+    function insertSorted(reminder) {
+        const index = active.findIndex(
+            (r) =>
+                r.start > reminder.start ||
+                (r.start === reminder.start && r.title.localeCompare(reminder.title, "pt-BR") > 0),
+        );
+        if (index < 0) {
+            active.push(reminder);
+            list.appendChild(reminder.itemEl);
         } else {
-            list.appendChild(item);
+            list.insertBefore(reminder.itemEl, active[index].itemEl);
+            active.splice(index, 0, reminder);
         }
-        reminder.itemEl = item;
-        active.push(reminder);
+    }
+
+    function show(data) {
+        if (loadDismissed()[keyOf(data)]) return; // dispensado em outra aba
+        ensureModal();
+        // Pop-up fechando: espera terminar e reabre com este aviso
+        if (modalState === "hiding") {
+            if (!pending.some((r) => keyOf(r) === keyOf(data))) pending.push(data);
+            return;
+        }
+        if (active.some((r) => keyOf(r) === keyOf(data))) return;
+
+        // Novo aviso da mesma atividade (reagendado) substitui o anterior na lista
+        const previous = active.find((r) => r.id === data.id);
+        if (previous) removeReminder(previous, { dismissed: false, keepOpen: true });
+
+        const reminder = { ...data, snoozed: false };
+        reminder.itemEl = buildItem(reminder);
+        insertSorted(reminder);
+        updateFooter();
         reminder.expireTimer = setTimeout(
-            () => expire(reminder),
+            () => removeReminder(reminder, { dismissed: true }),
             Math.max(0, parseLocal(reminder.start).getTime() + CLOSE_AFTER_START_MS - Date.now()),
         );
 
         if (!refreshTimer) {
             refreshTimer = setInterval(() => active.forEach(updateWhen), REFRESH_MS);
         }
-        window.jQuery(modal).modal("show");
+        openModal();
     }
 
     function schedule(reminders) {
@@ -285,7 +362,7 @@
         reminders.forEach((reminder) => {
             const start = parseLocal(reminder.start).getTime();
             const notifyAt = start - reminder.notifyBeforeMinutes * 60 * 1000;
-            // Fechado pelo usuário ou já passados 5 min do início: não mostra
+            // Dispensado pelo usuário ou já passados 5 min do início: não mostra
             if (dismissed[keyOf(reminder)] || now >= start + CLOSE_AFTER_START_MS) return;
             const delay = notifyAt - now;
             if (delay <= 0) show(reminder);

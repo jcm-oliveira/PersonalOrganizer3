@@ -116,7 +116,7 @@ async function selectActivities({
             updated_at
         FROM activity
         WHERE ${where}
-        ORDER BY next_activity_date ASC, id DESC
+        ORDER BY next_activity_date IS NULL, next_activity_date ASC, id DESC
         LIMIT ? OFFSET ?
     `;
 

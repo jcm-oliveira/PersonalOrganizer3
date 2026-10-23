@@ -48,10 +48,10 @@
 <div class="form-row">
     <div class="form-group col-md-4">
         <label for="next_activity_date">
-            Próxima Atividade (Data) <span class="text-danger">*</span>
+            Próxima Atividade (Data)
         </label>
         <input type="date" class="form-control <%= errors.next_activity_date ? 'is-invalid' : '' %>"
-            id="next_activity_date" name="next_activity_date" value="<%= values.next_activity_date || '' %>" required>
+            id="next_activity_date" name="next_activity_date" value="<%= values.next_activity_date || '' %>">
         <% if (errors.next_activity_date) { %><div class="invalid-feedback"><%= errors.next_activity_date %></div><% } %>
     </div>
 

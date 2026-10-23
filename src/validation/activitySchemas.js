@@ -84,9 +84,12 @@ const activityFormSchema = z.object({
         .max(255, "A descrição deve ter no máximo 255 caracteres."),
     relevance: z.string().trim().min(1, "Informe a relevância.").max(50).default("Prioridade"),
     next_activity_date: z
-        .string({ error: "Informe a data da próxima atividade." })
+        .string()
         .trim()
-        .regex(dateRegex, "Data da próxima atividade inválida (AAAA-MM-DD)."),
+        .regex(dateRegex, "Data da próxima atividade inválida (AAAA-MM-DD).")
+        .optional()
+        .or(z.literal(""))
+        .transform((val) => (val && val.trim() !== "" ? val.trim() : null)),
     final_deadline: z
         .string()
         .trim()
@@ -292,28 +295,30 @@ function enrichActivity(activity, referenceDate = new Date()) {
     let trafficLightClass = "badge-success";
     let dotColor = "#28a745"; // Verde
 
-    if (daysNext !== null) {
-        if (daysNext < 0) {
-            trafficLight = "ATRASADA";
-            trafficLightLabel = "ATRASADA";
-            trafficLightClass = "badge-danger";
-            dotColor = "#343a40"; // Preto/cinza escuro como na imagem
-        } else if (daysNext === 0) {
-            trafficLight = "HOJE";
-            trafficLightLabel = "HOJE";
-            trafficLightClass = "badge-danger";
-            dotColor = "#dc3545"; // Vermelho
-        } else if (daysNext <= 7) {
-            trafficLight = "7_DIAS";
-            trafficLightLabel = "PRÓX. 7 DIAS";
-            trafficLightClass = "badge-warning";
-            dotColor = "#fd7e14"; // Laranja
-        } else if (daysNext <= 15) {
-            trafficLight = "15_DIAS";
-            trafficLightLabel = "ENTRE 7 E 15 DIAS";
-            trafficLightClass = "badge-warning";
-            dotColor = "#ffc107"; // Amarelo
-        }
+    if (daysNext === null) {
+        // Sem data marcada: farol neutro
+        trafficLightClass = "badge-secondary";
+        dotColor = "#adb5bd"; // Cinza
+    } else if (daysNext < 0) {
+        trafficLight = "ATRASADA";
+        trafficLightLabel = "ATRASADA";
+        trafficLightClass = "badge-danger";
+        dotColor = "#343a40"; // Preto/cinza escuro como na imagem
+    } else if (daysNext === 0) {
+        trafficLight = "HOJE";
+        trafficLightLabel = "HOJE";
+        trafficLightClass = "badge-danger";
+        dotColor = "#dc3545"; // Vermelho
+    } else if (daysNext <= 7) {
+        trafficLight = "7_DIAS";
+        trafficLightLabel = "PRÓX. 7 DIAS";
+        trafficLightClass = "badge-warning";
+        dotColor = "#fd7e14"; // Laranja
+    } else if (daysNext <= 15) {
+        trafficLight = "15_DIAS";
+        trafficLightLabel = "ENTRE 7 E 15 DIAS";
+        trafficLightClass = "badge-warning";
+        dotColor = "#ffc107"; // Amarelo
     }
 
     return {

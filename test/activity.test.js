@@ -276,6 +276,45 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.match(res.text, /Informe a descrição da atividade\./);
     });
 
+    it("cadastra atividade sem data da próxima atividade", async () => {
+        const insert = mock.method(Activity, "insertActivity", async () => 1);
+
+        await request(app)
+            .post("/cms-Activity-C")
+            .type("form")
+            .send({
+                life_sphere: "Profissão e Carreira",
+                description: "Atividade sem data",
+                next_activity_date: "",
+                status: "1",
+            })
+            .expect(303);
+
+        assert.equal(insert.mock.callCount(), 1);
+        assert.equal(insert.mock.calls[0].arguments[0].next_activity_date, null);
+        assert.equal(insert.mock.calls[0].arguments[0].recurrence_rule, null);
+    });
+
+    it("exige a data da próxima atividade quando há repetição", async () => {
+        const insert = mock.method(Activity, "insertActivity", async () => 1);
+
+        const res = await request(app)
+            .post("/cms-Activity-C")
+            .type("form")
+            .send({
+                life_sphere: "Profissão e Carreira",
+                description: "Atividade recorrente sem data",
+                next_activity_date: "",
+                recurrence_freq: "DAILY",
+                recurrence_interval: "1",
+                status: "1",
+            })
+            .expect(422);
+
+        assert.equal(insert.mock.callCount(), 0);
+        assert.match(res.text, /Informe a data da próxima atividade para usar a repetição\./);
+    });
+
     it("carrega tela de visualização de atividade existente", async () => {
         mock.method(Activity, "selectActivityById", async () => ({
             id: 15,
@@ -432,6 +471,12 @@ describe("Módulo Activity (Painel de Vôo)", () => {
 
         assert.match(res.text, /<select[^>]*id="theme_organization"/);
         assert.match(res.text, /<option value="">\(Nenhum\)<\/option>/);
+    });
+
+    it("carrega tela de inserção com a data da próxima atividade em branco", async () => {
+        const res = await request(app).get("/cms-Activity-C").expect(200);
+
+        assert.match(res.text, /id="next_activity_date" name="next_activity_date" value=""/);
     });
 
     function mockLookupsWithStatuses() {

@@ -338,12 +338,20 @@ function buildDashboardCharts(distribution, lookups) {
 }
 
 // Valida o formulário de atividade e a recorrência. Com recorrência, a próxima
-// atividade é alinhada à primeira ocorrência válida da regra.
+// atividade é alinhada à primeira ocorrência válida da regra. A data é opcional,
+// exceto na atividade recorrente, em que ela é o início da série.
 function parseActivityForm(body) {
     const parsed = activityFormSchema.safeParse(body ?? {});
     const errors = parsed.success ? {} : toFieldErrors(parsed.error);
     const startDate = parsed.success ? parsed.data.next_activity_date : null;
-    const recurrence = startDate ? buildRecurrence(body, startDate) : null;
+    let recurrence = null;
+    if (startDate) {
+        recurrence = buildRecurrence(body, startDate);
+    } else if (parsed.success && body?.recurrence_freq) {
+        errors.next_activity_date = "Informe a data da próxima atividade para usar a repetição.";
+    } else {
+        recurrence = { rule: null, nextActivityDate: null };
+    }
     if (recurrence?.error) errors.recurrence = recurrence.error;
 
     if (Object.keys(errors).length > 0) {
@@ -502,14 +510,12 @@ module.exports = {
     //------------------------------------------------
 
     async loadInsertPage(req, res) {
-        const todayStr = getTodayString();
         const lookups = await loadLookupOptions();
         return res.render("cms/cms-Activity-C", {
             title: "Nova Atividade",
             values: {
                 status: String(DEFAULT_ACTIVITY_STATUS_ID),
                 relevance: "Prioridade",
-                next_activity_date: todayStr,
             },
             lifeSpheres: lookups.lifeSpheres,
             lifeSpheresWithColor: lookups.lifeSpheresWithColor,

@@ -1,6 +1,28 @@
 const { z } = require("zod");
 
 const PAGE_SIZES = [10, 25, 50, 100];
+// Notificação com antecedência (minutos antes do início da atividade)
+const DEFAULT_NOTIFY_BEFORE_MINUTES = 15;
+const NOTIFY_BEFORE_OPTIONS = [
+    { minutes: 0, label: "Na hora da atividade" },
+    { minutes: 15, label: "15 minutos" },
+    { minutes: 30, label: "30 minutos" },
+    { minutes: 60, label: "1 hora" },
+    { minutes: 120, label: "2 horas" },
+    { minutes: 180, label: "3 horas" },
+    { minutes: 240, label: "4 horas" },
+    { minutes: 300, label: "5 horas" },
+    { minutes: 1440, label: "1 dia" },
+    { minutes: 2880, label: "2 dias" },
+    { minutes: 4320, label: "3 dias" },
+    { minutes: 5760, label: "4 dias" },
+    { minutes: 7200, label: "5 dias" },
+];
+// Maior antecedência, em dias: limita a busca dos avisos
+const NOTIFY_BEFORE_MAX_DAYS = 5;
+// Atividade com horário fica atrasada (farol) 5 min após o início, quando o aviso some
+const OVERDUE_GRACE_MINUTES = 5;
+
 // Consulta de atividades abre com 50 itens por página
 const DEFAULT_PAGE_SIZE = 50;
 
@@ -147,6 +169,14 @@ const activityFormSchema = z.object({
         .optional()
         .or(z.literal(""))
         .transform((val) => (val && val.trim() !== "" ? val.trim() : null)),
+    notify_before_minutes: z
+        .string()
+        .trim()
+        .optional()
+        .transform((val) => (val ? Number(val) : DEFAULT_NOTIFY_BEFORE_MINUTES))
+        .refine((val) => NOTIFY_BEFORE_OPTIONS.some((opt) => opt.minutes === val), {
+            message: "Selecione uma antecedência válida para a notificação.",
+        }),
     notes: z
         .string()
         .trim()
@@ -206,6 +236,16 @@ const calendarRescheduleSchema = z.object({
         .nullable(),
 });
 
+// Pop-up de aviso: "Notificar novamente em" (nova antecedência da atividade)
+const activityNotifyBeforeSchema = z.object({
+    notify_before_minutes: z.coerce
+        .number({ error: "Selecione quando notificar novamente." })
+        .int()
+        .refine((val) => NOTIFY_BEFORE_OPTIONS.some((opt) => opt.minutes === val), {
+            message: "Selecione uma antecedência válida para a notificação.",
+        }),
+});
+
 const idParamSchema = z.coerce.number().int().positive();
 
 function toFieldErrors(zodError) {
@@ -237,6 +277,17 @@ function formatDateBr(dateStr) {
     return match ? `${match[3]}/${match[2]}/${match[1]}` : null;
 }
 
+/** 15 -> "15 minutos antes" | 0 -> "Na hora da atividade" (padrão quando não houver valor) */
+function formatNotifyBefore(minutes) {
+    const value =
+        minutes === null || minutes === undefined || minutes === ""
+            ? DEFAULT_NOTIFY_BEFORE_MINUTES
+            : Number(minutes);
+    if (value === 0) return "Na hora da atividade";
+    const option = NOTIFY_BEFORE_OPTIONS.find((opt) => opt.minutes === value);
+    return `${option ? option.label : `${value} minutos`} antes`;
+}
+
 /** Duração em minutos (o MySQL devolve DECIMAL como texto, ex.: "1.50"); null se não houver */
 function durationToMinutes(durationHours) {
     const hours = Number(durationHours);
@@ -266,6 +317,25 @@ function addDurationToDateTime(dateStr, timeStr, durationHours) {
     if (minutes === null || !date || !time) return null;
     const start = Date.UTC(date[1], date[2] - 1, date[3], time[1], time[2]);
     return new Date(start + minutes * 60 * 1000).toISOString().slice(0, 19);
+}
+
+/**
+ * Referência do farol "atrasada": a data de hoje e o horário-limite de início
+ * (agora - 5 min). Atividade de hoje que começou até esse horário já está atrasada.
+ * Logo após a meia-noite o limite cairia no dia anterior: overdueTime = null.
+ */
+function getOverdueReference(now = new Date()) {
+    const ref = new Date(now);
+    const cutoff = new Date(ref.getTime() - OVERDUE_GRACE_MINUTES * 60 * 1000);
+    const todayStr = toDateOnlyString(ref);
+    const pad = (n) => String(n).padStart(2, "0");
+    return {
+        todayStr,
+        overdueTime:
+            toDateOnlyString(cutoff) === todayStr
+                ? `${pad(cutoff.getHours())}:${pad(cutoff.getMinutes())}:${pad(cutoff.getSeconds())}`
+                : null,
+    };
 }
 
 /**
@@ -339,6 +409,17 @@ function enrichActivity(activity, referenceDate = new Date()) {
     const daysNext = calculateDaysDiff(nextDate, referenceDate);
     const daysFinal = calculateDaysDiff(finalDate, referenceDate);
 
+    // Hoje, com horário: atrasada 5 min após o início (quando o pop-up de aviso some)
+    const startTime = activity.scheduled_time ? String(activity.scheduled_time).slice(0, 8) : null;
+    const { overdueTime } = getOverdueReference(referenceDate);
+    const lateToday =
+        daysNext === 0 && Boolean(startTime && overdueTime && startTime <= overdueTime);
+    // Momento em que passa a atrasada (atualização do farol na tela, sem recarregar)
+    const overdueAt =
+        daysNext !== null && daysNext >= 0 && !lateToday && startTime
+            ? addDurationToDateTime(nextDate, startTime, OVERDUE_GRACE_MINUTES / 60)
+            : null;
+
     let trafficLight = "NO_PRAZO";
     let trafficLightLabel = "NO PRAZO";
     let trafficLightClass = "badge-success";
@@ -348,7 +429,7 @@ function enrichActivity(activity, referenceDate = new Date()) {
         // Sem data marcada: farol neutro
         trafficLightClass = "badge-secondary";
         dotColor = "#adb5bd"; // Cinza
-    } else if (daysNext < 0) {
+    } else if (daysNext < 0 || lateToday) {
         trafficLight = "ATRASADA";
         trafficLightLabel = "ATRASADA";
         trafficLightClass = "badge-danger";
@@ -381,12 +462,16 @@ function enrichActivity(activity, referenceDate = new Date()) {
         days_final_deadline: daysFinal,
         traffic_light: trafficLight,
         traffic_light_label: trafficLightLabel,
-        next_activity_day_label: getNextActivityDayLabel(daysNext, referenceDate),
+        next_activity_day_label: lateToday
+            ? "ATRASADO"
+            : getNextActivityDayLabel(daysNext, referenceDate),
         traffic_light_class: trafficLightClass,
         traffic_light_dot_color: dotColor,
+        overdue_at: overdueAt,
         // Duração e horário de término (HH:MM), quando houver horário e duração.
         // Só o horário interessa, então qualquer data serve de base para a soma.
         duration_label: formatDuration(activity.duration_hours),
+        notify_before_label: formatNotifyBefore(activity.notify_before_minutes),
         scheduled_end_time:
             addDurationToDateTime(
                 "2000-01-01",
@@ -398,6 +483,9 @@ function enrichActivity(activity, referenceDate = new Date()) {
 
 module.exports = {
     PAGE_SIZES,
+    DEFAULT_NOTIFY_BEFORE_MINUTES,
+    NOTIFY_BEFORE_OPTIONS,
+    NOTIFY_BEFORE_MAX_DAYS,
     DEFAULT_ACTIVITY_STATUS_ID,
     STATUS_FILTER_VISIBLE,
     STATUS_FILTER_ALL,
@@ -413,12 +501,14 @@ module.exports = {
     activityStatusChangeSchema,
     calendarRangeQuerySchema,
     calendarRescheduleSchema,
+    activityNotifyBeforeSchema,
     idParamSchema,
     toFieldErrors,
     calculateDaysDiff,
     toDateOnlyString,
     formatDuration,
     addDurationToDateTime,
+    getOverdueReference,
     enrichActivity,
     getNextActivityDayLabel,
     getContrastTextColor,

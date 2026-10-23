@@ -12,7 +12,28 @@ function pushStatusCondition(status, conditions, values) {
     }
 }
 
-function buildWhere({ status, search, lifeSphere, relevance, actionType, trafficLight, todayStr }) {
+/**
+ * Atividade atrasada: data anterior a hoje ou, hoje, com horário de início até
+ * overdueTime (agora - 5 min, ver getOverdueReference). Retorna SQL e valores.
+ */
+function overdueCondition(todayStr, overdueTime) {
+    if (!overdueTime) return { sql: "next_activity_date < ?", values: [todayStr] };
+    return {
+        sql: "(next_activity_date < ? OR (next_activity_date = ? AND scheduled_time IS NOT NULL AND scheduled_time <= ?))",
+        values: [todayStr, todayStr, overdueTime],
+    };
+}
+
+function buildWhere({
+    status,
+    search,
+    lifeSphere,
+    relevance,
+    actionType,
+    trafficLight,
+    todayStr,
+    overdueTime,
+}) {
     const conditions = ["excluded = 0"];
     const values = [];
 
@@ -34,12 +55,14 @@ function buildWhere({ status, search, lifeSphere, relevance, actionType, traffic
     }
 
     if (trafficLight && todayStr) {
+        const overdue = overdueCondition(todayStr, overdueTime);
         if (trafficLight === "ATRASADA") {
-            conditions.push("next_activity_date < ?");
-            values.push(todayStr);
+            conditions.push(overdue.sql);
+            values.push(...overdue.values);
         } else if (trafficLight === "HOJE") {
-            conditions.push("next_activity_date = ?");
-            values.push(todayStr);
+            // Hoje e ainda não atrasada
+            conditions.push(`next_activity_date = ? AND NOT ${overdue.sql}`);
+            values.push(todayStr, ...overdue.values);
         } else if (trafficLight === "7_DIAS") {
             conditions.push(
                 "next_activity_date > ? AND next_activity_date <= DATE_ADD(?, INTERVAL 7 DAY)",
@@ -76,26 +99,9 @@ function buildWhere({ status, search, lifeSphere, relevance, actionType, traffic
 //                     SELECT
 //------------------------------------------------
 
-async function selectActivities({
-    status,
-    search,
-    lifeSphere,
-    relevance,
-    actionType,
-    trafficLight,
-    todayStr,
-    limit,
-    offset,
-}) {
-    const { where, values } = buildWhere({
-        status,
-        search,
-        lifeSphere,
-        relevance,
-        actionType,
-        trafficLight,
-        todayStr,
-    });
+// Critérios de filtro: ver buildWhere (status, busca, esfera, ..., todayStr, overdueTime)
+async function selectActivities({ limit, offset, ...criteria }) {
+    const { where, values } = buildWhere(criteria);
 
     const sql = `
         SELECT
@@ -111,6 +117,7 @@ async function selectActivities({
             recurrence_rule,
             action_type,
             theme_organization,
+            notify_before_minutes,
             notes,
             status,
             created_at,
@@ -125,24 +132,8 @@ async function selectActivities({
     return rows;
 }
 
-async function countActivities({
-    status,
-    search,
-    lifeSphere,
-    relevance,
-    actionType,
-    trafficLight,
-    todayStr,
-}) {
-    const { where, values } = buildWhere({
-        status,
-        search,
-        lifeSphere,
-        relevance,
-        actionType,
-        trafficLight,
-        todayStr,
-    });
+async function countActivities(criteria) {
+    const { where, values } = buildWhere(criteria);
     const [rows] = await pool.query(
         `SELECT COUNT(*) AS total FROM activity WHERE ${where}`,
         values,
@@ -178,7 +169,30 @@ async function selectActivitiesForCalendar({ start, end, status }) {
             recurrence_rule,
             action_type,
             theme_organization,
+            notify_before_minutes,
             status
+        FROM activity
+        WHERE ${conditions.join(" AND ")}
+        ORDER BY next_activity_date ASC, scheduled_time ASC, id ASC
+    `;
+    const [rows] = await pool.query(sql, values);
+    return rows;
+}
+
+// Notificação com antecedência: atividades com a próxima data no intervalo [de, até]
+// e status visível (pop-up de aviso exibido em todas as páginas)
+async function selectUpcomingReminders(fromDate, toDate) {
+    const conditions = ["excluded = 0", "next_activity_date >= ?", "next_activity_date <= ?"];
+    const values = [fromDate, toDate];
+    pushStatusCondition("visible", conditions, values);
+
+    const sql = `
+        SELECT
+            id,
+            description,
+            next_activity_date,
+            scheduled_time,
+            notify_before_minutes
         FROM activity
         WHERE ${conditions.join(" AND ")}
         ORDER BY next_activity_date ASC, scheduled_time ASC, id ASC
@@ -202,6 +216,7 @@ async function selectActivityById(id) {
             recurrence_rule,
             action_type,
             theme_organization,
+            notify_before_minutes,
             notes,
             status,
             created_at,
@@ -217,12 +232,13 @@ async function selectActivityById(id) {
 /**
  * Estatísticas do Painel de Voo / Resumo
  */
-async function getActivityStats(todayStr) {
+async function getActivityStats(todayStr, overdueTime = null) {
+    const overdue = overdueCondition(todayStr, overdueTime);
     const sql = `
         SELECT
             COUNT(CASE WHEN final_deadline IS NOT NULL AND final_deadline <= DATE_ADD(?, INTERVAL 7 DAY) AND final_deadline >= ? THEN 1 END) AS prazo_final_7_dias,
-            COUNT(CASE WHEN next_activity_date < ? THEN 1 END) AS vencidas,
-            COUNT(CASE WHEN next_activity_date >= ? AND next_activity_date <= DATE_ADD(?, INTERVAL 7 DAY) THEN 1 END) AS proximos_7_dias,
+            COUNT(CASE WHEN ${overdue.sql} THEN 1 END) AS vencidas,
+            COUNT(CASE WHEN next_activity_date >= ? AND next_activity_date <= DATE_ADD(?, INTERVAL 7 DAY) AND NOT ${overdue.sql} THEN 1 END) AS proximos_7_dias,
             COUNT(CASE WHEN next_activity_date > DATE_ADD(?, INTERVAL 7 DAY) AND next_activity_date <= DATE_ADD(?, INTERVAL 15 DAY) THEN 1 END) AS entre_7_e_15_dias,
             COUNT(CASE WHEN relevance = 'Prioridade' THEN 1 END) AS priorizados,
             COUNT(CASE WHEN relevance = 'Backlog' THEN 1 END) AS backlog,
@@ -233,9 +249,10 @@ async function getActivityStats(todayStr) {
     const [rows] = await pool.query(sql, [
         todayStr,
         todayStr,
+        ...overdue.values,
         todayStr,
         todayStr,
-        todayStr,
+        ...overdue.values,
         todayStr,
         todayStr,
     ]);
@@ -260,7 +277,8 @@ const VISIBLE_STATUS_SQL =
  * Status considera todas as atividades; as demais dimensões, só as de status
  * visíveis por padrão (mesmo padrão da consulta e do calendário).
  */
-async function getActivityDistribution(todayStr) {
+async function getActivityDistribution(todayStr, overdueTime = null) {
+    const overdue = overdueCondition(todayStr, overdueTime);
     const groupBy = async (expression) => {
         const [rows] = await pool.query(`
             SELECT ${expression} AS label, COUNT(*) AS total
@@ -285,7 +303,7 @@ async function getActivityDistribution(todayStr) {
             `
             SELECT
                 CASE
-                    WHEN DATEDIFF(next_activity_date, ?) < 0 THEN 'ATRASADO'
+                    WHEN ${overdue.sql} THEN 'ATRASADO'
                     WHEN DATEDIFF(next_activity_date, ?) = 0 THEN 'HOJE'
                     WHEN DATEDIFF(next_activity_date, ?) = 1 THEN 'AMANHA'
                     WHEN DATEDIFF(next_activity_date, ?) <= 7 THEN 'ATE_7'
@@ -297,7 +315,7 @@ async function getActivityDistribution(todayStr) {
             WHERE excluded = 0 AND ${VISIBLE_STATUS_SQL}
             GROUP BY bucket
         `,
-            [todayStr, todayStr, todayStr, todayStr, todayStr],
+            [...overdue.values, todayStr, todayStr, todayStr, todayStr],
         ),
     ]);
 
@@ -331,9 +349,10 @@ async function insertActivity(data) {
             recurrence_rule,
             action_type,
             theme_organization,
+            notify_before_minutes,
             notes,
             status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const [result] = await pool.query(sql, [
         data.life_sphere,
@@ -347,6 +366,7 @@ async function insertActivity(data) {
         data.recurrence_rule ?? null,
         data.action_type,
         data.theme_organization,
+        data.notify_before_minutes,
         data.notes,
         data.status,
     ]);
@@ -372,6 +392,7 @@ async function updateActivity(id, data) {
             recurrence_rule = ?,
             action_type = ?,
             theme_organization = ?,
+            notify_before_minutes = ?,
             notes = ?,
             status = ?
         WHERE id = ? AND excluded = 0
@@ -388,6 +409,7 @@ async function updateActivity(id, data) {
         data.recurrence_rule ?? null,
         data.action_type,
         data.theme_organization,
+        data.notify_before_minutes,
         data.notes,
         data.status,
         id,
@@ -399,6 +421,13 @@ async function updateActivity(id, data) {
 async function updateNextActivitySchedule(id, nextActivityDate, scheduledTime) {
     const sql = `UPDATE activity SET next_activity_date = ?, scheduled_time = ? WHERE id = ? AND excluded = 0`;
     const [result] = await pool.query(sql, [nextActivityDate, scheduledTime, id]);
+    return result.affectedRows;
+}
+
+// Pop-up de aviso: nova antecedência ("Notificar novamente em")
+async function updateNotifyBefore(id, notifyBeforeMinutes) {
+    const sql = `UPDATE activity SET notify_before_minutes = ? WHERE id = ? AND excluded = 0`;
+    const [result] = await pool.query(sql, [notifyBeforeMinutes, id]);
     return result.affectedRows;
 }
 
@@ -428,6 +457,8 @@ module.exports = {
     selectActivities,
     countActivities,
     selectActivityById,
+    selectUpcomingReminders,
+    updateNotifyBefore,
     selectActivitiesForCalendar,
     getActivityStats,
     getActivityDistribution,

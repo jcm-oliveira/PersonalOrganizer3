@@ -30,7 +30,38 @@
         });
     }
 
+    // Farol: a atividade de hoje com horário vira ATRASADO 5 min após o início (quando o
+    // pop-up de aviso some), sem recarregar a página. data-overdue-at vem do servidor.
+    const MAX_TIMEOUT_MS = 2147483647;
+
+    function markOverdue(row) {
+        const badge = row.querySelector(".c-dayprox .badge");
+        if (badge) {
+            badge.className = "badge badge-danger";
+            badge.textContent = "ATRASADO";
+        }
+        const dot = row.querySelector(".c-days-next .rounded-circle");
+        if (dot) dot.style.backgroundColor = "#343a40";
+        // Sem a cor da Esfera da Vida, a linha atrasada fica vermelha (igual ao servidor)
+        if (!row.classList.contains("activity-row--sphere")) row.classList.add("table-danger");
+    }
+
+    function scheduleOverdue() {
+        document.querySelectorAll("tr[data-overdue-at]").forEach((row) => {
+            const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/.exec(
+                row.getAttribute("data-overdue-at"),
+            );
+            if (!match) return;
+            const [, y, mo, d, h, mi, s] = match.map(Number);
+            const delay = new Date(y, mo - 1, d, h, mi, s).getTime() - Date.now();
+            if (delay <= 0) markOverdue(row);
+            else if (delay < MAX_TIMEOUT_MS) setTimeout(() => markOverdue(row), delay);
+        });
+    }
+
     function init() {
+        scheduleOverdue();
+
         onModalShow("rescheduleModal", (form, button) => {
             const currentDate = button.getAttribute("data-next-date") || "";
             form.querySelector('[data-field="current-date"]').textContent =

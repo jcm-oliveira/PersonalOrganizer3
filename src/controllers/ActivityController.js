@@ -12,6 +12,9 @@ const { can } = require("../security/permissions");
 const {
     PAGE_SIZES,
     DEFAULT_ACTIVITY_STATUS_ID,
+    DEFAULT_NOTIFY_BEFORE_MINUTES,
+    NOTIFY_BEFORE_OPTIONS,
+    NOTIFY_BEFORE_MAX_DAYS,
     STATUS_FILTER_VISIBLE,
     STATUS_FILTER_ALL,
     LIFE_SPHERES_WITH_COLORS,
@@ -26,12 +29,14 @@ const {
     activityStatusChangeSchema,
     calendarRangeQuerySchema,
     calendarRescheduleSchema,
+    activityNotifyBeforeSchema,
     idParamSchema,
     toFieldErrors,
     enrichActivity,
     getContrastTextColor,
     toDateOnlyString,
     addDurationToDateTime,
+    getOverdueReference,
 } = require("../validation/activitySchemas");
 const {
     buildRecurrence,
@@ -409,10 +414,6 @@ function toStatusCriteria(status) {
     return Number(status);
 }
 
-function getTodayString() {
-    return toDateOnlyString(new Date());
-}
-
 module.exports = {
     //------------------------------------------------
     //          SHOW / LIST ROUTINE (Q + F)
@@ -420,7 +421,8 @@ module.exports = {
 
     async loadShowPage(req, res) {
         const filter = activityListQuerySchema.parse(req.query);
-        const todayStr = getTodayString();
+        // Mesma referência do farol: atrasada também a de hoje com início + 5 min já passado
+        const { todayStr, overdueTime } = getOverdueReference();
 
         const criteria = {
             status: toStatusCriteria(filter.status),
@@ -430,6 +432,7 @@ module.exports = {
             actionType: filter.actionType,
             trafficLight: filter.trafficLight,
             todayStr,
+            overdueTime,
         };
 
         const total = await Activity.countActivities(criteria);
@@ -517,6 +520,7 @@ module.exports = {
             values: {
                 status: String(DEFAULT_ACTIVITY_STATUS_ID),
                 relevance: "Prioridade",
+                notify_before_minutes: String(DEFAULT_NOTIFY_BEFORE_MINUTES),
             },
             lifeSpheres: lookups.lifeSpheres,
             lifeSpheresWithColor: lookups.lifeSpheresWithColor,
@@ -525,6 +529,7 @@ module.exports = {
             actionTypes: lookups.actionTypes,
             themeOrganizations: lookups.themeOrganizations,
             activityStatuses: lookups.activityStatuses,
+            notifyBeforeOptions: NOTIFY_BEFORE_OPTIONS,
             errors: {},
         });
     },
@@ -543,6 +548,7 @@ module.exports = {
                 actionTypes: lookups.actionTypes,
                 themeOrganizations: lookups.themeOrganizations,
                 activityStatuses: lookups.activityStatuses,
+                notifyBeforeOptions: NOTIFY_BEFORE_OPTIONS,
                 errors: parsed.errors,
             });
         }
@@ -588,6 +594,9 @@ module.exports = {
                         : String(Number(activity.duration_hours)),
                 action_type: activity.action_type || "",
                 theme_organization: activity.theme_organization || "",
+                notify_before_minutes: String(
+                    activity.notify_before_minutes ?? DEFAULT_NOTIFY_BEFORE_MINUTES,
+                ),
                 notes: activity.notes || "",
                 status: String(activity.status),
                 ...ruleToFormValues(activity.recurrence_rule),
@@ -599,6 +608,7 @@ module.exports = {
             actionTypes: lookups.actionTypes,
             themeOrganizations: lookups.themeOrganizations,
             activityStatuses: lookups.activityStatuses,
+            notifyBeforeOptions: NOTIFY_BEFORE_OPTIONS,
             errors: {},
         });
     },
@@ -619,6 +629,7 @@ module.exports = {
                 actionTypes: lookups.actionTypes,
                 themeOrganizations: lookups.themeOrganizations,
                 activityStatuses: lookups.activityStatuses,
+                notifyBeforeOptions: NOTIFY_BEFORE_OPTIONS,
                 errors: parsed.errors,
             });
         }
@@ -639,10 +650,11 @@ module.exports = {
     //------------------------------------------------
 
     async loadDashboardPage(req, res) {
-        const todayStr = getTodayString();
+        // Atrasada: data anterior a hoje ou, hoje, início + 5 min já passado
+        const { todayStr, overdueTime } = getOverdueReference();
         const [stats, distribution, lookups] = await Promise.all([
-            Activity.getActivityStats(todayStr),
-            Activity.getActivityDistribution(todayStr),
+            Activity.getActivityStats(todayStr, overdueTime),
+            Activity.getActivityDistribution(todayStr, overdueTime),
             loadLookupOptions(),
         ]);
 
@@ -660,6 +672,51 @@ module.exports = {
             lifeSphereColors: (lookups.lifeSphereColors || []).filter((s) => s.color_code),
             activityStatuses: lookups.activityStatuses,
         });
+    },
+
+    // Notificação com antecedência (JSON): atividades que começam até o limite da maior
+    // antecedência, e as opções de antecedência ("Notificar novamente em" no pop-up).
+    // O navegador agenda o pop-up para início - antecedência; sem horário, o início
+    // considerado é 00:00 do dia.
+    async loadReminders(req, res) {
+        const today = new Date();
+        const limit = new Date(today);
+        limit.setDate(limit.getDate() + NOTIFY_BEFORE_MAX_DAYS + 1);
+
+        const rows = await Activity.selectUpcomingReminders(
+            toDateOnlyString(today),
+            toDateOnlyString(limit),
+        );
+        const reminders = rows.map((act) => {
+            const date = toDateOnlyString(act.next_activity_date);
+            const time = act.scheduled_time ? String(act.scheduled_time).slice(0, 8) : null;
+            return {
+                id: act.id,
+                title: act.description,
+                start: `${date}T${time || "00:00:00"}`,
+                allDay: !time,
+                notifyBeforeMinutes: act.notify_before_minutes ?? DEFAULT_NOTIFY_BEFORE_MINUTES,
+                url: `/cms-Activity-V/${act.id}`,
+            };
+        });
+        return res.json({ options: NOTIFY_BEFORE_OPTIONS, reminders });
+    },
+
+    // "Notificar novamente em" (pop-up de aviso, JSON): grava a nova antecedência
+    // da atividade; o navegador reagenda o aviso para início - nova antecedência.
+    async updateReminder(req, res) {
+        const id = parseId(req.params.id);
+        const parsed = activityNotifyBeforeSchema.safeParse(req.body ?? {});
+        if (!parsed.success) {
+            return res.status(422).json({ ok: false, errors: toFieldErrors(parsed.error) });
+        }
+
+        const minutes = parsed.data.notify_before_minutes;
+        const affectedRows = await Activity.updateNotifyBefore(id, minutes);
+        if (affectedRows === 0) {
+            return res.status(404).json({ ok: false, message: "Atividade não encontrada." });
+        }
+        return res.json({ ok: true, notifyBeforeMinutes: minutes });
     },
 
     // Fonte de eventos JSON consumida pelo FullCalendar (?start=...&end=...&status=...).

@@ -1448,3 +1448,27 @@ a.hbar-label:focus {
 fieldset:disabled .perm-check .custom-control-label::before {
     opacity: 0.9;
 }
+
+/* ---------- Notificação com antecedência (pop-up de lembrete) ---------- */
+
+.activity-reminder + .activity-reminder {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.activity-reminder__title {
+    display: block;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.activity-reminder__when {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.activity-reminder__snooze {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+}

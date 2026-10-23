@@ -72,6 +72,16 @@
                     </dd>
                 </div>
                 <div class="av-item">
+                    <dt><i class="far fa-bell" aria-hidden="true"></i> Notificação</dt>
+                    <dd>
+                        <% if (activity.next_activity_date_br) { %>
+                            <%= activity.notify_before_label %>
+                        <% } else { %>
+                            <span class="av-muted">Sem data: não há aviso</span>
+                        <% } %>
+                    </dd>
+                </div>
+                <div class="av-item">
                     <dt><i class="far fa-calendar-check" aria-hidden="true"></i> Prazo final</dt>
                     <dd>
                         <% if (activity.final_deadline_br) { %>

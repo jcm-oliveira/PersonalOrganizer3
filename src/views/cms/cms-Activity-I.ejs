@@ -137,7 +137,7 @@
 </div>
 
 <div class="form-row">
-    <div class="form-group col-md-6">
+    <div class="form-group col-md-4">
         <label for="theme_organization">
             Organização por Tema
         </label>
@@ -164,7 +164,23 @@
         <% if (errors.theme_organization) { %><div class="invalid-feedback"><%= errors.theme_organization %></div><% } %>
     </div>
 
-    <div class="form-group col-md-6">
+    <div class="form-group col-md-3">
+        <label for="notify_before_minutes">
+            Notificação com antecedência
+        </label>
+        <select class="form-control <%= errors.notify_before_minutes ? 'is-invalid' : '' %>"
+            id="notify_before_minutes" name="notify_before_minutes"
+            title="Quanto tempo antes do início o sistema mostra o aviso desta atividade">
+            <% (locals.notifyBeforeOptions || []).forEach((opt) => { %>
+                <option value="<%= opt.minutes %>" <%= String(values.notify_before_minutes ?? 15) === String(opt.minutes) ? 'selected' : '' %>>
+                    <%= opt.label %><%= opt.minutes === 15 ? ' (padrão)' : '' %>
+                </option>
+            <% }) %>
+        </select>
+        <% if (errors.notify_before_minutes) { %><div class="invalid-feedback"><%= errors.notify_before_minutes %></div><% } %>
+    </div>
+
+    <div class="form-group col-md-5">
         <label for="notes">
             Anotações / Próximas Atividades
         </label>

@@ -21,6 +21,10 @@ routes.get("/cms-Activity-C/:id", update, ActivityController.loadUpdatePage);
 routes.get("/cms-Activity-U/:id", update, ActivityController.loadUpdatePage);
 routes.get("/cms-Activity-V/:id", viewDetails, ActivityController.loadViewPage);
 routes.get("/cms-Activity-V/:id/detalhes", viewDetails, ActivityController.loadViewFragment);
+// Pop-up de notificação com antecedência (todas as páginas)
+routes.get("/cms-Activity-N", viewDetails, ActivityController.loadReminders);
+// "Notificar novamente em" no pop-up: altera a antecedência da atividade
+routes.post("/cms-Activity-N/:id", update, ActivityController.updateReminder);
 routes.post("/cms-Activity-U/:id", update, ActivityController.updateActivityPage);
 // Remarcar, concluir ocorrência e mudar status são alterações da atividade
 routes.post("/cms-Activity-R/:id", update, ActivityController.rescheduleActivityPage);

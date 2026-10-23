@@ -258,6 +258,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             recurrence_rule: null,
             action_type: "Tarefa",
             theme_organization: "[TI] - Projetos",
+            notify_before_minutes: 15, // padrão quando não informado
             notes: "Revisar protótipo",
             status: 1,
         });
@@ -446,6 +447,53 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                 "HOJE",
             );
         }
+    });
+
+    it("farol: atividade de hoje com horário fica ATRASADO 5 min após o início", () => {
+        const {
+            enrichActivity,
+            getOverdueReference,
+        } = require("../src/validation/activitySchemas");
+        const act = { next_activity_date: "2026-10-13", scheduled_time: "09:00:00" };
+        const at = (h, m) => enrichActivity(act, new Date(2026, 9, 13, h, m));
+
+        // Antes do limite: HOJE, com o momento em que passa a atrasada
+        assert.equal(at(9, 4).next_activity_day_label, "HOJE");
+        assert.equal(at(9, 4).traffic_light, "HOJE");
+        assert.equal(at(9, 4).overdue_at, "2026-10-13T09:05:00");
+        // Início + 5 min: ATRASADO
+        assert.equal(at(9, 5).next_activity_day_label, "ATRASADO");
+        assert.equal(at(9, 5).traffic_light, "ATRASADA");
+        assert.equal(at(9, 5).overdue_at, null);
+        // Sem horário: continua HOJE durante o dia
+        const allDay = enrichActivity(
+            { next_activity_date: "2026-10-13" },
+            new Date(2026, 9, 13, 23, 0),
+        );
+        assert.equal(allDay.next_activity_day_label, "HOJE");
+        assert.equal(allDay.overdue_at, null);
+
+        // Referência usada nas consultas (filtro e dashboard)
+        assert.deepEqual(getOverdueReference(new Date(2026, 9, 13, 9, 5, 30)), {
+            todayStr: "2026-10-13",
+            overdueTime: "09:00:30",
+        });
+        // Logo após a meia-noite nenhuma atividade de hoje está atrasada pelo horário
+        assert.equal(getOverdueReference(new Date(2026, 9, 13, 0, 3)).overdueTime, null);
+    });
+
+    it("filtro Atrasadas recebe a referência de horário do farol", async () => {
+        mock.method(Activity, "countActivities", async () => 0);
+        const select = mock.method(Activity, "selectActivities", async () => []);
+
+        await request(app).get("/cms-Activity-Q").query({ trafficLight: "ATRASADA" }).expect(200);
+
+        const criteria = select.mock.calls[0].arguments[0];
+        assert.equal(criteria.trafficLight, "ATRASADA");
+        assert.match(criteria.todayStr, /^\d{4}-\d{2}-\d{2}$/);
+        assert.ok(
+            criteria.overdueTime === null || /^\d{2}:\d{2}:\d{2}$/.test(criteria.overdueTime),
+        );
     });
 
     it("calcula o rótulo do Dia Próx. conforme a regra da planilha", () => {
@@ -730,6 +778,131 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.equal(insert.mock.calls[1].arguments[0].duration_hours, null);
     });
 
+    it("formulário traz a notificação com antecedência com 15 minutos como padrão", async () => {
+        const res = await request(app).get("/cms-Activity-C").expect(200);
+
+        const select = res.text.match(
+            /<select[^>]*id="notify_before_minutes"[\s\S]*?<\/select>/,
+        )[0];
+        const options = [...select.matchAll(/<option value="(\d+)"/g)].map((m) => Number(m[1]));
+        assert.deepEqual(
+            options,
+            [0, 15, 30, 60, 120, 180, 240, 300, 1440, 2880, 4320, 5760, 7200],
+        );
+        assert.match(select, /<option value="15" selected>\s*15 minutos \(padrão\)/);
+    });
+
+    it("grava a antecedência escolhida e recusa valores fora da lista", async () => {
+        const insert = mock.method(Activity, "insertActivity", async () => 1);
+        const send = (notify_before_minutes) =>
+            request(app).post("/cms-Activity-C").type("form").send({
+                life_sphere: "Profissão e Carreira",
+                description: "Com notificação",
+                notify_before_minutes,
+                status: "1",
+            });
+
+        const res = await send("45").expect(422);
+        assert.match(res.text, /Selecione uma antecedência válida para a notificação\./);
+        assert.equal(insert.mock.callCount(), 0);
+
+        await send("1440").expect(303);
+        assert.equal(insert.mock.calls[0].arguments[0].notify_before_minutes, 1440);
+    });
+
+    it("retorna os avisos das próximas atividades com início e antecedência", async () => {
+        const select = mock.method(Activity, "selectUpcomingReminders", async () => [
+            {
+                id: 5,
+                description: "Reunião <equipe>",
+                next_activity_date: "2026-10-24",
+                scheduled_time: "09:30:00",
+                notify_before_minutes: 60,
+            },
+            {
+                id: 6,
+                description: "Dia inteiro",
+                next_activity_date: new Date(2026, 9, 25),
+                scheduled_time: null,
+                notify_before_minutes: 1440,
+            },
+        ]);
+
+        const res = await request(app)
+            .get("/cms-Activity-N")
+            .expect(200)
+            .expect("Content-Type", /json/);
+
+        // Busca de hoje até o limite da maior antecedência (5 dias) + 1
+        const [from, to] = select.mock.calls[0].arguments;
+        assert.equal((Date.parse(to) - Date.parse(from)) / 86400000, 6);
+        // Opções de antecedência para o "Notificar novamente em" do pop-up
+        assert.deepEqual(res.body.options[0], { minutes: 0, label: "Na hora da atividade" });
+        assert.deepEqual(res.body.options[1], { minutes: 15, label: "15 minutos" });
+        assert.equal(res.body.options.length, 13);
+        assert.deepEqual(res.body.reminders, [
+            {
+                id: 5,
+                title: "Reunião <equipe>",
+                start: "2026-10-24T09:30:00",
+                allDay: false,
+                notifyBeforeMinutes: 60,
+                url: "/cms-Activity-V/5",
+            },
+            {
+                id: 6,
+                title: "Dia inteiro",
+                start: "2026-10-25T00:00:00",
+                allDay: true,
+                notifyBeforeMinutes: 1440,
+                url: "/cms-Activity-V/6",
+            },
+        ]);
+    });
+
+    it("inclui o script de avisos nas páginas para quem vê atividades", async () => {
+        mock.method(Activity, "countActivities", async () => 0);
+        mock.method(Activity, "selectActivities", async () => []);
+        const res = await request(app).get("/cms-Activity-Q").expect(200);
+        assert.match(
+            res.text,
+            /src="\/scripts\/activity-reminders\.js" data-url="\/cms-Activity-N"\s+data-can-update="true"/,
+        );
+    });
+
+    it('"Notificar novamente em" grava a nova antecedência da atividade', async () => {
+        const update = mock.method(Activity, "updateNotifyBefore", async () => 1);
+
+        const res = await request(app)
+            .post("/cms-Activity-N/5")
+            .send({ notify_before_minutes: 30 })
+            .expect(200)
+            .expect("Content-Type", /json/);
+
+        assert.deepEqual(res.body, { ok: true, notifyBeforeMinutes: 30 });
+        assert.deepEqual(update.mock.calls[0].arguments, [5, 30]);
+
+        // "Na hora da atividade" (0 minutos antes)
+        await request(app).post("/cms-Activity-N/5").send({ notify_before_minutes: 0 }).expect(200);
+        assert.deepEqual(update.mock.calls[1].arguments, [5, 0]);
+    });
+
+    it('"Notificar novamente em" recusa antecedência fora da lista e atividade inexistente', async () => {
+        const update = mock.method(Activity, "updateNotifyBefore", async () => 0);
+
+        const invalid = await request(app)
+            .post("/cms-Activity-N/5")
+            .send({ notify_before_minutes: 45 })
+            .expect(422);
+        assert.equal(invalid.body.ok, false);
+        assert.equal(update.mock.callCount(), 0);
+
+        await request(app)
+            .post("/cms-Activity-N/999")
+            .send({ notify_before_minutes: 15 })
+            .expect(404);
+    });
+
     it("mostra o horário de término e a duração na visualização da atividade", async () => {
         mock.method(Activity, "selectActivityById", async () => ({
             id: 7,
@@ -741,6 +914,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             day_period: null,
             scheduled_time: "09:00:00",
             duration_hours: "1.50",
+            notify_before_minutes: 60,
             action_type: null,
             theme_organization: null,
             notes: null,
@@ -751,6 +925,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         const res = await request(app).get("/cms-Activity-V/7/detalhes").expect(200);
 
         assert.match(res.text, /09:00 às 10:30/);
+        assert.match(res.text, /1 hora antes/);
         assert.match(res.text, /· 1h30/);
     });
 

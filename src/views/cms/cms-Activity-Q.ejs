@@ -146,7 +146,7 @@
                     const rowClass = hasSphereColor ? 'activity-row--sphere' : (isOverdue ? 'table-danger' : '');
                 %>
                     <tr class="<%= rowClass %>"
-                        <% if (hasSphereColor) { %>data-bg-color="<%= act.life_sphere_color %>" data-text-color="<%= act.life_sphere_text_color %>"<% } %>>
+                        <% if (hasSphereColor) { %>data-bg-color="<%= act.life_sphere_color %>" data-text-color="<%= act.life_sphere_text_color %>"<% } %><% if (act.overdue_at) { %> data-overdue-at="<%= act.overdue_at %>"<% } %>>
                         <!-- Farol: ATRASADO, HOJE, AMANHÃ, dia da semana ou MAIS DE 15 DIAS -->
                         <td class="c-dayprox align-middle text-center font-weight-bold">
                             <span class="badge <%= act.traffic_light_class %>">

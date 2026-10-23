@@ -56,12 +56,16 @@
     </div>
 
     <div class="form-group col-md-4">
-        <label for="final_deadline">
-            Prazo Final
+        <label for="action_type">
+            Tipo de Ação
         </label>
-        <input type="date" class="form-control <%= errors.final_deadline ? 'is-invalid' : '' %>"
-            id="final_deadline" name="final_deadline" value="<%= values.final_deadline || '' %>">
-        <% if (errors.final_deadline) { %><div class="invalid-feedback"><%= errors.final_deadline %></div><% } %>
+        <select class="form-control <%= errors.action_type ? 'is-invalid' : '' %>" id="action_type" name="action_type">
+            <option value="">(Nenhum)</option>
+            <% actionTypes.forEach((act) => { %>
+                <option value="<%= act %>" <%= values.action_type === act ? 'selected' : '' %>><%= act %></option>
+            <% }) %>
+        </select>
+        <% if (errors.action_type) { %><div class="invalid-feedback"><%= errors.action_type %></div><% } %>
     </div>
 
     <div class="form-group col-md-4">
@@ -112,16 +116,12 @@
     </div>
 
     <div class="form-group col-md-4">
-        <label for="action_type">
-            Tipo de Ação
+        <label for="final_deadline">
+            Prazo Final
         </label>
-        <select class="form-control <%= errors.action_type ? 'is-invalid' : '' %>" id="action_type" name="action_type">
-            <option value="">(Nenhum)</option>
-            <% actionTypes.forEach((act) => { %>
-                <option value="<%= act %>" <%= values.action_type === act ? 'selected' : '' %>><%= act %></option>
-            <% }) %>
-        </select>
-        <% if (errors.action_type) { %><div class="invalid-feedback"><%= errors.action_type %></div><% } %>
+        <input type="date" class="form-control <%= errors.final_deadline ? 'is-invalid' : '' %>"
+            id="final_deadline" name="final_deadline" value="<%= values.final_deadline || '' %>">
+        <% if (errors.final_deadline) { %><div class="invalid-feedback"><%= errors.final_deadline %></div><% } %>
     </div>
 </div>
 

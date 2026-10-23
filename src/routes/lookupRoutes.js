@@ -1,7 +1,7 @@
 const express = require("express");
 const {
     LifeSphereController,
-    RelevanceController,
+    ActivityTypeController,
     DayPeriodController,
     PeriodicityController,
     ActionTypeController,
@@ -46,7 +46,7 @@ function registerLookupRoutes(prefix, controller) {
 registerLookupRoutes("cms-LifeSphere", LifeSphereController);
 
 // 2. Relevância
-registerLookupRoutes("cms-Relevance", RelevanceController);
+registerLookupRoutes("cms-ActivityType", ActivityTypeController);
 
 // 3. Período do Dia
 registerLookupRoutes("cms-DayPeriod", DayPeriodController);

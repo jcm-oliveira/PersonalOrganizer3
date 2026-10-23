@@ -5,13 +5,13 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h1 class="h3 mb-0 text-dark">Atividades</h1>
-            <% if (filter.trafficLight || filter.search || filter.lifeSphere || filter.relevance || filter.actionType || filter.status !== 'visible') { %>
+            <% if (filter.trafficLight || filter.search || filter.lifeSphere || filter.activityType || filter.actionType || filter.status !== 'visible') { %>
                 <span class="badge badge-info mt-1">Filtros aplicados</span>
                 <a href="/cms-Activity-Q" class="small text-danger ml-2">Limpar filtros</a>
             <% } %>
         </div>
         <div class="d-flex align-items-center">
-            <% const hasActiveFilter = Boolean(filter.trafficLight || filter.search || filter.lifeSphere || filter.relevance || filter.actionType || filter.status !== 'visible'); %>
+            <% const hasActiveFilter = Boolean(filter.trafficLight || filter.search || filter.lifeSphere || filter.activityType || filter.actionType || filter.status !== 'visible'); %>
             <button type="button" class="btn btn-sm <%= hasActiveFilter ? 'btn-primary' : 'btn-outline-secondary' %> mr-1"
                 data-toggle="modal" data-target="#filterModal" title="Filtrar atividades" aria-label="Filtrar atividades">
                 <i class="fas fa-filter" aria-hidden="true"></i>
@@ -52,7 +52,7 @@
                     <th style="min-width: 110px;">
                         <span class="activity-th-content">
                             <i class="fas fa-layer-group activity-th-icon" aria-hidden="true"></i>
-                            <span class="activity-th-label">Tipo de Ação<span class="sr-only"> e relevância</span></span>
+                            <span class="activity-th-label">Tipo de Ação<span class="sr-only"> e tipo de atividade</span></span>
                         </span>
                     </th>
                     <th style="min-width: 110px;">
@@ -152,7 +152,7 @@
                                 <% } %>
                             </div>
                             <div class="card-line card-muted">
-                                <%= act.life_sphere %> · <%= act.relevance %> · <%= act.status_name || (act.status === 1 ? 'Ativo' : 'Inativo') %>
+                                <%= act.life_sphere %> · <%= act.activity_type %> · <%= act.status_name || (act.status === 1 ? 'Ativo' : 'Inativo') %>
                             </div>
                             <% if (act.recurrence_description) { %>
                                 <div class="card-line card-muted">
@@ -161,11 +161,11 @@
                             <% } %>
                         </td>
 
-                        <!-- Tipo de Ação, com a relevância logo abaixo (discreto) -->
+                        <!-- Tipo de Ação, com o tipo de atividade logo abaixo (discreto) -->
                         <td class="c-action align-middle text-center">
                             <%= act.action_type || '-' %>
-                            <% if (act.relevance) { %>
-                                <span class="activity-subtext" title="Relevância"><span class="sr-only">Relevância: </span><%= act.relevance %></span>
+                            <% if (act.activity_type) { %>
+                                <span class="activity-subtext" title="Tipo de Atividade"><span class="sr-only">Tipo de Atividade: </span><%= act.activity_type %></span>
                             <% } %>
                         </td>
 

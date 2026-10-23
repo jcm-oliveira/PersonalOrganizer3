@@ -33,15 +33,15 @@
     </div>
 
     <div class="form-group col-md-3">
-        <label for="relevance">
+        <label for="activity_type">
             Relevância <span class="text-danger">*</span>
         </label>
-        <select class="form-control <%= errors.relevance ? 'is-invalid' : '' %>" id="relevance" name="relevance" required>
-            <% relevanceOptions.forEach((rel) => { %>
-                <option value="<%= rel %>" <%= values.relevance === rel ? 'selected' : '' %>><%= rel %></option>
+        <select class="form-control <%= errors.activity_type ? 'is-invalid' : '' %>" id="activity_type" name="activity_type" required>
+            <% activityTypeOptions.forEach((rel) => { %>
+                <option value="<%= rel %>" <%= values.activity_type === rel ? 'selected' : '' %>><%= rel %></option>
             <% }) %>
         </select>
-        <% if (errors.relevance) { %><div class="invalid-feedback"><%= errors.relevance %></div><% } %>
+        <% if (errors.activity_type) { %><div class="invalid-feedback"><%= errors.activity_type %></div><% } %>
     </div>
 </div>
 

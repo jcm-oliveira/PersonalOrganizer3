@@ -194,11 +194,11 @@
                     ),
             },
             eventDidMount: (info) => {
-                const { lifeSphere, relevance, status, recurrence } = info.event.extendedProps;
+                const { lifeSphere, activityType, status, recurrence } = info.event.extendedProps;
                 info.el.title = [
                     info.event.title,
                     lifeSphere,
-                    relevance,
+                    activityType,
                     status,
                     recurrence ? `Repete: ${recurrence}` : null,
                 ]

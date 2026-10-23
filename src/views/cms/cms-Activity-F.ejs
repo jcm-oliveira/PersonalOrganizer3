@@ -43,11 +43,11 @@
                         </select>
                     </div>
                     <div class="form-group col-md-6">
-                        <label for="filterRelevance">Relevância</label>
-                        <select class="form-control" id="filterRelevance" name="relevance">
+                        <label for="filterActivityType">Tipo de Atividade</label>
+                        <select class="form-control" id="filterActivityType" name="activityType">
                             <option value="">Todas</option>
-                            <% relevanceOptions.forEach((rel) => { %>
-                                <option value="<%= rel %>" <%= filter.relevance === rel ? "selected" : "" %>><%= rel %></option>
+                            <% activityTypeOptions.forEach((rel) => { %>
+                                <option value="<%= rel %>" <%= filter.activityType === rel ? "selected" : "" %>><%= rel %></option>
                             <% }) %>
                         </select>
                     </div>

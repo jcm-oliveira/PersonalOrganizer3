@@ -21,7 +21,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                 id: 1,
                 life_sphere: "Profissão e Carreira",
                 description: "Reunião de Governança",
-                relevance: "Prioridade",
+                activity_type: "Prioridade",
                 next_activity_date: "2026-10-10",
                 final_deadline: "2026-10-15",
                 day_period: "2 - Tarde",
@@ -97,11 +97,11 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             /Reunião de Governança[\s\S]*<span class="activity-subtext" title="Esfera da Vida">[\s\S]*Profissão e Carreira<\/span>/,
         );
         assert.doesNotMatch(descCell, /Compromisso|Prioridade/);
-        // Tipo de ação com a relevância abaixo, discreta
+        // Tipo de ação com o tipo de atividade abaixo, discreto
         const actionCell = res.text.match(/<td class="c-action[^"]*">([\s\S]*?)<\/td>/)[1];
         assert.match(
             actionCell,
-            /Compromisso\s*<span class="activity-subtext" title="Relevância">[\s\S]*Prioridade<\/span>/,
+            /Compromisso\s*<span class="activity-subtext" title="Tipo de Atividade">[\s\S]*Prioridade<\/span>/,
         );
         // Próxima atividade: data e horário juntos, período do dia discreto (sem o prefixo
         // "2 - ") e, abaixo, os dias sem parênteses (as duas datas já passaram)
@@ -136,7 +136,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         mock.method(Activity, "getActivityDistribution", async () => ({
             bySphere: [],
             byActionType: [],
-            byRelevance: [],
+            byActivityType: [],
             byStatus: [],
             bySchedule: [],
         }));
@@ -186,7 +186,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                 { label: "Compromisso", total: 2 },
                 { label: "Não informado", total: 2 },
             ],
-            byRelevance: [{ label: "Prioridade", total: 4 }],
+            byActivityType: [{ label: "Prioridade", total: 4 }],
             byStatus: [
                 { statusId: 1, total: 4 },
                 { statusId: 4, total: 1 },
@@ -251,7 +251,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             .send({
                 life_sphere: "Profissão e Carreira",
                 description: "PROJETO CCB: Simulador DCR",
-                relevance: "Prioridade",
+                activity_type: "Prioridade",
                 next_activity_date: "2026-10-20",
                 final_deadline: "2026-10-30",
                 day_period: "1 - Manhã",
@@ -270,7 +270,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.deepEqual(insert.mock.calls[0].arguments[0], {
             life_sphere: "Profissão e Carreira",
             description: "PROJETO CCB: Simulador DCR",
-            relevance: "Prioridade",
+            activity_type: "Prioridade",
             next_activity_date: "2026-10-20",
             final_deadline: "2026-10-30",
             day_period: "1 - Manhã",
@@ -347,7 +347,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             id: 15,
             life_sphere: "Família, Lazer e Social",
             description: "Backup Celular e PC",
-            relevance: "Prioridade",
+            activity_type: "Prioridade",
             next_activity_date: "2026-10-25",
             final_deadline: null,
             day_period: null,
@@ -375,7 +375,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             .send({
                 life_sphere: "Família, Lazer e Social",
                 description: "Backup Celular e PC atualizado",
-                relevance: "Normal",
+                activity_type: "Normal",
                 next_activity_date: "2026-10-28",
                 status: "1",
             })
@@ -390,7 +390,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             id: 15,
             life_sphere: "Profissão e Carreira",
             description: "Backup Celular e PC",
-            relevance: "Prioridade",
+            activity_type: "Prioridade",
             next_activity_date: "2026-10-25",
             final_deadline: null,
             day_period: null,
@@ -418,7 +418,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             { id: 2, name: "Esfera Antiga", color_code: "#6f42c1" },
         ]);
         for (const model of [
-            "RelevanceModel",
+            "ActivityTypeModel",
             "DayPeriodModel",
             "PeriodicityModel",
             "ActionTypeModel",
@@ -435,7 +435,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                 id: 7,
                 life_sphere: "esfera antiga ",
                 description: "Atividade de esfera inativa",
-                relevance: "Normal",
+                activity_type: "Normal",
                 next_activity_date: "2099-01-01",
                 final_deadline: null,
                 status: 1,
@@ -557,7 +557,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         mock.method(Lookups.LifeSphereModel, "selectActiveOptionsWithColor", async () => []);
         mock.method(Lookups.LifeSphereModel, "selectAllWithColor", async () => []);
         for (const model of [
-            "RelevanceModel",
+            "ActivityTypeModel",
             "DayPeriodModel",
             "PeriodicityModel",
             "ActionTypeModel",
@@ -617,7 +617,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                 id: 5,
                 life_sphere: "Profissão e Carreira",
                 description: "Revisar contrato",
-                relevance: "Normal",
+                activity_type: "Normal",
                 next_activity_date: "2026-10-20",
                 final_deadline: null,
                 status: 2,
@@ -734,7 +734,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                 id: 7,
                 life_sphere: "Profissão e Carreira",
                 description: "Reunião de 1h30",
-                relevance: "Prioridade",
+                activity_type: "Prioridade",
                 next_activity_date: "2026-10-20",
                 scheduled_time: "09:00:00",
                 duration_hours: "1.50", // MySQL devolve DECIMAL como texto
@@ -744,7 +744,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                 id: 8,
                 life_sphere: "Profissão e Carreira",
                 description: "Plantão noturno",
-                relevance: "Normal",
+                activity_type: "Normal",
                 next_activity_date: "2026-10-21",
                 scheduled_time: "23:30:00",
                 duration_hours: "2.00",
@@ -754,7 +754,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                 id: 9,
                 life_sphere: "Profissão e Carreira",
                 description: "Dia inteiro com duração",
-                relevance: "Normal",
+                activity_type: "Normal",
                 next_activity_date: "2026-10-22",
                 scheduled_time: null,
                 duration_hours: "3.00",
@@ -929,7 +929,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             id: 7,
             life_sphere: "Profissão e Carreira",
             description: "Reunião de 1h30",
-            relevance: "Prioridade",
+            activity_type: "Prioridade",
             next_activity_date: "2026-10-20",
             final_deadline: null,
             day_period: null,
@@ -960,7 +960,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                 id: 3,
                 life_sphere: "Profissão e Carreira",
                 description: "Reunião",
-                relevance: "Prioridade",
+                activity_type: "Prioridade",
                 next_activity_date: new Date(2026, 9, 20),
                 scheduled_time: "14:30:00",
                 status: 2,
@@ -969,7 +969,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                 id: 4,
                 life_sphere: "Sem cadastro",
                 description: "Dia inteiro",
-                relevance: "Normal",
+                activity_type: "Normal",
                 next_activity_date: "2026-10-21",
                 final_deadline: "2026-11-05",
                 scheduled_time: null,
@@ -979,7 +979,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                 id: 6,
                 life_sphere: "Profissão e Carreira",
                 description: "Só o prazo no período",
-                relevance: "Normal",
+                activity_type: "Normal",
                 next_activity_date: "2026-12-01",
                 final_deadline: new Date(2026, 9, 30),
                 scheduled_time: null,
@@ -1012,7 +1012,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                 extendedProps: {
                     activityId: 3,
                     lifeSphere: "Profissão e Carreira",
-                    relevance: "Prioridade",
+                    activityType: "Prioridade",
                     status: "Em andamento",
                     kind: "next",
                     recurrence: null,
@@ -1028,7 +1028,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                 extendedProps: {
                     activityId: 4,
                     lifeSphere: "Sem cadastro",
-                    relevance: "Normal",
+                    activityType: "Normal",
                     status: "Pendente",
                     kind: "next",
                     recurrence: null,
@@ -1045,7 +1045,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                 extendedProps: {
                     activityId: 4,
                     lifeSphere: "Sem cadastro",
-                    relevance: "Normal",
+                    activityType: "Normal",
                     status: "Pendente",
                     kind: "deadline",
                     recurrence: null,
@@ -1063,7 +1063,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                 extendedProps: {
                     activityId: 6,
                     lifeSphere: "Profissão e Carreira",
-                    relevance: "Normal",
+                    activityType: "Normal",
                     status: "Pendente",
                     kind: "deadline",
                     recurrence: null,
@@ -1162,7 +1162,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             id: 7,
             life_sphere: "Profissão e Carreira",
             description: "Revisar <contrato>",
-            relevance: "Prioridade",
+            activity_type: "Prioridade",
             next_activity_date: "2026-10-20",
             final_deadline: null,
             day_period: null,
@@ -1196,7 +1196,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
                 id: 7,
                 life_sphere: "Profissão e Carreira",
                 description: "Revisar contrato",
-                relevance: "Normal",
+                activity_type: "Normal",
                 next_activity_date: "2026-10-20",
                 final_deadline: null,
                 status: 1,

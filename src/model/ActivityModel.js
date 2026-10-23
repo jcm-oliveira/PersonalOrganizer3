@@ -28,7 +28,7 @@ function buildWhere({
     status,
     search,
     lifeSphere,
-    relevance,
+    activityType,
     actionType,
     trafficLight,
     todayStr,
@@ -44,9 +44,9 @@ function buildWhere({
         values.push(lifeSphere);
     }
 
-    if (relevance) {
-        conditions.push("relevance = ?");
-        values.push(relevance);
+    if (activityType) {
+        conditions.push("activity_type = ?");
+        values.push(activityType);
     }
 
     if (actionType) {
@@ -108,7 +108,7 @@ async function selectActivities({ limit, offset, ...criteria }) {
             id,
             life_sphere,
             description,
-            relevance,
+            activity_type,
             next_activity_date,
             final_deadline,
             day_period,
@@ -160,7 +160,7 @@ async function selectActivitiesForCalendar({ start, end, status }) {
             id,
             life_sphere,
             description,
-            relevance,
+            activity_type,
             next_activity_date,
             final_deadline,
             day_period,
@@ -207,7 +207,7 @@ async function selectActivityById(id) {
             id,
             life_sphere,
             description,
-            relevance,
+            activity_type,
             next_activity_date,
             final_deadline,
             day_period,
@@ -240,8 +240,8 @@ async function getActivityStats(todayStr, overdueTime = null) {
             COUNT(CASE WHEN ${overdue.sql} THEN 1 END) AS vencidas,
             COUNT(CASE WHEN next_activity_date >= ? AND next_activity_date <= DATE_ADD(?, INTERVAL 7 DAY) AND NOT ${overdue.sql} THEN 1 END) AS proximos_7_dias,
             COUNT(CASE WHEN next_activity_date > DATE_ADD(?, INTERVAL 7 DAY) AND next_activity_date <= DATE_ADD(?, INTERVAL 15 DAY) THEN 1 END) AS entre_7_e_15_dias,
-            COUNT(CASE WHEN relevance = 'Prioridade' THEN 1 END) AS priorizados,
-            COUNT(CASE WHEN relevance = 'Backlog' THEN 1 END) AS backlog,
+            COUNT(CASE WHEN activity_type = 'Prioridade' THEN 1 END) AS priorizados,
+            COUNT(CASE WHEN activity_type = 'Backlog' THEN 1 END) AS backlog,
             COUNT(*) AS total_ativos
         FROM activity
         WHERE excluded = 0 AND status = 1
@@ -289,18 +289,19 @@ async function getActivityDistribution(todayStr, overdueTime = null) {
         return rows.map((r) => ({ label: r.label, total: Number(r.total) }));
     };
 
-    const [bySphere, byActionType, byRelevance, byStatusRows, byScheduleRows] = await Promise.all([
-        groupBy("life_sphere"),
-        groupBy("COALESCE(NULLIF(TRIM(action_type), ''), 'Não informado')"),
-        groupBy("relevance"),
-        pool.query(`
+    const [bySphere, byActionType, byActivityType, byStatusRows, byScheduleRows] =
+        await Promise.all([
+            groupBy("life_sphere"),
+            groupBy("COALESCE(NULLIF(TRIM(action_type), ''), 'Não informado')"),
+            groupBy("activity_type"),
+            pool.query(`
             SELECT status AS status_id, COUNT(*) AS total
             FROM activity
             WHERE excluded = 0
             GROUP BY status
         `),
-        pool.query(
-            `
+            pool.query(
+                `
             SELECT
                 CASE
                     WHEN ${overdue.sql} THEN 'ATRASADO'
@@ -315,14 +316,14 @@ async function getActivityDistribution(todayStr, overdueTime = null) {
             WHERE excluded = 0 AND ${VISIBLE_STATUS_SQL}
             GROUP BY bucket
         `,
-            [...overdue.values, todayStr, todayStr, todayStr, todayStr],
-        ),
-    ]);
+                [...overdue.values, todayStr, todayStr, todayStr, todayStr],
+            ),
+        ]);
 
     return {
         bySphere,
         byActionType,
-        byRelevance,
+        byActivityType,
         byStatus: byStatusRows[0].map((r) => ({
             statusId: Number(r.status_id),
             total: Number(r.total),
@@ -340,7 +341,7 @@ async function insertActivity(data) {
         INSERT INTO activity (
             life_sphere,
             description,
-            relevance,
+            activity_type,
             next_activity_date,
             final_deadline,
             day_period,
@@ -357,7 +358,7 @@ async function insertActivity(data) {
     const [result] = await pool.query(sql, [
         data.life_sphere,
         data.description,
-        data.relevance,
+        data.activity_type,
         data.next_activity_date,
         data.final_deadline,
         data.day_period,
@@ -383,7 +384,7 @@ async function updateActivity(id, data) {
         SET
             life_sphere = ?,
             description = ?,
-            relevance = ?,
+            activity_type = ?,
             next_activity_date = ?,
             final_deadline = ?,
             day_period = ?,
@@ -400,7 +401,7 @@ async function updateActivity(id, data) {
     const [result] = await pool.query(sql, [
         data.life_sphere,
         data.description,
-        data.relevance,
+        data.activity_type,
         data.next_activity_date,
         data.final_deadline,
         data.day_period,

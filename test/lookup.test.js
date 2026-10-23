@@ -6,7 +6,7 @@ const assert = require("node:assert/strict");
 const request = require("supertest");
 const {
     LifeSphereModel,
-    RelevanceModel,
+    ActivityTypeModel,
     DayPeriodModel,
     PeriodicityModel,
     ActionTypeModel,
@@ -75,15 +75,15 @@ describe("Módulo de Cadastros de Apoio", () => {
         assert.match(res.text, /Cor inválida/);
     });
 
-    it("lista relevâncias", async () => {
-        mock.method(RelevanceModel, "count", async () => 1);
-        mock.method(RelevanceModel, "selectList", async () => [
+    it("lista tipos de atividade", async () => {
+        mock.method(ActivityTypeModel, "count", async () => 1);
+        mock.method(ActivityTypeModel, "selectList", async () => [
             { id: 1, name: "Prioridade", description: "Alta urgência", status: 1 },
         ]);
 
-        const res = await request(app).get("/cms-Relevance-Q").expect(200);
+        const res = await request(app).get("/cms-ActivityType-Q").expect(200);
 
-        assert.match(res.text, /Relevâncias/);
+        assert.match(res.text, /Tipos de Atividade/);
         assert.match(res.text, /Prioridade/);
     });
 

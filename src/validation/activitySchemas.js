@@ -37,7 +37,7 @@ const LIFE_SPHERES_WITH_COLORS = [
 
 const LIFE_SPHERES = LIFE_SPHERES_WITH_COLORS.map((s) => s.name);
 
-const RELEVANCE_OPTIONS = ["Prioridade", "Normal", "Baixa", "Backlog"];
+const ACTIVITY_TYPE_OPTIONS = ["Prioridade", "Normal", "Baixa", "Backlog"];
 
 const DAY_PERIODS = ["1 - Manhã", "2 - Tarde", "3 - Noite"];
 
@@ -82,7 +82,7 @@ const activityListQuerySchema = z.object({
         .catch(STATUS_FILTER_VISIBLE),
     search: z.string().trim().max(150).catch(""),
     lifeSphere: z.string().trim().catch(""),
-    relevance: z.string().trim().catch(""),
+    activityType: z.string().trim().catch(""),
     actionType: z.string().trim().catch(""),
     trafficLight: z.enum(["", "ATRASADA", "HOJE", "7_DIAS", "15_DIAS", "PRAZO"]).catch(""),
     page: z.coerce.number().int().min(1).catch(1),
@@ -106,7 +106,12 @@ const activityFormSchema = z.object({
         .trim()
         .min(1, "Informe a descrição da atividade.")
         .max(255, "A descrição deve ter no máximo 255 caracteres."),
-    relevance: z.string().trim().min(1, "Informe a relevância.").max(50).default("Prioridade"),
+    activity_type: z
+        .string()
+        .trim()
+        .min(1, "Informe o tipo de atividade.")
+        .max(50)
+        .default("Prioridade"),
     next_activity_date: z
         .string()
         .trim()
@@ -491,7 +496,7 @@ module.exports = {
     STATUS_FILTER_ALL,
     LIFE_SPHERES_WITH_COLORS,
     LIFE_SPHERES,
-    RELEVANCE_OPTIONS,
+    ACTIVITY_TYPE_OPTIONS,
     DAY_PERIODS,
     ACTION_TYPES,
     THEME_ORGANIZATIONS,

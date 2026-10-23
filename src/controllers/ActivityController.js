@@ -1,7 +1,7 @@
 const Activity = require("../model/ActivityModel");
 const {
     LifeSphereModel,
-    RelevanceModel,
+    ActivityTypeModel,
     DayPeriodModel,
     ActionTypeModel,
     ThemeOrganizationModel,
@@ -19,7 +19,7 @@ const {
     STATUS_FILTER_ALL,
     LIFE_SPHERES_WITH_COLORS,
     LIFE_SPHERES,
-    RELEVANCE_OPTIONS,
+    ACTIVITY_TYPE_OPTIONS,
     DAY_PERIODS,
     ACTION_TYPES,
     THEME_ORGANIZATIONS,
@@ -108,7 +108,7 @@ function listUrl(filter, page) {
         status: filter.status,
         search: filter.search,
         lifeSphere: filter.lifeSphere,
-        relevance: filter.relevance,
+        activityType: filter.activityType,
         actionType: filter.actionType,
         trafficLight: filter.trafficLight,
         perPage: String(filter.perPage),
@@ -119,11 +119,11 @@ function listUrl(filter, page) {
 
 async function loadLookupOptions() {
     try {
-        const [spheres, allSphereColors, relevances, periods, actionTypes, themes, statuses] =
+        const [spheres, allSphereColors, activityTypes, periods, actionTypes, themes, statuses] =
             await Promise.all([
                 LifeSphereModel.selectActiveOptionsWithColor(),
                 LifeSphereModel.selectAllWithColor(),
-                RelevanceModel.selectActiveOptions(),
+                ActivityTypeModel.selectActiveOptions(),
                 DayPeriodModel.selectActiveOptions(),
                 ActionTypeModel.selectActiveOptions(),
                 ThemeOrganizationModel.selectActiveOptions(),
@@ -146,7 +146,9 @@ async function loadLookupOptions() {
             lifeSpheresWithColor: spheresWithColor,
             // Cores de todas as esferas (ativas e inativas), usadas para pintar as linhas
             lifeSphereColors: allSphereColors.length > 0 ? allSphereColors : spheresWithColor,
-            relevanceOptions: relevances.length ? relevances.map((r) => r.name) : RELEVANCE_OPTIONS,
+            activityTypeOptions: activityTypes.length
+                ? activityTypes.map((r) => r.name)
+                : ACTIVITY_TYPE_OPTIONS,
             dayPeriods: periods.length ? periods.map((p) => p.name) : DAY_PERIODS,
             actionTypes: actionTypes.length ? actionTypes.map((a) => a.name) : ACTION_TYPES,
             themeOrganizations: formattedThemes,
@@ -157,7 +159,7 @@ async function loadLookupOptions() {
             lifeSpheres: LIFE_SPHERES,
             lifeSpheresWithColor: LIFE_SPHERES_WITH_COLORS,
             lifeSphereColors: LIFE_SPHERES_WITH_COLORS,
-            relevanceOptions: RELEVANCE_OPTIONS,
+            activityTypeOptions: ACTIVITY_TYPE_OPTIONS,
             dayPeriods: DAY_PERIODS,
             actionTypes: ACTION_TYPES,
             themeOrganizations: THEME_ORGANIZATIONS.map((name, idx) => ({
@@ -287,10 +289,10 @@ function buildDashboardCharts(distribution, lookups) {
         }),
     );
 
-    const relevanceRows = withZeroRows(
-        lookups.relevanceOptions || [],
-        distribution.byRelevance,
-    ).map((r) => ({ ...r, color: CHART_DEFAULT_COLOR, href: listLink({ relevance: r.label }) }));
+    const activityTypeRows = withZeroRows(
+        lookups.activityTypeOptions || [],
+        distribution.byActivityType,
+    ).map((r) => ({ ...r, color: CHART_DEFAULT_COLOR, href: listLink({ activityType: r.label }) }));
 
     const scheduleCounts = new Map(distribution.bySchedule.map((b) => [b.bucket, b.total]));
     const scheduleRows = SCHEDULE_BUCKETS.map((b) => ({
@@ -325,11 +327,11 @@ function buildDashboardCharts(distribution, lookups) {
             rows: actionRows,
         }),
         buildChart({
-            key: "relevance",
-            title: "Relevância",
+            key: "activity_type",
+            title: "Tipo de Atividade",
             subtitle: visibleNote,
             icon: "fa-flag",
-            rows: relevanceRows,
+            rows: activityTypeRows,
             sortByTotal: false,
         }),
         buildChart({
@@ -428,7 +430,7 @@ module.exports = {
             status: toStatusCriteria(filter.status),
             search: filter.search,
             lifeSphere: filter.lifeSphere,
-            relevance: filter.relevance,
+            activityType: filter.activityType,
             actionType: filter.actionType,
             trafficLight: filter.trafficLight,
             todayStr,
@@ -472,7 +474,7 @@ module.exports = {
             filter,
             pageSizes: PAGE_SIZES,
             lifeSpheres: lookups.lifeSpheres,
-            relevanceOptions: lookups.relevanceOptions,
+            activityTypeOptions: lookups.activityTypeOptions,
             actionTypes: lookups.actionTypes,
             themeOrganizations: lookups.themeOrganizations,
             activityStatuses: lookups.activityStatuses,
@@ -519,12 +521,12 @@ module.exports = {
             title: "Nova Atividade",
             values: {
                 status: String(DEFAULT_ACTIVITY_STATUS_ID),
-                relevance: "Prioridade",
+                activity_type: "Prioridade",
                 notify_before_minutes: String(DEFAULT_NOTIFY_BEFORE_MINUTES),
             },
             lifeSpheres: lookups.lifeSpheres,
             lifeSpheresWithColor: lookups.lifeSpheresWithColor,
-            relevanceOptions: lookups.relevanceOptions,
+            activityTypeOptions: lookups.activityTypeOptions,
             dayPeriods: lookups.dayPeriods,
             actionTypes: lookups.actionTypes,
             themeOrganizations: lookups.themeOrganizations,
@@ -543,7 +545,7 @@ module.exports = {
                 values: req.body ?? {},
                 lifeSpheres: lookups.lifeSpheres,
                 lifeSpheresWithColor: lookups.lifeSpheresWithColor,
-                relevanceOptions: lookups.relevanceOptions,
+                activityTypeOptions: lookups.activityTypeOptions,
                 dayPeriods: lookups.dayPeriods,
                 actionTypes: lookups.actionTypes,
                 themeOrganizations: lookups.themeOrganizations,
@@ -582,7 +584,7 @@ module.exports = {
             values: {
                 life_sphere: activity.life_sphere,
                 description: activity.description,
-                relevance: activity.relevance,
+                activity_type: activity.activity_type,
                 next_activity_date: nextDate,
                 final_deadline: finalDate,
                 day_period: activity.day_period || "",
@@ -603,7 +605,7 @@ module.exports = {
             },
             lifeSpheres: lookups.lifeSpheres,
             lifeSpheresWithColor: lookups.lifeSpheresWithColor,
-            relevanceOptions: lookups.relevanceOptions,
+            activityTypeOptions: lookups.activityTypeOptions,
             dayPeriods: lookups.dayPeriods,
             actionTypes: lookups.actionTypes,
             themeOrganizations: lookups.themeOrganizations,
@@ -624,7 +626,7 @@ module.exports = {
                 values: req.body ?? {},
                 lifeSpheres: lookups.lifeSpheres,
                 lifeSpheresWithColor: lookups.lifeSpheresWithColor,
-                relevanceOptions: lookups.relevanceOptions,
+                activityTypeOptions: lookups.activityTypeOptions,
                 dayPeriods: lookups.dayPeriods,
                 actionTypes: lookups.actionTypes,
                 themeOrganizations: lookups.themeOrganizations,
@@ -756,7 +758,7 @@ module.exports = {
             const extendedProps = {
                 activityId: act.id,
                 lifeSphere: act.life_sphere,
-                relevance: act.relevance,
+                activityType: act.activity_type,
                 status: statusMap.get(act.status)?.name || null,
                 recurrence: act.recurrence_rule ? describeRecurrence(act.recurrence_rule) : null,
             };

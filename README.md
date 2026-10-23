@@ -79,7 +79,7 @@ Implementado cobrindo inserção, edição, visualização e exclusão com indic
 Cadastros auxiliares alimentados dinamicamente nos formulários e filtros de Atividades:
 
 - **Esferas da Vida** (`/cms-LifeSphere-Q`): Nome, Descrição, Cor da linha (código hexadecimal) e Status.
-- **Relevâncias** (`/cms-Relevance-Q`): Nome, Descrição e Status.
+- **Tipos de Atividade** (`/cms-ActivityType-Q`, antiga Relevância): Nome, Descrição e Status.
 - **Períodos do Dia** (`/cms-DayPeriod-Q`): Nome, Descrição e Status.
 - **Periodicidades** (`/cms-Periodicity-Q`): Nome, Descrição e Status.
 - **Tipos de Ação** (`/cms-ActionType-Q`): Nome, Descrição e Status.

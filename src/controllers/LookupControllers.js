@@ -11,7 +11,7 @@ const {
 } = require("../validation/lookupSchemas");
 const {
     LifeSphereModel,
-    RelevanceModel,
+    ActivityTypeModel,
     DayPeriodModel,
     PeriodicityModel,
     ActionTypeModel,
@@ -223,13 +223,13 @@ const LifeSphereController = createSimpleLookupController({
     formSchema: lifeSphereFormSchema,
 });
 
-// 2. Relevância
-const RelevanceController = createSimpleLookupController({
-    model: RelevanceModel,
-    entityName: "Relevância",
-    entityTitle: "Relevâncias",
-    routePrefix: "cms-Relevance",
-    formSchema: simpleLookupFormSchema("Relevância", 50),
+// 2. Tipo de Atividade (antiga Relevância)
+const ActivityTypeController = createSimpleLookupController({
+    model: ActivityTypeModel,
+    entityName: "Tipo de Atividade",
+    entityTitle: "Tipos de Atividade",
+    routePrefix: "cms-ActivityType",
+    formSchema: simpleLookupFormSchema("Tipo de Atividade", 50),
 });
 
 // 3. Período do Dia
@@ -427,7 +427,7 @@ const ActivityStatusController = createSimpleLookupController({
 
 module.exports = {
     LifeSphereController,
-    RelevanceController,
+    ActivityTypeController,
     DayPeriodController,
     PeriodicityController,
     ActionTypeController,

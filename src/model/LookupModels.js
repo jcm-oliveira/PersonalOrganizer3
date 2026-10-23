@@ -117,7 +117,7 @@ const LifeSphereModel = {
     },
 };
 
-const RelevanceModel = createLookupModel("relevance");
+const ActivityTypeModel = createLookupModel("activity_type");
 const DayPeriodModel = createLookupModel("day_period");
 const PeriodicityModel = createLookupModel("periodicity");
 const ActionTypeModel = createLookupModel("action_type");
@@ -256,7 +256,7 @@ const ActivityStatusModel = {
 
 module.exports = {
     LifeSphereModel,
-    RelevanceModel,
+    ActivityTypeModel,
     DayPeriodModel,
     PeriodicityModel,
     ActionTypeModel,

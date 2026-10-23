@@ -28,7 +28,7 @@ const RESOURCES = [
         hint: "Alterar permite remarcar arrastando a atividade.",
     },
     { key: "life_sphere", label: "Esferas da Vida", group: "Cadastros", actions: ALL },
-    { key: "relevance", label: "Relevâncias", group: "Cadastros", actions: ALL },
+    { key: "activity_type", label: "Tipos de Atividade", group: "Cadastros", actions: ALL },
     { key: "day_period", label: "Períodos do Dia", group: "Cadastros", actions: ALL },
     { key: "action_type", label: "Tipos de Ação", group: "Cadastros", actions: ALL },
     { key: "theme_organization", label: "Organização por Tema", group: "Cadastros", actions: ALL },
@@ -44,7 +44,7 @@ const ACTION_KEYS = ACTIONS.map((a) => a.key);
 // Periodicidade saiu do menu: sem tela no catálogo, só o Administrador acessa.
 const LOOKUP_PREFIX_RESOURCE = {
     "cms-LifeSphere": "life_sphere",
-    "cms-Relevance": "relevance",
+    "cms-ActivityType": "activity_type",
     "cms-DayPeriod": "day_period",
     "cms-Periodicity": "periodicity",
     "cms-ActionType": "action_type",

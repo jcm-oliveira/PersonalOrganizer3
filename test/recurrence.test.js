@@ -21,7 +21,7 @@ const baseActivity = {
     id: 20,
     life_sphere: "Financeiro e Bens",
     description: "Pagar condomínio",
-    relevance: "Prioridade",
+    activity_type: "Prioridade",
     next_activity_date: "2026-10-15",
     final_deadline: null,
     day_period: null,
@@ -36,7 +36,7 @@ const baseActivity = {
 const validForm = {
     life_sphere: "Financeiro e Bens",
     description: "Pagar condomínio",
-    relevance: "Prioridade",
+    activity_type: "Prioridade",
     next_activity_date: "2026-10-13",
     status: "1",
 };

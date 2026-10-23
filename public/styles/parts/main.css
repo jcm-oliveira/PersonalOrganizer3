@@ -1271,6 +1271,24 @@ a.hbar-label:focus {
     background-color: #5b8fd6;
 }
 
+/* Cadastros: engrenagem do mesmo tamanho do avatar do usuário */
+.nav-settings {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-settings__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    font-size: 26px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
 .nav-user__name {
     max-width: 180px;
     overflow: hidden;

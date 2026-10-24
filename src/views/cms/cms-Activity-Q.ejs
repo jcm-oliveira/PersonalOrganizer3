@@ -44,8 +44,8 @@
 
     <!-- Tabela Estilo Planilha / Painel de Vôo -->
     <div class="activity-block__body activity-table-wrap">
-        <%# Sem cabeçalho visível: só os cartões, como nos blocos da direita %>
-        <%- include('cms-Activity-Q-table', { activities: blocks.programmed.activities, hideHeader: true }) %>
+        <%# Sem cabeçalho visível (só os cartões, como nos blocos da direita) e sem Prazo Final %>
+        <%- include('cms-Activity-Q-table', { activities: blocks.programmed.activities, hideHeader: true, hideDeadline: true }) %>
     </div>
 
     <div class="activity-block__footer">

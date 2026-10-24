@@ -71,7 +71,6 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.match(res.text, /href="\/cms-Activity-U\/1\?returnTo=%2Fcms-Activity-Q%3F/);
         // Datas exibidas em dd/mm/aaaa (o atributo do botão Remarcar continua em ISO)
         assert.match(res.text, />\s*10\/10\/2026 <span class="activity-datetime__sep"/); // horário ao lado
-        assert.match(res.text, />\s*15\/10\/2026\s*</);
         assert.match(res.text, /data-next-date="2026-10-10"/);
         assert.doesNotMatch(res.text, /table-bordered/);
         // Cartão no celular: resumo com data, prazo, esfera, tipo de atividade e status
@@ -80,7 +79,8 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.match(summary, /Prazo 15\/10\/2026/);
         assert.match(summary, /Profissão e Carreira · Prioridade · /);
         assert.match(res.text, />\s*ATRASADO\s*</); // Data 2026-10-10 é anterior a 2026-10-13
-        // Colunas: "Farol" primeiro, sem colunas "Faltam (dias)" e sem a linha de agrupamento
+        // Colunas: "Farol" primeiro, sem "Faltam (dias)", sem Prazo Final (oculto no bloco
+        // Atividades Programadas) e sem a linha de agrupamento
         const labels = [...res.text.matchAll(/activity-th-label">([^<]+)/g)].map((m) =>
             m[1].trim(),
         );
@@ -88,7 +88,6 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             "Farol",
             "Nome",
             "Próxima Atividade",
-            "Prazo Final",
             "Repetição",
             "Status",
             "Ações",
@@ -100,8 +99,9 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             "c-desc",
             "c-mobile-summary",
             "c-next",
-            "c-deadline",
+            "c-recurrence",
         ]);
+        assert.doesNotMatch(res.text, /class="c-deadline/);
         // Descrição com Esfera da Vida e Tipo de Ação abaixo, discretos e separados por hífen
         const descCell = res.text.match(/<td class="c-desc[^"]*">([\s\S]*?)<\/td>/)[1];
         assert.match(
@@ -123,11 +123,6 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             /<span class="activity-period" title="Período do dia">[\s\S]*\(Tarde\)<\/span>/,
         );
         assert.match(nextCell, /<span class="activity-subtext">há \d+ dias?<\/span>/);
-        const deadlineCell = res.text.match(/<td class="c-deadline[^"]*">([\s\S]*?)<\/td>/)[1];
-        assert.match(
-            deadlineCell,
-            /15\/10\/2026\s*<span class="activity-subtext">há \d+ dias?<\/span>/,
-        );
     });
 
     it("renderiza a tela de dashboard com o quadrante de status das atividades", async () => {
@@ -606,8 +601,10 @@ describe("Módulo Activity (Painel de Vôo)", () => {
 
         assert.match(res.text, /<h1 class="h3 mb-0 text-dark">Todas as Atividades<\/h1>/);
         assert.match(res.text, /activity-th-label">Tipo de Atividade</);
-        // Aqui o cabeçalho da tabela continua visível
+        // Aqui o cabeçalho da tabela continua visível, com a coluna Prazo Final
         assert.doesNotMatch(res.text, /table-activity--headless/);
+        assert.match(res.text, /activity-th-label">Prazo Final</);
+        assert.match(res.text, /<td class="c-deadline align-middle text-center">/);
         assert.match(
             res.text,
             /<td class="c-activity-type align-middle text-center">\s*Ordem de Serviço\s*<\/td>/,

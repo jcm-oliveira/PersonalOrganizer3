@@ -34,6 +34,7 @@
     // pop-up de aviso some), sem recarregar a página. data-overdue-at vem do servidor.
     const MAX_TIMEOUT_MS = 2147483647;
 
+    // row: linha da tabela de Programadas (os blocos da direita não têm data nem farol)
     function markOverdue(row) {
         const badge = row.querySelector(".c-dayprox .badge");
         if (badge) {

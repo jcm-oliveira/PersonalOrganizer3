@@ -1,4 +1,9 @@
 const { pool } = require("../db/config");
+const {
+    ACTIVITY_TYPE_PROGRAMMED,
+    ACTIVITY_TYPE_SERVICE_ORDER,
+    ACTIVITY_TYPE_SHOPPING_LIST,
+} = require("../validation/activitySchemas");
 
 // Filtro de status: null = todos | "visible" = status visíveis por padrão | número = id do status
 function pushStatusCondition(status, conditions, values) {
@@ -29,6 +34,8 @@ function buildWhere({
     search,
     lifeSphere,
     activityType,
+    activityTypeIn,
+    activityTypeNotIn,
     actionType,
     trafficLight,
     todayStr,
@@ -47,6 +54,16 @@ function buildWhere({
     if (activityType) {
         conditions.push("activity_type = ?");
         values.push(activityType);
+    }
+
+    // Blocos da consulta: tipos do bloco (activityTypeIn) ou todos menos esses (NotIn)
+    if (activityTypeIn?.length) {
+        conditions.push(`activity_type IN (${activityTypeIn.map(() => "?").join(", ")})`);
+        values.push(...activityTypeIn);
+    }
+    if (activityTypeNotIn?.length) {
+        conditions.push(`activity_type NOT IN (${activityTypeNotIn.map(() => "?").join(", ")})`);
+        values.push(...activityTypeNotIn);
     }
 
     if (actionType) {
@@ -240,8 +257,9 @@ async function getActivityStats(todayStr, overdueTime = null) {
             COUNT(CASE WHEN ${overdue.sql} THEN 1 END) AS vencidas,
             COUNT(CASE WHEN next_activity_date >= ? AND next_activity_date <= DATE_ADD(?, INTERVAL 7 DAY) AND NOT ${overdue.sql} THEN 1 END) AS proximos_7_dias,
             COUNT(CASE WHEN next_activity_date > DATE_ADD(?, INTERVAL 7 DAY) AND next_activity_date <= DATE_ADD(?, INTERVAL 15 DAY) THEN 1 END) AS entre_7_e_15_dias,
-            COUNT(CASE WHEN activity_type = 'Prioridade' THEN 1 END) AS priorizados,
-            COUNT(CASE WHEN activity_type = 'Backlog' THEN 1 END) AS backlog,
+            COUNT(CASE WHEN activity_type = ? THEN 1 END) AS programadas,
+            COUNT(CASE WHEN activity_type = ? THEN 1 END) AS ordens_servico,
+            COUNT(CASE WHEN activity_type = ? THEN 1 END) AS listas_compras,
             COUNT(*) AS total_ativos
         FROM activity
         WHERE excluded = 0 AND status = 1
@@ -255,6 +273,9 @@ async function getActivityStats(todayStr, overdueTime = null) {
         ...overdue.values,
         todayStr,
         todayStr,
+        ACTIVITY_TYPE_PROGRAMMED,
+        ACTIVITY_TYPE_SERVICE_ORDER,
+        ACTIVITY_TYPE_SHOPPING_LIST,
     ]);
 
     const stat = rows[0] || {};
@@ -263,8 +284,9 @@ async function getActivityStats(todayStr, overdueTime = null) {
         vencidas: Number(stat.vencidas || 0),
         proximos7Dias: Number(stat.proximos_7_dias || 0),
         entre7e15Dias: Number(stat.entre_7_e_15_dias || 0),
-        priorizados: Number(stat.priorizados || 0),
-        backlog: Number(stat.backlog || 0),
+        programadas: Number(stat.programadas || 0),
+        ordensServico: Number(stat.ordens_servico || 0),
+        listasCompras: Number(stat.listas_compras || 0),
         totalAtivos: Number(stat.total_ativos || 0),
     };
 }
@@ -418,10 +440,23 @@ async function updateActivity(id, data) {
     return result.affectedRows;
 }
 
+// Ordem de Serviço e Lista de Compras não têm data: ao receber uma, passam a Programada
+const PROGRAM_WHEN_DATED_SQL = "activity_type = IF(activity_type IN (?, ?), ?, activity_type)";
+const PROGRAM_WHEN_DATED_VALUES = [
+    ACTIVITY_TYPE_SERVICE_ORDER,
+    ACTIVITY_TYPE_SHOPPING_LIST,
+    ACTIVITY_TYPE_PROGRAMMED,
+];
+
 // Remarcação pelo calendário (arrastar e soltar): data e, se informado, o horário
 async function updateNextActivitySchedule(id, nextActivityDate, scheduledTime) {
-    const sql = `UPDATE activity SET next_activity_date = ?, scheduled_time = ? WHERE id = ? AND excluded = 0`;
-    const [result] = await pool.query(sql, [nextActivityDate, scheduledTime, id]);
+    const sql = `UPDATE activity SET next_activity_date = ?, scheduled_time = ?, ${PROGRAM_WHEN_DATED_SQL} WHERE id = ? AND excluded = 0`;
+    const [result] = await pool.query(sql, [
+        nextActivityDate,
+        scheduledTime,
+        ...PROGRAM_WHEN_DATED_VALUES,
+        id,
+    ]);
     return result.affectedRows;
 }
 
@@ -432,9 +467,10 @@ async function updateNotifyBefore(id, notifyBeforeMinutes) {
     return result.affectedRows;
 }
 
+// Remarcar (pop-up), concluir ocorrência e calendário sem horário
 async function updateNextActivityDate(id, nextActivityDate) {
-    const sql = `UPDATE activity SET next_activity_date = ? WHERE id = ? AND excluded = 0`;
-    const [result] = await pool.query(sql, [nextActivityDate, id]);
+    const sql = `UPDATE activity SET next_activity_date = ?, ${PROGRAM_WHEN_DATED_SQL} WHERE id = ? AND excluded = 0`;
+    const [result] = await pool.query(sql, [nextActivityDate, ...PROGRAM_WHEN_DATED_VALUES, id]);
     return result.affectedRows;
 }
 

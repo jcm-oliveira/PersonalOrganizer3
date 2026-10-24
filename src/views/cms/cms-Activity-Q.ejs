@@ -31,8 +31,29 @@
 
     <%- include('../parts/messages') %>
 
+    <%
+        // Dias até a data, exibidos abaixo dela: "hoje", "1 dia", "5 dias", "há 2 dias"
+        const daysText = (days) => {
+            if (days === 0) return 'hoje';
+            const n = Math.abs(days);
+            const label = `${n} ${n === 1 ? 'dia' : 'dias'}`;
+            return days > 0 ? label : `há ${label}`;
+        };
+        const activities = blocks.programmed.activities;
+    %>
+
+    <!-- Blocos por Tipo de Atividade, com contorno e altura fixa (rolagem interna):
+         Atividades Programadas (2/3 à esquerda, altura da tela); Ordens de Serviço e
+         Lista de Compras (1/3 à direita, meia altura cada). No celular, um abaixo do outro. -->
+    <div class="row activity-blocks">
+    <div class="col-lg-8 activity-blocks__main">
+    <section class="activity-block" aria-labelledby="activityBlock-programmed">
+    <h2 class="activity-block__title" id="activityBlock-programmed">
+        <%= blocks.programmed.title %> <span class="activity-block__count"><%= blocks.programmed.pagination.total %></span>
+    </h2>
+
     <!-- Tabela Estilo Planilha / Painel de Vôo -->
-    <div class="table-responsive shadow-sm bg-white rounded activity-table-wrap">
+    <div class="activity-block__body activity-table-wrap">
         <table class="table table-sm table-hover table-activity mb-0">
             <thead>
                 <!-- Linha inferior de colunas específicas com ícones acima dos textos -->
@@ -43,7 +64,8 @@
                             <span class="activity-th-label">Farol</span>
                         </span>
                     </th>
-                    <th style="min-width: 220px;" class="text-left">
+                    <%# Descrição com a largura da antiga coluna "Organização por tema" (220 + 150) %>
+                    <th style="min-width: 370px;" class="text-left">
                         <span class="activity-th-content activity-th-content--left">
                             <i class="fas fa-align-left activity-th-icon" aria-hidden="true"></i>
                             <span class="activity-th-label">Descrição</span>
@@ -67,12 +89,6 @@
                             <span class="activity-th-label">Repetição</span>
                         </span>
                     </th>
-                    <th style="min-width: 150px;">
-                        <span class="activity-th-content">
-                            <i class="fas fa-folder activity-th-icon" aria-hidden="true"></i>
-                            <span class="activity-th-label">Organização por tema</span>
-                        </span>
-                    </th>
 
                     <th style="min-width: 75px;">
                         <span class="activity-th-content">
@@ -89,18 +105,9 @@
                 </tr>
             </thead>
             <tbody>
-                <%
-                    // Dias até a data, exibidos abaixo dela: "hoje", "1 dia", "5 dias", "há 2 dias"
-                    const daysText = (days) => {
-                        if (days === 0) return 'hoje';
-                        const n = Math.abs(days);
-                        const label = `${n} ${n === 1 ? 'dia' : 'dias'}`;
-                        return days > 0 ? label : `há ${label}`;
-                    };
-                %>
                 <% if (activities.length === 0) { %>
                     <tr>
-                        <td colspan="8" class="text-center py-4 text-muted">
+                        <td colspan="7" class="text-center py-4 text-muted">
                             Nenhuma atividade encontrada com os filtros selecionados.
                         </td>
                     </tr>
@@ -185,10 +192,6 @@
                             <%= act.recurrence_description || '-' %>
                         </td>
 
-                        <!-- Organização por tema -->
-                        <td class="c-theme align-middle text-center">
-                            <%= act.theme_organization || '-' %>
-                        </td>
 
                         <!-- Status -->
                         <td class="c-status align-middle text-center">
@@ -199,46 +202,7 @@
 
                         <!-- Ações: botões de ícone discretos (cor só ao passar o mouse) -->
                         <td class="c-actions align-middle text-center text-nowrap">
-                            <div class="row-actions">
-                                <a class="btn-icon" href="/cms-Activity-V/<%= act.id %>" data-activity-view="<%= act.id %>"
-                                    title="Visualizar atividade" aria-label="Visualizar atividade">
-                                    <i class="fas fa-search" aria-hidden="true"></i>
-                                </a>
-                                <% if (can('activities', 'update')) { %>
-                                <a class="btn-icon" href="/cms-Activity-U/<%= act.id %>"
-                                    title="Editar atividade" aria-label="Editar atividade">
-                                    <i class="fas fa-pen" aria-hidden="true"></i>
-                                </a>
-                                <button type="button" class="btn-icon"
-                                    data-toggle="modal" data-target="#rescheduleModal"
-                                    data-activity-id="<%= act.id %>"
-                                    data-activity-description="<%= act.description %>"
-                                    data-next-date="<%= act.next_activity_date_formatted || '' %>"
-                                    title="Remarcar atividade" aria-label="Remarcar atividade">
-                                    <i class="far fa-calendar-alt" aria-hidden="true"></i>
-                                </button>
-                                <button type="button" class="btn-icon"
-                                    data-toggle="modal" data-target="#statusModal"
-                                    data-activity-id="<%= act.id %>"
-                                    data-activity-description="<%= act.description %>"
-                                    data-status="<%= act.status %>"
-                                    title="Status da atividade" aria-label="Status da atividade">
-                                    <i class="fas fa-sync-alt" aria-hidden="true"></i>
-                                </button>
-                                <% if (act.recurrence_description) { %>
-                                    <button type="button" class="btn-icon btn-icon--success"
-                                        data-toggle="modal" data-target="#occurrenceModal"
-                                        data-activity-id="<%= act.id %>"
-                                        data-activity-description="<%= act.description %>"
-                                        data-recurrence="<%= act.recurrence_description %>"
-                                        data-next-date="<%= act.next_activity_date_formatted || '' %>"
-                                        data-next-occurrence="<%= act.next_occurrence_date || '' %>"
-                                        title="Concluir ocorrência" aria-label="Concluir ocorrência">
-                                        <i class="fas fa-check" aria-hidden="true"></i>
-                                    </button>
-                                <% } %>
-                                <% } %>
-                            </div>
+                            <%- include('cms-Activity-Q-actions', { act }) %>
                         </td>
                     </tr>
                 <% }) %>
@@ -246,23 +210,17 @@
         </table>
     </div>
 
-    <!-- Paginação -->
-    <nav class="d-flex flex-wrap justify-content-between align-items-center mt-3 activity-pagination" aria-label="Paginação">
-        <span class="text-muted small">
-            Exibindo <%= pagination.firstItem %>–<%= pagination.lastItem %> de <%= pagination.total %> registros
-        </span>
-        <ul class="pagination pagination-sm mb-0">
-            <li class="page-item <%= pagination.previousUrl ? '' : 'disabled' %>">
-                <a class="page-link" href="<%= pagination.previousUrl || '#' %>">Anterior</a>
-            </li>
-            <li class="page-item disabled">
-                <span class="page-link">Página <%= pagination.page %> de <%= pagination.totalPages %></span>
-            </li>
-            <li class="page-item <%= pagination.nextUrl ? '' : 'disabled' %>">
-                <a class="page-link" href="<%= pagination.nextUrl || '#' %>">Próxima</a>
-            </li>
-        </ul>
-    </nav>
+    <div class="activity-block__footer">
+        <%- include('cms-Activity-Q-pagination', { block: blocks.programmed }) %>
+    </div>
+    </section>
+    </div>
+
+    <div class="col-lg-4 activity-blocks__side">
+        <%- include('cms-Activity-Q-compact', { block: blocks.service }) %>
+        <%- include('cms-Activity-Q-compact', { block: blocks.shopping }) %>
+    </div>
+    </div>
 
     <!-- Modal de Filtros -->
     <%- include('cms-Activity-F') %>

@@ -1,0 +1,41 @@
+<%# Botões de ação de uma atividade na consulta (tabela e listas compactas). Recebe: act %>
+<div class="row-actions">
+    <a class="btn-icon" href="/cms-Activity-V/<%= act.id %>" data-activity-view="<%= act.id %>"
+        title="Visualizar atividade" aria-label="Visualizar atividade">
+        <i class="fas fa-search" aria-hidden="true"></i>
+    </a>
+    <% if (can('activities', 'update')) { %>
+    <a class="btn-icon" href="/cms-Activity-U/<%= act.id %>"
+        title="Editar atividade" aria-label="Editar atividade">
+        <i class="fas fa-pen" aria-hidden="true"></i>
+    </a>
+    <button type="button" class="btn-icon"
+        data-toggle="modal" data-target="#rescheduleModal"
+        data-activity-id="<%= act.id %>"
+        data-activity-description="<%= act.description %>"
+        data-next-date="<%= act.next_activity_date_formatted || '' %>"
+        title="Remarcar atividade" aria-label="Remarcar atividade">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+    </button>
+    <button type="button" class="btn-icon"
+        data-toggle="modal" data-target="#statusModal"
+        data-activity-id="<%= act.id %>"
+        data-activity-description="<%= act.description %>"
+        data-status="<%= act.status %>"
+        title="Status da atividade" aria-label="Status da atividade">
+        <i class="fas fa-sync-alt" aria-hidden="true"></i>
+    </button>
+    <% if (act.recurrence_description) { %>
+        <button type="button" class="btn-icon btn-icon--success"
+            data-toggle="modal" data-target="#occurrenceModal"
+            data-activity-id="<%= act.id %>"
+            data-activity-description="<%= act.description %>"
+            data-recurrence="<%= act.recurrence_description %>"
+            data-next-date="<%= act.next_activity_date_formatted || '' %>"
+            data-next-occurrence="<%= act.next_occurrence_date || '' %>"
+            title="Concluir ocorrência" aria-label="Concluir ocorrência">
+            <i class="fas fa-check" aria-hidden="true"></i>
+        </button>
+    <% } %>
+    <% } %>
+</div>

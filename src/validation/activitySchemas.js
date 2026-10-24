@@ -37,7 +37,18 @@ const LIFE_SPHERES_WITH_COLORS = [
 
 const LIFE_SPHERES = LIFE_SPHERES_WITH_COLORS.map((s) => s.name);
 
-const ACTIVITY_TYPE_OPTIONS = ["Prioridade", "Normal", "Baixa", "Backlog"];
+// Tipos de Atividade que definem os blocos da consulta (ver migração 013).
+// "Programada" fica à esquerda, junto com qualquer outro tipo; os demais, à direita.
+const ACTIVITY_TYPE_PROGRAMMED = "Programada";
+const ACTIVITY_TYPE_SERVICE_ORDER = "Ordem de Serviço";
+const ACTIVITY_TYPE_SHOPPING_LIST = "Lista de Compras";
+const ACTIVITY_TYPE_OPTIONS = [
+    ACTIVITY_TYPE_PROGRAMMED,
+    ACTIVITY_TYPE_SERVICE_ORDER,
+    ACTIVITY_TYPE_SHOPPING_LIST,
+];
+// Tipos sem data: ao receber uma data, a atividade passa a ser "Programada"
+const UNDATED_ACTIVITY_TYPES = [ACTIVITY_TYPE_SERVICE_ORDER, ACTIVITY_TYPE_SHOPPING_LIST];
 
 const DAY_PERIODS = ["1 - Manhã", "2 - Tarde", "3 - Noite"];
 
@@ -85,7 +96,10 @@ const activityListQuerySchema = z.object({
     activityType: z.string().trim().catch(""),
     actionType: z.string().trim().catch(""),
     trafficLight: z.enum(["", "ATRASADA", "HOJE", "7_DIAS", "15_DIAS", "PRAZO"]).catch(""),
+    // Página de cada bloco: Programada (page), Ordem de Serviço e Lista de Compras
     page: z.coerce.number().int().min(1).catch(1),
+    pageService: z.coerce.number().int().min(1).catch(1),
+    pageShopping: z.coerce.number().int().min(1).catch(1),
     perPage: z.coerce
         .number()
         .refine((val) => PAGE_SIZES.includes(val))
@@ -111,7 +125,7 @@ const activityFormSchema = z.object({
         .trim()
         .min(1, "Informe o tipo de atividade.")
         .max(50)
-        .default("Prioridade"),
+        .default(ACTIVITY_TYPE_PROGRAMMED),
     next_activity_date: z
         .string()
         .trim()
@@ -496,6 +510,10 @@ module.exports = {
     STATUS_FILTER_ALL,
     LIFE_SPHERES_WITH_COLORS,
     LIFE_SPHERES,
+    ACTIVITY_TYPE_PROGRAMMED,
+    ACTIVITY_TYPE_SERVICE_ORDER,
+    ACTIVITY_TYPE_SHOPPING_LIST,
+    UNDATED_ACTIVITY_TYPES,
     ACTIVITY_TYPE_OPTIONS,
     DAY_PERIODS,
     ACTION_TYPES,

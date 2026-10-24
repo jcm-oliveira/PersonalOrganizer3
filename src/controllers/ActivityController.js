@@ -19,6 +19,10 @@ const {
     STATUS_FILTER_ALL,
     LIFE_SPHERES_WITH_COLORS,
     LIFE_SPHERES,
+    ACTIVITY_TYPE_PROGRAMMED,
+    ACTIVITY_TYPE_SERVICE_ORDER,
+    ACTIVITY_TYPE_SHOPPING_LIST,
+    UNDATED_ACTIVITY_TYPES,
     ACTIVITY_TYPE_OPTIONS,
     DAY_PERIODS,
     ACTION_TYPES,
@@ -103,7 +107,32 @@ function parseId(rawId) {
     return parsed.data;
 }
 
-function listUrl(filter, page) {
+// Blocos da consulta: "Programada" à esquerda (também com qualquer outro tipo) e, à
+// direita, "Ordem de Serviço" e "Lista de Compras". Os filtros valem para os três;
+// cada bloco tem a própria página (pageParam).
+const LIST_BLOCKS = [
+    {
+        key: "programmed",
+        title: "Atividades Programadas",
+        pageParam: "page",
+        criteria: { activityTypeNotIn: [ACTIVITY_TYPE_SERVICE_ORDER, ACTIVITY_TYPE_SHOPPING_LIST] },
+    },
+    {
+        key: "service",
+        title: "Ordens de Serviço",
+        pageParam: "pageService",
+        criteria: { activityTypeIn: [ACTIVITY_TYPE_SERVICE_ORDER] },
+    },
+    {
+        key: "shopping",
+        title: "Lista de Compras",
+        pageParam: "pageShopping",
+        criteria: { activityTypeIn: [ACTIVITY_TYPE_SHOPPING_LIST] },
+    },
+];
+
+// pages: { page, pageService, pageShopping } (página de cada bloco)
+function listUrl(filter, pages) {
     const params = new URLSearchParams({
         status: filter.status,
         search: filter.search,
@@ -112,8 +141,8 @@ function listUrl(filter, page) {
         actionType: filter.actionType,
         trafficLight: filter.trafficLight,
         perPage: String(filter.perPage),
-        page: String(page),
     });
+    LIST_BLOCKS.forEach(({ pageParam }) => params.set(pageParam, String(pages[pageParam] || 1)));
     return `${LIST_URL}?${params}`;
 }
 
@@ -365,11 +394,17 @@ function parseActivityForm(body) {
     if (Object.keys(errors).length > 0) {
         return { success: false, errors };
     }
+    const nextActivityDate = recurrence.nextActivityDate;
     return {
         success: true,
         data: {
             ...parsed.data,
-            next_activity_date: recurrence.nextActivityDate,
+            // Ordem de Serviço e Lista de Compras não têm data: com data, é Programada
+            activity_type:
+                nextActivityDate && UNDATED_ACTIVITY_TYPES.includes(parsed.data.activity_type)
+                    ? ACTIVITY_TYPE_PROGRAMMED
+                    : parsed.data.activity_type,
+            next_activity_date: nextActivityDate,
             recurrence_rule: recurrence.rule,
         },
     };
@@ -437,24 +472,32 @@ module.exports = {
             overdueTime,
         };
 
-        const total = await Activity.countActivities(criteria);
-        const totalPages = Math.max(1, Math.ceil(total / filter.perPage));
-        const page = Math.min(filter.page, totalPages);
-        const offset = (page - 1) * filter.perPage;
+        // Total de cada bloco e página válida de cada um
+        const totals = await Promise.all(
+            LIST_BLOCKS.map((block) => Activity.countActivities({ ...criteria, ...block.criteria })),
+        );
+        const pages = {};
+        LIST_BLOCKS.forEach((block, i) => {
+            const totalPages = Math.max(1, Math.ceil(totals[i] / filter.perPage));
+            pages[block.pageParam] = Math.min(filter[block.pageParam], totalPages);
+        });
 
-        const [rawActivities, lookups] = await Promise.all([
-            Activity.selectActivities({
-                ...criteria,
-                limit: filter.perPage,
-                offset,
-            }),
+        const [lookups, ...blockRows] = await Promise.all([
             loadLookupOptions(),
+            ...LIST_BLOCKS.map((block) =>
+                Activity.selectActivities({
+                    ...criteria,
+                    ...block.criteria,
+                    limit: filter.perPage,
+                    offset: (pages[block.pageParam] - 1) * filter.perPage,
+                }),
+            ),
         ]);
 
         const statusMap = new Map((lookups.activityStatuses || []).map((s) => [s.id, s]));
         const resolveSphereColor = buildSphereColorResolver(lookups.lifeSphereColors);
 
-        const activities = rawActivities.map((act) => {
+        const decorate = (act) => {
             const enriched = enrichActivity(act);
             const statusObj = statusMap.get(act.status);
             const statusColor = statusObj?.color_code || (act.status === 1 ? "#28a745" : "#6c757d");
@@ -466,11 +509,36 @@ module.exports = {
                 ...resolveSphereColor(act.life_sphere),
                 ...recurrenceInfo(act),
             };
+        };
+
+        // Blocos por chave (programmed, service, shopping), cada um com a sua paginação
+        const blocks = {};
+        LIST_BLOCKS.forEach((block, i) => {
+            const total = totals[i];
+            const page = pages[block.pageParam];
+            const totalPages = Math.max(1, Math.ceil(total / filter.perPage));
+            const offset = (page - 1) * filter.perPage;
+            const activities = blockRows[i].map(decorate);
+            const urlFor = (target) => listUrl(filter, { ...pages, [block.pageParam]: target });
+            blocks[block.key] = {
+                key: block.key,
+                title: block.title,
+                activities,
+                pagination: {
+                    page,
+                    totalPages,
+                    total,
+                    firstItem: total === 0 ? 0 : offset + 1,
+                    lastItem: offset + activities.length,
+                    previousUrl: page > 1 ? urlFor(page - 1) : null,
+                    nextUrl: page < totalPages ? urlFor(page + 1) : null,
+                },
+            };
         });
 
         return res.render("cms/cms-Activity-Q", {
             title: "Atividades",
-            activities,
+            blocks,
             filter,
             pageSizes: PAGE_SIZES,
             lifeSpheres: lookups.lifeSpheres,
@@ -478,16 +546,7 @@ module.exports = {
             actionTypes: lookups.actionTypes,
             themeOrganizations: lookups.themeOrganizations,
             activityStatuses: lookups.activityStatuses,
-            returnTo: listUrl(filter, page),
-            pagination: {
-                page,
-                totalPages,
-                total,
-                firstItem: total === 0 ? 0 : offset + 1,
-                lastItem: offset + activities.length,
-                previousUrl: page > 1 ? listUrl(filter, page - 1) : null,
-                nextUrl: page < totalPages ? listUrl(filter, page + 1) : null,
-            },
+            returnTo: listUrl(filter, pages),
             message: messageFor(req.query.msg),
         });
     },
@@ -521,7 +580,7 @@ module.exports = {
             title: "Nova Atividade",
             values: {
                 status: String(DEFAULT_ACTIVITY_STATUS_ID),
-                activity_type: "Prioridade",
+                activity_type: ACTIVITY_TYPE_PROGRAMMED,
                 notify_before_minutes: String(DEFAULT_NOTIFY_BEFORE_MINUTES),
             },
             lifeSpheres: lookups.lifeSpheres,

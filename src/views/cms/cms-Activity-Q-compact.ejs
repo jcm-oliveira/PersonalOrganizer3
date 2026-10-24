@@ -1,0 +1,40 @@
+<%#
+    Bloco estreito da consulta (Ordem de Serviço / Lista de Compras): lista compacta com
+    descrição, a Organização por tema abaixo e ações. Sem farol: esses tipos não têm data
+    (ao receber uma data, a atividade passa a ser Programada).
+    Recebe: block (key, title, activities, pagination)
+%>
+<section class="activity-block activity-block--compact" aria-labelledby="activityBlock-<%= block.key %>">
+    <h2 class="activity-block__title" id="activityBlock-<%= block.key %>">
+        <%= block.title %> <span class="activity-block__count"><%= block.pagination.total %></span>
+    </h2>
+    <div class="activity-block__body">
+        <% if (block.activities.length === 0) { %>
+            <p class="text-center text-muted small py-3 mb-0">Nenhuma atividade.</p>
+        <% } else { %>
+            <ul class="activity-compact list-unstyled mb-0">
+                <% block.activities.forEach((act) => { %>
+                    <li class="activity-compact__item"
+                        <% if (act.life_sphere_color) { %>data-sphere-color="<%= act.life_sphere_color %>"<% } %>>
+                        <div class="activity-compact__body">
+                            <a href="/cms-Activity-V/<%= act.id %>" class="activity-desc-link" data-activity-view="<%= act.id %>">
+                                <%= act.description %>
+                            </a>
+                            <% if (act.theme_organization) { %>
+                                <span class="activity-subtext" title="Organização por tema"><span class="sr-only">Organização por tema: </span><%= act.theme_organization %></span>
+                            <% } %>
+                        </div>
+                        <div class="activity-compact__actions">
+                            <%- include('cms-Activity-Q-actions', { act }) %>
+                        </div>
+                    </li>
+                <% }) %>
+            </ul>
+        <% } %>
+    </div>
+    <% if (block.pagination.totalPages > 1) { %>
+        <div class="activity-block__footer">
+            <%- include('cms-Activity-Q-pagination', { block }) %>
+        </div>
+    <% } %>
+</section>

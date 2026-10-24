@@ -26,6 +26,11 @@
             if (textColor === "auto") el.style.color = contrastTextColor(bgColor);
             else if (HEX_COLOR.test(textColor)) el.style.color = textColor;
         });
+        // Listas compactas da consulta: a esfera aparece como faixa colorida à esquerda
+        root.querySelectorAll("[data-sphere-color]").forEach((el) => {
+            const color = el.getAttribute("data-sphere-color");
+            if (HEX_COLOR.test(color)) el.style.borderLeftColor = color;
+        });
     }
 
     // Disponível para conteúdo carregado depois (ex.: pop-up de visualização)

@@ -45,7 +45,7 @@ function registerLookupRoutes(prefix, controller) {
 // 1. Esfera da Vida
 registerLookupRoutes("cms-LifeSphere", LifeSphereController);
 
-// 2. Relevância
+// 2. Tipo de Atividade (antiga Relevância)
 registerLookupRoutes("cms-ActivityType", ActivityTypeController);
 
 // 3. Período do Dia

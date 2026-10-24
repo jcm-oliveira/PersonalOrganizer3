@@ -1,0 +1,18 @@
+<%# Paginação de um bloco da consulta. Recebe: block (title, pagination) %>
+<% const pagination = block.pagination; %>
+<nav class="d-flex flex-wrap justify-content-between align-items-center activity-pagination" aria-label="Paginação: <%= block.title %>">
+    <span class="text-muted small">
+        Exibindo <%= pagination.firstItem %>–<%= pagination.lastItem %> de <%= pagination.total %> registros
+    </span>
+    <ul class="pagination pagination-sm mb-0">
+        <li class="page-item <%= pagination.previousUrl ? '' : 'disabled' %>">
+            <a class="page-link" href="<%= pagination.previousUrl || '#' %>">Anterior</a>
+        </li>
+        <li class="page-item disabled">
+            <span class="page-link">Página <%= pagination.page %> de <%= pagination.totalPages %></span>
+        </li>
+        <li class="page-item <%= pagination.nextUrl ? '' : 'disabled' %>">
+            <a class="page-link" href="<%= pagination.nextUrl || '#' %>">Próxima</a>
+        </li>
+    </ul>
+</nav>

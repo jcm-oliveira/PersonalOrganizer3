@@ -218,10 +218,15 @@ describe("Recorrência de atividades (RRULE)", () => {
 
         it("consulta mostra o ícone de repetição e o botão Concluir ocorrência", async () => {
             mock.method(Activity, "countActivities", async () => 2);
-            mock.method(Activity, "selectActivities", async () => [
-                { ...baseActivity, recurrence_rule: "FREQ=MONTHLY;BYMONTHDAY=15" },
-                { ...baseActivity, id: 21, description: "Avulsa", recurrence_rule: null },
-            ]);
+            // Só o bloco Programadas (sem activityTypeIn) traz as atividades
+            mock.method(Activity, "selectActivities", async ({ activityTypeIn }) =>
+                activityTypeIn
+                    ? []
+                    : [
+                          { ...baseActivity, recurrence_rule: "FREQ=MONTHLY;BYMONTHDAY=15" },
+                          { ...baseActivity, id: 21, description: "Avulsa", recurrence_rule: null },
+                      ],
+            );
 
             const res = await request(app).get("/cms-Activity-Q").expect(200);
 

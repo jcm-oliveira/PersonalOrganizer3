@@ -16,27 +16,41 @@ describe("Módulo Activity (Painel de Vôo)", () => {
 
     it("lista as atividades ativas da primeira página", async () => {
         mock.method(Activity, "countActivities", async () => 1);
-        const select = mock.method(Activity, "selectActivities", async () => [
-            {
-                id: 1,
-                life_sphere: "Profissão e Carreira",
-                description: "Reunião de Governança",
-                activity_type: "Prioridade",
-                next_activity_date: "2026-10-10",
-                final_deadline: "2026-10-15",
-                day_period: "2 - Tarde",
-                scheduled_time: "14:00:00",
-                periodicity: "Semanal",
-                action_type: "Compromisso",
-                theme_organization: "[TI] - Escritório TI",
-                notes: "Próximas atividades a alinhar",
-                status: 1,
-            },
-        ]);
+        // Só o bloco Programadas (activityTypeNotIn) traz a atividade
+        const select = mock.method(Activity, "selectActivities", async ({ activityTypeIn }) =>
+            activityTypeIn
+                ? []
+                : [
+                      {
+                          id: 1,
+                          life_sphere: "Profissão e Carreira",
+                          description: "Reunião de Governança",
+                          activity_type: "Prioridade",
+                          next_activity_date: "2026-10-10",
+                          final_deadline: "2026-10-15",
+                          day_period: "2 - Tarde",
+                          scheduled_time: "14:00:00",
+                          periodicity: "Semanal",
+                          action_type: "Compromisso",
+                          theme_organization: "[TI] - Escritório TI",
+                          notes: "Próximas atividades a alinhar",
+                          status: 1,
+                      },
+                  ],
+        );
 
         const res = await request(app).get("/cms-Activity-Q").expect(200);
 
-        assert.equal(select.mock.callCount(), 1);
+        // Uma consulta por bloco: Programadas (todos menos OS e Compras), OS e Compras
+        assert.equal(select.mock.callCount(), 3);
+        assert.deepEqual(
+            select.mock.calls.map(({ arguments: [c] }) => [c.activityTypeIn, c.activityTypeNotIn]),
+            [
+                [undefined, ["Ordem de Serviço", "Lista de Compras"]],
+                [["Ordem de Serviço"], undefined],
+                [["Lista de Compras"], undefined],
+            ],
+        );
         // Padrão de 50 itens por página, já marcado no filtro
         assert.equal(select.mock.calls[0].arguments[0].limit, 50);
         assert.match(res.text, /<option value="50" selected>50<\/option>/);
@@ -59,7 +73,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.match(res.text, />\s*15\/10\/2026\s*</);
         assert.match(res.text, /data-next-date="2026-10-10"/);
         assert.doesNotMatch(res.text, /table-bordered/);
-        // Cartão no celular: resumo com data, prazo, esfera, relevância e status
+        // Cartão no celular: resumo com data, prazo, esfera, tipo de atividade e status
         const summary = res.text.match(/<td class="c-mobile-summary">([\s\S]*?)<\/td>/)[1];
         assert.match(summary, /10\/10\/2026 · 14:00/);
         assert.match(summary, /Prazo 15\/10\/2026/);
@@ -75,7 +89,6 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             "Próxima Atividade",
             "Prazo Final",
             "Repetição",
-            "Organização por tema",
             "Status",
             "Ações",
         ]);
@@ -122,8 +135,9 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             vencidas: 9,
             proximos7Dias: 10,
             entre7e15Dias: 5,
-            priorizados: 93,
-            backlog: 176,
+            programadas: 93,
+            ordensServico: 17,
+            listasCompras: 4,
             totalAtivos: 295,
         }));
 
@@ -140,7 +154,19 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.match(res.text, /Status das Atividades/);
         assert.match(res.text, /Atividades vencidas/);
         assert.match(res.text, /9/);
-        assert.match(res.text, /Priorizados/);
+        // Contagem por Tipo de Atividade, com link para a consulta filtrada
+        assert.match(
+            res.text,
+            /activityType=Programada" class="text-dark">Atividades Programadas<\/a>/,
+        );
+        assert.match(
+            res.text,
+            /activityType=Ordem%20de%20Servi%C3%A7o" class="text-dark">Ordens de Serviço/,
+        );
+        assert.match(
+            res.text,
+            /activityType=Lista%20de%20Compras" class="text-dark">Listas de Compras/,
+        );
         assert.match(res.text, /93/);
         assert.match(res.text, /Balanceamento das atividades/);
         assert.match(res.text, /Nenhuma atividade para exibir\./);
@@ -167,8 +193,9 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             vencidas: 0,
             proximos7Dias: 0,
             entre7e15Dias: 0,
-            priorizados: 0,
-            backlog: 0,
+            programadas: 0,
+            ordensServico: 0,
+            listasCompras: 0,
             totalAtivos: 4,
         }));
         const distribution = mock.method(Activity, "getActivityDistribution", async () => ({
@@ -1185,17 +1212,21 @@ describe("Módulo Activity (Painel de Vôo)", () => {
 
     it("consulta e calendário abrem a visualização em pop-up", async () => {
         mock.method(Activity, "countActivities", async () => 1);
-        mock.method(Activity, "selectActivities", async () => [
-            {
-                id: 7,
-                life_sphere: "Profissão e Carreira",
-                description: "Revisar contrato",
-                activity_type: "Normal",
-                next_activity_date: "2026-10-20",
-                final_deadline: null,
-                status: 1,
-            },
-        ]);
+        mock.method(Activity, "selectActivities", async ({ activityTypeIn }) =>
+            activityTypeIn
+                ? []
+                : [
+                      {
+                          id: 7,
+                          life_sphere: "Profissão e Carreira",
+                          description: "Revisar contrato",
+                          activity_type: "Normal",
+                          next_activity_date: "2026-10-20",
+                          final_deadline: null,
+                          status: 1,
+                      },
+                  ],
+        );
 
         const list = await request(app).get("/cms-Activity-Q?status=all").expect(200);
         assert.equal(list.text.match(/data-activity-view="7"/g).length, 2); // descrição + botão
@@ -1205,6 +1236,88 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         const calendar = await request(app).get("/cms-Calendar").expect(200);
         assert.match(calendar.text, /id="activityViewModal"/);
         assert.match(calendar.text, /src="\/scripts\/activity-view-modal.js"/);
+    });
+
+    it("consulta dividida em blocos: Programadas (2/3) e, à direita, OS e Compras", async () => {
+        // Programada tem data; OS e Compras não têm (com data viram Programada)
+        const row = (id, description, activity_type) => ({
+            id,
+            life_sphere: "Profissão e Carreira",
+            description,
+            activity_type,
+            next_activity_date: activity_type === "Programada" ? "2026-10-20" : null,
+            scheduled_time: activity_type === "Programada" ? "14:00:00" : null,
+            final_deadline: null,
+            theme_organization: "[Casa] Manutenção",
+            status: 1,
+        });
+        mock.method(Activity, "countActivities", async ({ activityTypeIn }) =>
+            activityTypeIn?.[0] === "Ordem de Serviço" ? 120 : 1,
+        );
+        mock.method(Activity, "selectActivities", async ({ activityTypeIn }) => {
+            if (!activityTypeIn) return [row(1, "Reunião semanal", "Programada")];
+            if (activityTypeIn[0] === "Ordem de Serviço")
+                return [row(2, "Trocar lâmpada", "Ordem de Serviço")];
+            return [row(3, "Mercado do mês", "Lista de Compras")];
+        });
+
+        const res = await request(app).get("/cms-Activity-Q?pageShopping=1").expect(200);
+
+        // Layout: 2/3 à esquerda e 1/3 à direita; blocos com moldura e área de rolagem
+        assert.match(
+            res.text,
+            /<div class="col-lg-8 activity-blocks__main">\s*<section class="activity-block" aria-labelledby="activityBlock-programmed">/,
+        );
+        assert.match(res.text, /<div class="col-lg-4 activity-blocks__side">/);
+        assert.equal(res.text.match(/class="activity-block__body/g).length, 3);
+        // Títulos com a quantidade de cada bloco
+        assert.match(
+            res.text,
+            /Atividades Programadas <span class="activity-block__count">1<\/span>/,
+        );
+        assert.match(res.text, /Ordens de Serviço <span class="activity-block__count">120<\/span>/);
+        assert.match(res.text, /Lista de Compras <span class="activity-block__count">1<\/span>/);
+        // Cada atividade no seu bloco: tabela à esquerda, listas compactas à direita
+        const section = (key) =>
+            res.text.match(
+                new RegExp(`aria-labelledby="activityBlock-${key}">([\\s\\S]*?)</section>`),
+            )[1];
+        assert.match(section("programmed"), /Reunião semanal/);
+        assert.match(section("service"), /class="activity-compact__item[\s\S]*Trocar lâmpada/);
+        assert.doesNotMatch(section("service"), /Reunião semanal|Mercado do mês/);
+        // Blocos da direita: sem farol; Organização por tema abaixo do nome
+        assert.match(
+            section("shopping"),
+            /Mercado do mês[\s\S]*<span class="activity-subtext" title="Organização por tema">[\s\S]*\[Casa\] Manutenção<\/span>/,
+        );
+        assert.doesNotMatch(section("service") + section("shopping"), /class="badge badge-/);
+        // Programadas: sem a coluna Organização por tema
+        assert.doesNotMatch(section("programmed"), /c-theme|Organização por tema/);
+        // Paginação própria (120 OS em páginas de 50): o link mantém a página dos outros blocos
+        assert.match(section("service"), /Página 1 de 3/);
+        assert.match(section("service"), /href="[^"]*page=1&amp;pageService=2&amp;pageShopping=1"/);
+    });
+
+    it("Ordem de Serviço ou Lista de Compras com data passa a ser Programada", async () => {
+        const insert = mock.method(Activity, "insertActivity", async () => 1);
+        const send = (activity_type, next_activity_date) =>
+            request(app).post("/cms-Activity-C").type("form").send({
+                life_sphere: "Profissão e Carreira",
+                description: "Teste de tipo",
+                activity_type,
+                next_activity_date,
+                status: "1",
+            });
+
+        await send("Ordem de Serviço", "2026-10-30").expect(303);
+        await send("Lista de Compras", "2026-10-30").expect(303);
+        await send("Lista de Compras", "").expect(303);
+        await send("Programada", "").expect(303);
+
+        assert.deepEqual(
+            insert.mock.calls.map(({ arguments: [data] }) => data.activity_type),
+            ["Programada", "Programada", "Lista de Compras", "Programada"],
+        );
     });
 
     it("exclui uma atividade com exclusão lógica", async () => {

@@ -570,6 +570,75 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.match(res.text, /<option value="">\(Nenhum\)<\/option>/);
     });
 
+    it("setas de sequência: move a atividade (JSON pelo script ou redirecionando)", async () => {
+        const move = mock.method(Activity, "moveActivity", async () => true);
+
+        const json = await request(app)
+            .post("/cms-Activity-M/7")
+            .set("Accept", "application/json")
+            .type("form")
+            .send({ direction: "up" })
+            .expect(200);
+        assert.deepEqual(json.body, { ok: true, moved: true });
+        assert.deepEqual(move.mock.calls[0].arguments, [7, "up"]);
+
+        // Sem JavaScript: volta para a consulta de origem, sem mensagem
+        const html = await request(app)
+            .post("/cms-Activity-M/7")
+            .type("form")
+            .send({ direction: "down", returnTo: "/cms-Activity-Q?pageService=2" })
+            .expect(303);
+        assert.equal(html.headers.location, "/cms-Activity-Q?pageService=2");
+        assert.deepEqual(move.mock.calls[1].arguments, [7, "down"]);
+
+        await request(app)
+            .post("/cms-Activity-M/7")
+            .set("Accept", "application/json")
+            .type("form")
+            .send({ direction: "lado" })
+            .expect(422);
+        assert.equal(move.mock.callCount(), 2);
+    });
+
+    it("blocos OS e Compras: ordem manual e setas (subir desabilitada no primeiro)", async () => {
+        mock.method(Activity, "countActivities", async () => 2);
+        const select = mock.method(Activity, "selectActivities", async ({ activityTypeIn }) =>
+            activityTypeIn?.[0] === "Lista de Compras"
+                ? [
+                      {
+                          id: 31,
+                          description: "Arroz",
+                          activity_type: "Lista de Compras",
+                          status: 1,
+                      },
+                      {
+                          id: 32,
+                          description: "Feijão",
+                          activity_type: "Lista de Compras",
+                          status: 1,
+                      },
+                  ]
+                : [],
+        );
+
+        const res = await request(app).get("/cms-Activity-Q").expect(200);
+
+        // Programadas pela data; OS e Compras pela sequência manual
+        assert.deepEqual(
+            select.mock.calls.map(({ arguments: [c] }) => c.manualOrder ?? false),
+            [false, true, true],
+        );
+        const shopping = res.text.match(
+            /aria-labelledby="activityBlock-shopping">([\s\S]*?)<\/section>/,
+        )[1];
+        assert.match(shopping, /data-sortable-list data-first-page="true" data-last-page="true"/);
+        const arrows = [
+            ...shopping.matchAll(/data-move="(up|down)"[\s\S]*?aria-label="[^"]+"\s*(disabled)?/g),
+        ].map((m) => `${m[1]}${m[2] ? ":off" : ""}`);
+        assert.deepEqual(arrows, ["up:off", "down", "up", "down:off"]);
+        assert.match(shopping, /action="\/cms-Activity-M\/31"/);
+    });
+
     it("mensagem após uma ação tem botão de fechar e fecha sozinha após 5 segundos", async () => {
         mock.method(Activity, "countActivities", async () => 0);
         mock.method(Activity, "selectActivities", async () => []);

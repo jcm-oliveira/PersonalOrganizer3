@@ -88,14 +88,15 @@ function messageFor(code) {
 }
 
 // Volta para a consulta mantendo os filtros/página de origem. Só aceita a própria
-// tela de consulta como destino (evita redirecionamento aberto).
+// tela de consulta como destino (evita redirecionamento aberto). msgCode é opcional.
 function returnToListUrl(returnTo, msgCode) {
     const isListPath = typeof returnTo === "string" && /^\/cms-Activity-Q(\?|$)/.test(returnTo);
     const url = new URL(isListPath ? returnTo : LIST_URL, "http://localhost");
     if (url.pathname !== LIST_URL) {
-        return `${LIST_URL}?msg=${msgCode}`;
+        return msgCode ? `${LIST_URL}?msg=${msgCode}` : LIST_URL;
     }
-    url.searchParams.set("msg", msgCode);
+    if (msgCode) url.searchParams.set("msg", msgCode);
+    else url.searchParams.delete("msg");
     return `${url.pathname}${url.search}`;
 }
 
@@ -121,13 +122,16 @@ const LIST_BLOCKS = [
         key: "service",
         title: "Ordens de Serviço",
         pageParam: "pageService",
-        criteria: { activityTypeIn: [ACTIVITY_TYPE_SERVICE_ORDER] },
+        // Sequência manual (setas para subir/descer)
+        criteria: { activityTypeIn: [ACTIVITY_TYPE_SERVICE_ORDER], manualOrder: true },
+        sortable: true,
     },
     {
         key: "shopping",
         title: "Lista de Compras",
         pageParam: "pageShopping",
-        criteria: { activityTypeIn: [ACTIVITY_TYPE_SHOPPING_LIST] },
+        criteria: { activityTypeIn: [ACTIVITY_TYPE_SHOPPING_LIST], manualOrder: true },
+        sortable: true,
     },
 ];
 
@@ -474,7 +478,9 @@ module.exports = {
 
         // Total de cada bloco e página válida de cada um
         const totals = await Promise.all(
-            LIST_BLOCKS.map((block) => Activity.countActivities({ ...criteria, ...block.criteria })),
+            LIST_BLOCKS.map((block) =>
+                Activity.countActivities({ ...criteria, ...block.criteria }),
+            ),
         );
         const pages = {};
         LIST_BLOCKS.forEach((block, i) => {
@@ -523,6 +529,7 @@ module.exports = {
             blocks[block.key] = {
                 key: block.key,
                 title: block.title,
+                sortable: Boolean(block.sortable),
                 activities,
                 pagination: {
                     page,
@@ -943,6 +950,26 @@ module.exports = {
         }
         await Activity.updateNextActivityDate(id, next);
         return res.redirect(303, returnToListUrl(returnTo, "occurrenceDone"));
+    },
+
+    //------------------------------------------------
+    //   SEQUÊNCIA (setas dos blocos OS e Compras)
+    //------------------------------------------------
+
+    // Sobe ou desce a atividade uma posição. Pelo script da consulta (JSON) a troca é
+    // feita na tela, sem recarregar; sem JavaScript, volta para a consulta.
+    async moveActivityPage(req, res) {
+        const id = parseId(req.params.id);
+        const direction = req.body?.direction;
+        const wantsJson = req.accepts(["html", "json"]) === "json";
+        if (direction !== "up" && direction !== "down") {
+            if (wantsJson) return res.status(422).json({ ok: false, message: "Direção inválida." });
+            return res.redirect(303, returnToListUrl(req.body?.returnTo));
+        }
+
+        const moved = await Activity.moveActivity(id, direction);
+        if (wantsJson) return res.json({ ok: true, moved });
+        return res.redirect(303, returnToListUrl(req.body?.returnTo));
     },
 
     //------------------------------------------------

@@ -1,8 +1,9 @@
 <%#
     Bloco estreito da consulta (Ordem de Serviço / Lista de Compras): lista compacta com
-    descrição e status, a Organização por tema abaixo e ações. Sem farol: esses tipos não têm data
-    (ao receber uma data, a atividade passa a ser Programada).
-    Recebe: block (key, title, activities, pagination)
+    descrição e status, a Organização por tema abaixo e ações (com setas para mudar a
+    sequência). Sem farol: esses tipos não têm data (ao receber uma data, a atividade passa
+    a ser Programada).
+    Recebe: block (key, title, sortable, activities, pagination)
 %>
 <section class="activity-block activity-block--compact" aria-labelledby="activityBlock-<%= block.key %>">
     <h2 class="activity-block__title" id="activityBlock-<%= block.key %>">
@@ -12,8 +13,15 @@
         <% if (block.activities.length === 0) { %>
             <p class="text-center text-muted small py-3 mb-0">Nenhuma atividade.</p>
         <% } else { %>
-            <ul class="activity-compact list-unstyled mb-0">
-                <% block.activities.forEach((act) => { %>
+            <%
+                // Setas de sequência: só nos blocos ordenáveis e para quem pode alterar
+                const canSort = block.sortable && can('activities', 'update');
+                const isFirstPage = block.pagination.page === 1;
+                const isLastPage = block.pagination.page === block.pagination.totalPages;
+            %>
+            <ul class="activity-compact list-unstyled mb-0"
+                <% if (canSort) { %>data-sortable-list data-first-page="<%= isFirstPage %>" data-last-page="<%= isLastPage %>"<% } %>>
+                <% block.activities.forEach((act, index) => { %>
                     <li class="activity-compact__item"
                         <% if (act.life_sphere_color) { %>data-sphere-color="<%= act.life_sphere_color %>"<% } %>>
                         <div class="activity-compact__body">
@@ -29,6 +37,23 @@
                             <%= act.status_name %>
                         </span>
                         <div class="activity-compact__actions">
+                            <% if (canSort) { %>
+                                <%# Subir/descer na sequência (activity-quick-actions.js troca na tela, sem recarregar) %>
+                                <form method="post" action="/cms-Activity-M/<%= act.id %>" class="activity-move" data-activity-move>
+                                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                                    <input type="hidden" name="returnTo" value="<%= locals.returnTo || '' %>">
+                                    <button type="submit" name="direction" value="up" class="btn-icon" data-move="up"
+                                        title="Subir" aria-label="Subir <%= act.description %>"
+                                        <%= isFirstPage && index === 0 ? 'disabled' : '' %>>
+                                        <i class="fas fa-arrow-up" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="submit" name="direction" value="down" class="btn-icon" data-move="down"
+                                        title="Descer" aria-label="Descer <%= act.description %>"
+                                        <%= isLastPage && index === block.activities.length - 1 ? 'disabled' : '' %>>
+                                        <i class="fas fa-arrow-down" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                            <% } %>
                             <%- include('cms-Activity-Q-actions', { act }) %>
                         </div>
                     </li>

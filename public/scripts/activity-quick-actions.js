@@ -58,8 +58,67 @@
         });
     }
 
+    // Setas dos blocos OS e Compras: grava a nova sequência e troca os itens na tela, sem
+    // recarregar (mantém a rolagem do bloco). Se a vizinha estiver em outra página, ou se
+    // algo falhar, recarrega a consulta.
+    function updateMoveButtons(list) {
+        const items = [...list.querySelectorAll(":scope > li")];
+        items.forEach((item, index) => {
+            const up = item.querySelector('[data-move="up"]');
+            const down = item.querySelector('[data-move="down"]');
+            if (up) up.disabled = index === 0 && list.dataset.firstPage === "true";
+            if (down) {
+                down.disabled = index === items.length - 1 && list.dataset.lastPage === "true";
+            }
+        });
+    }
+
+    function initMoveButtons() {
+        document.querySelectorAll("form[data-activity-move]").forEach((form) => {
+            form.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const direction = event.submitter?.value;
+                if (direction !== "up" && direction !== "down") return;
+
+                const item = form.closest("li");
+                const list = item.parentElement;
+                const neighbor =
+                    direction === "up" ? item.previousElementSibling : item.nextElementSibling;
+                const body = new URLSearchParams(new FormData(form));
+                body.set("direction", direction);
+                form.querySelectorAll("button").forEach((b) => (b.disabled = true));
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: "POST",
+                        credentials: "same-origin",
+                        headers: { Accept: "application/json" },
+                        body,
+                    });
+                    const result = response.ok ? await response.json() : null;
+                    if (!result || !result.ok) throw new Error("falha ao mover");
+                    if (!result.moved) return updateMoveButtons(list);
+                    if (!neighbor) return window.location.reload(); // vizinha em outra página
+
+                    if (direction === "up") list.insertBefore(item, neighbor);
+                    else list.insertBefore(neighbor, item);
+                    updateMoveButtons(list);
+                    // Mantém o foco na seta usada, para mover de novo pelo teclado
+                    const again = item.querySelector(`[data-move="${direction}"]`);
+                    (again && !again.disabled
+                        ? again
+                        : item.querySelector(".activity-desc-link")
+                    )?.focus();
+                } catch {
+                    window.location.reload();
+                }
+            });
+        });
+    }
+
     function init() {
         scheduleOverdue();
+        initMoveButtons();
 
         onModalShow("rescheduleModal", (form, button) => {
             const currentDate = button.getAttribute("data-next-date") || "";

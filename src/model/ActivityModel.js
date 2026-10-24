@@ -1,4 +1,4 @@
-const { pool } = require("../db/config");
+const { pool, withTransaction } = require("../db/config");
 const {
     ACTIVITY_TYPE_PROGRAMMED,
     ACTIVITY_TYPE_SERVICE_ORDER,
@@ -116,9 +116,13 @@ function buildWhere({
 //                     SELECT
 //------------------------------------------------
 
-// Critérios de filtro: ver buildWhere (status, busca, esfera, ..., todayStr, overdueTime)
-async function selectActivities({ limit, offset, ...criteria }) {
+// Critérios de filtro: ver buildWhere (status, busca, esfera, ..., todayStr, overdueTime).
+// manualOrder: sequência definida pelas setas (blocos OS e Compras); senão, pela data.
+async function selectActivities({ limit, offset, manualOrder = false, ...criteria }) {
     const { where, values } = buildWhere(criteria);
+    const orderBy = manualOrder
+        ? "sort_order ASC, id ASC"
+        : "next_activity_date IS NULL, next_activity_date ASC, id DESC";
 
     const sql = `
         SELECT
@@ -141,7 +145,7 @@ async function selectActivities({ limit, offset, ...criteria }) {
             updated_at
         FROM activity
         WHERE ${where}
-        ORDER BY next_activity_date IS NULL, next_activity_date ASC, id DESC
+        ORDER BY ${orderBy}
         LIMIT ? OFFSET ?
     `;
 
@@ -393,6 +397,13 @@ async function insertActivity(data) {
         data.notes,
         data.status,
     ]);
+    // Nova atividade entra no fim da sequência manual (blocos OS e Compras)
+    await pool.query(
+        `UPDATE activity
+         SET sort_order = (SELECT next_order FROM (SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_order FROM activity) AS t)
+         WHERE id = ?`,
+        [result.insertId],
+    );
     return result.insertId;
 }
 
@@ -474,6 +485,52 @@ async function updateNextActivityDate(id, nextActivityDate) {
     return result.affectedRows;
 }
 
+/**
+ * Setas dos blocos OS e Compras: troca a posição da atividade com a vizinha (anterior
+ * em "up", seguinte em "down") do mesmo Tipo de Atividade, na sequência manual.
+ * Retorna false quando não há atividade ou vizinha (já é a primeira/última).
+ */
+async function moveActivity(id, direction) {
+    return withTransaction(async (conn) => {
+        const [[current]] = await conn.query(
+            "SELECT id, activity_type, sort_order FROM activity WHERE id = ? AND excluded = 0 FOR UPDATE",
+            [id],
+        );
+        if (!current) return false;
+
+        const up = direction === "up";
+        const [[neighbor]] = await conn.query(
+            `SELECT id, sort_order FROM activity
+             WHERE excluded = 0 AND activity_type = ?
+               AND (sort_order ${up ? "<" : ">"} ? OR (sort_order = ? AND id ${up ? "<" : ">"} ?))
+             ORDER BY sort_order ${up ? "DESC" : "ASC"}, id ${up ? "DESC" : "ASC"}
+             LIMIT 1
+             FOR UPDATE`,
+            [current.activity_type, current.sort_order, current.sort_order, current.id],
+        );
+        if (!neighbor) return false;
+
+        // Valores iguais (dados antigos): a que sobe fica antes da que desce
+        const currentOrder =
+            neighbor.sort_order === current.sort_order
+                ? neighbor.sort_order + (up ? 0 : 1)
+                : neighbor.sort_order;
+        const neighborOrder =
+            neighbor.sort_order === current.sort_order
+                ? current.sort_order + (up ? 1 : 0)
+                : current.sort_order;
+        await conn.query("UPDATE activity SET sort_order = ? WHERE id = ?", [
+            currentOrder,
+            current.id,
+        ]);
+        await conn.query("UPDATE activity SET sort_order = ? WHERE id = ?", [
+            neighborOrder,
+            neighbor.id,
+        ]);
+        return true;
+    });
+}
+
 async function updateActivityStatus(id, status) {
     const sql = `UPDATE activity SET status = ? WHERE id = ? AND excluded = 0`;
     const [result] = await pool.query(sql, [status, id]);
@@ -504,5 +561,6 @@ module.exports = {
     updateNextActivityDate,
     updateNextActivitySchedule,
     updateActivityStatus,
+    moveActivity,
     deleteActivity,
 };

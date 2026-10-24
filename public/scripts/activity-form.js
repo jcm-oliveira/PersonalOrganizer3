@@ -1,44 +1,21 @@
 // Formulário de atividade (inserção e edição). Script externo: a CSP bloqueia scripts inline.
-// 1) Destaca a cor da Esfera da Vida selecionada.
+// 1) Mostra a cor da Esfera da Vida selecionada num quadradinho discreto dentro do campo.
 // 2) Mostra apenas os campos de Repetição que valem para a frequência escolhida.
 (function () {
     const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
 
-    function contrastTextColor(hex) {
-        let h = hex.slice(1);
-        if (h.length === 3) {
-            h = h
-                .split("")
-                .map((c) => c + c)
-                .join("");
-        }
-        const toLinear = (c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
-        const [r, g, b] = [0, 2, 4].map((i) => toLinear(parseInt(h.slice(i, i + 2), 16) / 255));
-        return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.179 ? "#212529" : "#ffffff";
-    }
-
     function initSphereColor() {
         const sphereSelect = document.getElementById("life_sphere");
-        const badge = document.getElementById("life_sphere_badge");
-        if (!sphereSelect || !badge) return;
+        const swatch = document.getElementById("life_sphere_swatch");
+        if (!sphereSelect || !swatch) return;
+        const wrapper = swatch.parentElement;
 
         function update() {
             const selected = sphereSelect.options[sphereSelect.selectedIndex];
             const color = selected ? selected.getAttribute("data-color") : "";
-            if (HEX_COLOR.test(color || "")) {
-                const textColor = contrastTextColor(color);
-                badge.classList.remove("d-none");
-                badge.style.backgroundColor = color;
-                badge.style.color = textColor;
-                badge.textContent = selected.value;
-                sphereSelect.style.backgroundColor = color;
-                sphereSelect.style.color = textColor;
-            } else {
-                badge.classList.add("d-none");
-                badge.textContent = "";
-                sphereSelect.style.backgroundColor = "";
-                sphereSelect.style.color = "";
-            }
+            const hasColor = HEX_COLOR.test(color || "");
+            swatch.style.backgroundColor = hasColor ? color : "";
+            wrapper.classList.toggle("sphere-select--colored", hasColor);
         }
 
         sphereSelect.addEventListener("change", update);

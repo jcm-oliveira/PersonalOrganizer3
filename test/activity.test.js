@@ -426,7 +426,9 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         const res = await request(app).get("/cms-Activity-U/15").expect(200);
 
         assert.match(res.text, /Editar Atividade nº 15/);
-        assert.match(res.text, /id="life_sphere_badge"/);
+        // Cor da esfera num quadradinho dentro do campo (via data-color), sem selo no rótulo
+        assert.doesNotMatch(res.text, /id="life_sphere_badge"/);
+        assert.match(res.text, /<span class="sphere-select__swatch" id="life_sphere_swatch"/);
         assert.match(res.text, /data-color="#007bff"/);
     });
 

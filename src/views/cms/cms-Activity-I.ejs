@@ -7,19 +7,22 @@
     <div class="form-group col-md-4">
         <label for="life_sphere">
             Esfera da Vida <span class="text-danger">*</span>
-            <span id="life_sphere_badge" class="badge ml-1 border d-none"></span>
         </label>
+        <%# Cor da esfera selecionada: quadradinho discreto dentro do campo (activity-form.js) %>
+        <div class="sphere-select">
+        <span class="sphere-select__swatch" id="life_sphere_swatch" aria-hidden="true"></span>
         <select class="form-control <%= errors.life_sphere ? 'is-invalid' : '' %>" id="life_sphere" name="life_sphere" required autofocus>
             <option value="" data-color="">Selecione...</option>
-            <% 
+            <%
                 const colorMap = new Map((locals.lifeSpheresWithColor || []).map((s) => [s.name, s.color_code]));
-                lifeSpheres.forEach((sphere) => { 
+                lifeSpheres.forEach((sphere) => {
                     const sphereColor = colorMap.get(sphere) || '';
             %>
                 <option value="<%= sphere %>" data-color="<%= sphereColor %>" <%= values.life_sphere === sphere ? 'selected' : '' %>><%= sphere %></option>
             <% }) %>
         </select>
         <% if (errors.life_sphere) { %><div class="invalid-feedback"><%= errors.life_sphere %></div><% } %>
+        </div>
     </div>
 
     <div class="form-group col-md-5">

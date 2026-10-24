@@ -20,6 +20,34 @@ h5,
     margin-right: 2rem;
 }
 
+/* Formulário de atividade: cor da Esfera da Vida num quadradinho discreto dentro do
+   campo, à esquerda do nome (activity-form.js) */
+.sphere-select {
+    position: relative;
+}
+
+.sphere-select__swatch {
+    display: none;
+    position: absolute;
+    /* centro vertical do campo (altura do .form-control do Bootstrap) */
+    top: calc((1.5em + 0.75rem + 2px) / 2);
+    left: 0.75rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 3px;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.sphere-select--colored .sphere-select__swatch {
+    display: block;
+}
+
+.sphere-select--colored .form-control {
+    padding-left: 1.85rem;
+}
+
 /* Consulta de atividades: informação complementar abaixo do valor da célula, discreta
    (dias até a data, ex.: "5 dias"; esfera e tipo de ação abaixo da descrição) */
 .table-activity .activity-subtext {

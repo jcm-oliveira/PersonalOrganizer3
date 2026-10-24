@@ -1,6 +1,7 @@
-<%# Campos do formulário de Atividade compartilhados por C e U %>
+<%# Campos do formulário de Atividade compartilhados por C e U.
+    Seções: Informações Básicas, Agendamento Programado, Repetição e Informações Complementares. %>
 <h5 class="text-primary border-bottom pb-2 mb-3">
-    <i class="fas fa-check-circle text-primary mr-1" aria-hidden="true"></i> Informações Obrigatórias
+    <i class="fas fa-check-circle text-primary mr-1" aria-hidden="true"></i> Informações Básicas
 </h5>
 
 <div class="form-row">
@@ -25,17 +26,19 @@
         </div>
     </div>
 
-    <div class="form-group col-md-5">
+    <div class="form-group col-md-8">
         <label for="description">
-            Descrição <span class="text-danger">*</span>
+            Nome <span class="text-danger">*</span>
         </label>
         <input type="text" class="form-control <%= errors.description ? 'is-invalid' : '' %>" id="description"
             name="description" maxlength="255" value="<%= values.description || '' %>" required
             placeholder="Ex: Reunião Equipe TI, Backup Celular...">
         <% if (errors.description) { %><div class="invalid-feedback"><%= errors.description %></div><% } %>
     </div>
+</div>
 
-    <div class="form-group col-md-3">
+<div class="form-row">
+    <div class="form-group col-md-4">
         <label for="activity_type">
             Tipo de Atividade <span class="text-danger">*</span>
         </label>
@@ -46,32 +49,35 @@
         </select>
         <% if (errors.activity_type) { %><div class="invalid-feedback"><%= errors.activity_type %></div><% } %>
     </div>
-</div>
 
-<div class="form-row">
-    <div class="form-group col-md-4">
-        <label for="next_activity_date">
-            Próxima Atividade (Data)
+    <div class="form-group col-md-5">
+        <label for="theme_organization">
+            Organização por Tema <span class="text-muted small">(opcional)</span>
         </label>
-        <input type="date" class="form-control <%= errors.next_activity_date ? 'is-invalid' : '' %>"
-            id="next_activity_date" name="next_activity_date" value="<%= values.next_activity_date || '' %>">
-        <% if (errors.next_activity_date) { %><div class="invalid-feedback"><%= errors.next_activity_date %></div><% } %>
-    </div>
-
-    <div class="form-group col-md-4">
-        <label for="action_type">
-            Tipo de Ação
-        </label>
-        <select class="form-control <%= errors.action_type ? 'is-invalid' : '' %>" id="action_type" name="action_type">
+        <select class="form-control <%= errors.theme_organization ? 'is-invalid' : '' %>"
+            id="theme_organization" name="theme_organization">
             <option value="">(Nenhum)</option>
-            <% actionTypes.forEach((act) => { %>
-                <option value="<%= act %>" <%= values.action_type === act ? 'selected' : '' %>><%= act %></option>
-            <% }) %>
+            <%
+                const knownThemes = (locals.themeOrganizations || []).map((t) => t.name);
+                const hasCustomCurrent = values.theme_organization && !knownThemes.includes(values.theme_organization);
+            %>
+            <% if (hasCustomCurrent) { %>
+                <option value="<%= values.theme_organization %>" selected><%= values.theme_organization %></option>
+            <% } %>
+            <% if (locals.themeOrganizations && themeOrganizations.length > 0) { %>
+                <% themeOrganizations.forEach((t) => {
+                    const label = t.life_sphere_name ? `[${t.life_sphere_name}] ${t.name}` : t.name;
+                %>
+                    <option value="<%= t.name %>" <%= values.theme_organization === t.name ? 'selected' : '' %>>
+                        <%= label %>
+                    </option>
+                <% }) %>
+            <% } %>
         </select>
-        <% if (errors.action_type) { %><div class="invalid-feedback"><%= errors.action_type %></div><% } %>
+        <% if (errors.theme_organization) { %><div class="invalid-feedback"><%= errors.theme_organization %></div><% } %>
     </div>
 
-    <div class="form-group col-md-4">
+    <div class="form-group col-md-3">
         <label for="status">
             Status
         </label>
@@ -92,10 +98,32 @@
 </div>
 
 <h5 class="text-primary border-bottom pb-2 mb-3 mt-4">
-    <i class="fas fa-info-circle text-primary mr-1" aria-hidden="true"></i> Informações Complementares
+    <i class="far fa-calendar-alt text-primary mr-1" aria-hidden="true"></i> Agendamento Programado
 </h5>
 
 <div class="form-row">
+    <div class="form-group col-md-3">
+        <label for="next_activity_date">
+            Próxima Atividade (Data)
+        </label>
+        <input type="date" class="form-control <%= errors.next_activity_date ? 'is-invalid' : '' %>"
+            id="next_activity_date" name="next_activity_date" value="<%= values.next_activity_date || '' %>">
+        <% if (errors.next_activity_date) { %><div class="invalid-feedback"><%= errors.next_activity_date %></div><% } %>
+    </div>
+
+    <div class="form-group col-md-3">
+        <label for="action_type">
+            Tipo de Ação
+        </label>
+        <select class="form-control <%= errors.action_type ? 'is-invalid' : '' %>" id="action_type" name="action_type">
+            <option value="">(Nenhum)</option>
+            <% actionTypes.forEach((act) => { %>
+                <option value="<%= act %>" <%= values.action_type === act ? 'selected' : '' %>><%= act %></option>
+            <% }) %>
+        </select>
+        <% if (errors.action_type) { %><div class="invalid-feedback"><%= errors.action_type %></div><% } %>
+    </div>
+
     <div class="form-group col-md-3">
         <label for="day_period">
             Período do Dia
@@ -117,8 +145,10 @@
             id="scheduled_time" name="scheduled_time" value="<%= values.scheduled_time || '' %>">
         <% if (errors.scheduled_time) { %><div class="invalid-feedback"><%= errors.scheduled_time %></div><% } %>
     </div>
+</div>
 
-    <div class="form-group col-md-2">
+<div class="form-row">
+    <div class="form-group col-md-3">
         <label for="duration_hours">
             Duração (horas)
         </label>
@@ -129,42 +159,13 @@
         <% if (errors.duration_hours) { %><div class="invalid-feedback"><%= errors.duration_hours %></div><% } %>
     </div>
 
-    <div class="form-group col-md-4">
+    <div class="form-group col-md-3">
         <label for="final_deadline">
             Prazo Final
         </label>
         <input type="date" class="form-control <%= errors.final_deadline ? 'is-invalid' : '' %>"
             id="final_deadline" name="final_deadline" value="<%= values.final_deadline || '' %>">
         <% if (errors.final_deadline) { %><div class="invalid-feedback"><%= errors.final_deadline %></div><% } %>
-    </div>
-</div>
-
-<div class="form-row">
-    <div class="form-group col-md-4">
-        <label for="theme_organization">
-            Organização por Tema
-        </label>
-        <select class="form-control <%= errors.theme_organization ? 'is-invalid' : '' %>"
-            id="theme_organization" name="theme_organization">
-            <option value="">(Nenhum)</option>
-            <% 
-                const knownThemes = (locals.themeOrganizations || []).map((t) => t.name);
-                const hasCustomCurrent = values.theme_organization && !knownThemes.includes(values.theme_organization);
-            %>
-            <% if (hasCustomCurrent) { %>
-                <option value="<%= values.theme_organization %>" selected><%= values.theme_organization %></option>
-            <% } %>
-            <% if (locals.themeOrganizations && themeOrganizations.length > 0) { %>
-                <% themeOrganizations.forEach((t) => { 
-                    const label = t.life_sphere_name ? `[${t.life_sphere_name}] ${t.name}` : t.name;
-                %>
-                    <option value="<%= t.name %>" <%= values.theme_organization === t.name ? 'selected' : '' %>>
-                        <%= label %>
-                    </option>
-                <% }) %>
-            <% } %>
-        </select>
-        <% if (errors.theme_organization) { %><div class="invalid-feedback"><%= errors.theme_organization %></div><% } %>
     </div>
 
     <div class="form-group col-md-3">
@@ -182,8 +183,16 @@
         </select>
         <% if (errors.notify_before_minutes) { %><div class="invalid-feedback"><%= errors.notify_before_minutes %></div><% } %>
     </div>
+</div>
 
-    <div class="form-group col-md-5">
+<%- include('cms-Activity-I-recurrence') %>
+
+<h5 class="text-primary border-bottom pb-2 mb-3 mt-4">
+    <i class="fas fa-info-circle text-primary mr-1" aria-hidden="true"></i> Informações Complementares
+</h5>
+
+<div class="form-row">
+    <div class="form-group col-12">
         <label for="notes">
             Anotações / Próximas Atividades
         </label>
@@ -192,7 +201,5 @@
         <% if (errors.notes) { %><div class="invalid-feedback"><%= errors.notes %></div><% } %>
     </div>
 </div>
-
-<%- include('cms-Activity-I-recurrence') %>
 
 <script src="/scripts/activity-form.js" defer></script>

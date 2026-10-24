@@ -116,10 +116,10 @@ const activityFormSchema = z.object({
         .min(1, "Informe a esfera da vida.")
         .max(100, "A esfera da vida deve ter no máximo 100 caracteres."),
     description: z
-        .string({ error: "Informe a descrição da atividade." })
+        .string({ error: "Informe o nome da atividade." })
         .trim()
-        .min(1, "Informe a descrição da atividade.")
-        .max(255, "A descrição deve ter no máximo 255 caracteres."),
+        .min(1, "Informe o nome da atividade.")
+        .max(255, "O nome deve ter no máximo 255 caracteres."),
     activity_type: z
         .string()
         .trim()

@@ -85,7 +85,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         );
         assert.deepEqual(labels, [
             "Farol",
-            "Descrição",
+            "Nome",
             "Próxima Atividade",
             "Prazo Final",
             "Repetição",
@@ -306,7 +306,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         });
     });
 
-    it("rejeita formulário sem campos obrigatórios (descrição / data) e devolve 422", async () => {
+    it("rejeita formulário sem campos obrigatórios (nome) e devolve 422", async () => {
         const insert = mock.method(Activity, "insertActivity", async () => 1);
 
         const res = await request(app)
@@ -321,7 +321,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             .expect(422);
 
         assert.equal(insert.mock.callCount(), 0);
-        assert.match(res.text, /Informe a descrição da atividade\./);
+        assert.match(res.text, /Informe o nome da atividade\./);
     });
 
     it("cadastra atividade sem data da próxima atividade", async () => {
@@ -568,6 +568,42 @@ describe("Módulo Activity (Painel de Vôo)", () => {
 
         assert.match(res.text, /<select[^>]*id="theme_organization"/);
         assert.match(res.text, /<option value="">\(Nenhum\)<\/option>/);
+    });
+
+    it("formulário organizado em seções, na ordem definida", async () => {
+        const res = await request(app).get("/cms-Activity-C").expect(200);
+
+        const sections = [
+            ...res.text.matchAll(/<h5[^>]*>\s*<i[^>]*><\/i>\s*([^<]+?)\s*<\/h5>/g),
+        ].map((m) => m[1]);
+        assert.deepEqual(sections, [
+            "Informações Básicas",
+            "Agendamento Programado",
+            "Repetição",
+            "Informações Complementares",
+        ]);
+        const fields = [...res.text.matchAll(/<label for="([a-z_]+)"/g)]
+            .map((m) => m[1])
+            .filter((id) => !id.startsWith("recurrence_"));
+        assert.deepEqual(fields, [
+            "life_sphere",
+            "description",
+            "activity_type",
+            "theme_organization",
+            "status",
+            "next_activity_date",
+            "action_type",
+            "day_period",
+            "scheduled_time",
+            "duration_hours",
+            "final_deadline",
+            "notify_before_minutes",
+            "notes",
+        ]);
+        assert.match(
+            res.text,
+            /<label for="description">\s*Nome <span class="text-danger">\*<\/span>/,
+        );
     });
 
     it("carrega tela de inserção com a data da próxima atividade em branco", async () => {

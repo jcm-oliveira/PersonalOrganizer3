@@ -22,9 +22,19 @@
             const bgColor = el.getAttribute("data-bg-color");
             const textColor = el.getAttribute("data-text-color");
             if (!HEX_COLOR.test(bgColor)) return;
-            el.style.backgroundColor = bgColor;
-            if (textColor === "auto") el.style.color = contrastTextColor(bgColor);
-            else if (HEX_COLOR.test(textColor)) el.style.color = textColor;
+            const color =
+                textColor === "auto"
+                    ? contrastTextColor(bgColor)
+                    : HEX_COLOR.test(textColor)
+                      ? textColor
+                      : null;
+            // Linha de tabela (consulta em cartões): pinta as células, não a <tr>, para
+            // os cantos arredondados das células não ficarem com fundo quadrado atrás
+            const targets = el.tagName === "TR" ? [...el.cells] : [el];
+            targets.forEach((target) => {
+                target.style.backgroundColor = bgColor;
+                if (color) target.style.color = color;
+            });
         });
         // Listas compactas da consulta: a esfera aparece como faixa colorida à esquerda
         root.querySelectorAll("[data-sphere-color]").forEach((el) => {

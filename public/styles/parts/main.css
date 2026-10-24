@@ -142,6 +142,47 @@ h5,
     flex: 1 1 auto;
     min-height: 0;
     overflow: auto;
+    background-color: #f8f9fa; /* fundo cinza claro: os registros aparecem como cartões */
+}
+
+/* Atividades Programadas no computador: cada linha da tabela como um cartão, com
+   cantos arredondados e espaço entre as linhas (no celular a tabela já vira cartões).
+   A cor da esfera/atraso é pintada nas células (sphere-colors.js), nunca na <tr>. */
+@media (min-width: 768px) {
+    .activity-block__body .table-activity {
+        border-collapse: separate;
+        border-spacing: 0 0.4rem;
+        padding: 0 0.5rem;
+    }
+
+    .activity-block__body .table-activity tbody tr {
+        background-color: transparent !important;
+    }
+
+    /* Fundo branco padrão com especificidade baixa: a cor de atraso (table-danger) e a
+       da esfera continuam valendo */
+    :where(.activity-block__body .table-activity) tbody td {
+        background-color: #ffffff;
+    }
+
+    .activity-block__body .table-activity tbody td {
+        border-top: 1px solid #e3e7eb;
+        border-bottom: 1px solid #e3e7eb;
+    }
+
+    .activity-block__body .table-activity tbody td:first-child {
+        border-left: 1px solid #e3e7eb;
+        border-radius: 0.5rem 0 0 0.5rem;
+    }
+
+    .activity-block__body .table-activity tbody td:last-child {
+        border-right: 1px solid #e3e7eb;
+        border-radius: 0 0.5rem 0.5rem 0;
+    }
+
+    .activity-block__body .table-activity tbody tr:hover > td {
+        box-shadow: inset 0 0 0 9999px rgba(0, 0, 0, 0.04);
+    }
 }
 
 .activity-block__footer {
@@ -207,16 +248,24 @@ h5,
 
 /* Lista compacta: descrição (Organização por tema abaixo) | ações. Sem farol nem data */
 /* Itens centralizados verticalmente: nome | status | ações (como as linhas da tabela) */
+/* Cada item é um cartão: borda arredondada e espaço entre eles, sobre fundo cinza claro */
+.activity-compact {
+    padding: 0.5rem;
+}
+
 .activity-compact__item {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     padding: 0.55rem 0.6rem;
-    border-left: 4px solid transparent; /* cor da Esfera da Vida (sphere-colors.js) */
+    border: 1px solid #e3e7eb;
+    border-left: 4px solid #e3e7eb; /* cor da Esfera da Vida (sphere-colors.js) */
+    border-radius: 0.5rem;
+    background-color: #ffffff;
 }
 
 .activity-compact__item + .activity-compact__item {
-    border-top: 1px solid #f1f3f5;
+    margin-top: 0.4rem;
 }
 
 .activity-compact__body {

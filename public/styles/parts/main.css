@@ -430,17 +430,26 @@ main {
     box-shadow: inset 0 0 0 9999px rgba(0, 0, 0, 0.075);
 }
 
-/* Descrição: mesmo tamanho e cor, com leve destaque em negrito */
-.table-activity .activity-desc-link {
+/* Descrição: mesmo tamanho e cor, com leve destaque em negrito
+   (igual na tabela de Programadas e nas listas compactas da direita) */
+.table-activity .activity-desc-link,
+.activity-compact .activity-desc-link {
     font-weight: 600;
     color: #212529;
     text-decoration: none;
 }
 
 .table-activity .activity-desc-link:hover,
-.table-activity .activity-desc-link:focus {
+.table-activity .activity-desc-link:focus,
+.activity-compact .activity-desc-link:hover,
+.activity-compact .activity-desc-link:focus {
     color: #007bff;
     text-decoration: underline;
+}
+
+/* Listas compactas com o mesmo tamanho de letra da tabela */
+.activity-compact {
+    font-size: 0.84rem;
 }
 
 /* ---------- Calendário (FullCalendar) ---------- */

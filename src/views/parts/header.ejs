@@ -39,8 +39,17 @@
             <% } %>
         </ul>
 
-        <!-- Engrenagem (menu de cadastros) e usuário logado -->
+        <!-- Todas as atividades (banco de dados), engrenagem (menu de cadastros) e usuário logado -->
         <ul class="navbar-nav align-items-md-center">
+            <% if (canView('activities')) { %>
+            <li class="nav-item">
+                <a class="nav-link nav-settings" href="/cms-Activity-L"
+                    title="Todas as Atividades" aria-label="Todas as Atividades">
+                    <span class="nav-settings__icon"><i class="fas fa-database" aria-hidden="true"></i></span>
+                    <span class="d-md-none">Todas as Atividades</span>
+                </a>
+            </li>
+            <% } %>
             <% if (supportItems.length > 0 || accessItems.length > 0) { %>
             <li class="nav-item dropdown">
                 <a class="nav-link nav-settings" href="#" id="cadastrosDropdown" role="button"

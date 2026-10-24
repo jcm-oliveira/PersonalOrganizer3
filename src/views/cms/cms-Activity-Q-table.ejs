@@ -1,0 +1,182 @@
+<%#
+    Tabela de atividades (estilo planilha / Painel de Vôo), usada no bloco Atividades
+    Programadas da consulta e na tela com todas as atividades.
+    Recebe: activities e, opcional, showActivityType (coluna Tipo de Atividade, para
+    listas que misturam os tipos).
+%>
+<%
+    const withType = locals.showActivityType === true;
+    // Dias até a data, exibidos abaixo dela: "hoje", "1 dia", "5 dias", "há 2 dias"
+    const daysText = (days) => {
+        if (days === 0) return 'hoje';
+        const n = Math.abs(days);
+        const label = `${n} ${n === 1 ? 'dia' : 'dias'}`;
+        return days > 0 ? label : `há ${label}`;
+    };
+%>
+<table class="table table-sm table-hover table-activity mb-0">
+    <thead>
+        <!-- Linha inferior de colunas específicas com ícones acima dos textos -->
+        <tr class="text-center">
+            <th style="min-width: 115px;">
+                <span class="activity-th-content">
+                    <i class="fas fa-traffic-light activity-th-icon" aria-hidden="true"></i>
+                    <span class="activity-th-label">Farol</span>
+                </span>
+            </th>
+            <%# Nome (descrição) com a largura da antiga coluna "Organização por tema" (220 + 150) %>
+            <th style="min-width: <%= withType ? 300 : 370 %>px;" class="text-left">
+                <span class="activity-th-content activity-th-content--left">
+                    <i class="fas fa-align-left activity-th-icon" aria-hidden="true"></i>
+                    <span class="activity-th-label">Nome</span>
+                </span>
+            </th>
+            <% if (withType) { %>
+            <th style="min-width: 110px;">
+                <span class="activity-th-content">
+                    <i class="fas fa-flag activity-th-icon" aria-hidden="true"></i>
+                    <span class="activity-th-label">Tipo de Atividade</span>
+                </span>
+            </th>
+            <% } %>
+            <th style="min-width: 110px;">
+                <span class="activity-th-content">
+                    <i class="far fa-calendar-alt activity-th-icon" aria-hidden="true"></i>
+                    <span class="activity-th-label">Próxima Atividade</span>
+                </span>
+            </th>
+            <th style="min-width: 100px;">
+                <span class="activity-th-content">
+                    <i class="far fa-calendar-check activity-th-icon" aria-hidden="true"></i>
+                    <span class="activity-th-label">Prazo Final</span>
+                </span>
+            </th>
+            <th style="min-width: 90px;" class="th-recurrence">
+                <span class="activity-th-content">
+                    <i class="fas fa-redo-alt activity-th-icon" aria-hidden="true"></i>
+                    <span class="activity-th-label">Repetição</span>
+                </span>
+            </th>
+
+            <th style="min-width: 75px;">
+                <span class="activity-th-content">
+                    <i class="fas fa-sync-alt activity-th-icon" aria-hidden="true"></i>
+                    <span class="activity-th-label">Status</span>
+                </span>
+            </th>
+            <th style="min-width: 170px;">
+                <span class="activity-th-content">
+                    <i class="fas fa-tools activity-th-icon" aria-hidden="true"></i>
+                    <span class="activity-th-label">Ações</span>
+                </span>
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        <% if (activities.length === 0) { %>
+            <tr>
+                <td colspan="<%= withType ? 8 : 7 %>" class="text-center py-4 text-muted">
+                    Nenhuma atividade encontrada com os filtros selecionados.
+                </td>
+            </tr>
+        <% } %>
+        <% activities.forEach((act) => {
+            const isOverdue = act.traffic_light === 'ATRASADA';
+            // A cor da Esfera da Vida sempre prevalece, independente de data ou atraso
+            const hasSphereColor = Boolean(act.life_sphere_color);
+            const rowClass = hasSphereColor ? 'activity-row--sphere' : (isOverdue ? 'table-danger' : '');
+        %>
+            <tr class="<%= rowClass %>"
+                <% if (hasSphereColor) { %>data-bg-color="<%= act.life_sphere_color %>" data-text-color="<%= act.life_sphere_text_color %>"<% } %><% if (act.overdue_at) { %> data-overdue-at="<%= act.overdue_at %>"<% } %>>
+                <!-- Farol: ATRASADO, HOJE, AMANHÃ, dia da semana ou MAIS DE 15 DIAS -->
+                <td class="c-dayprox align-middle text-center font-weight-bold">
+                    <span class="badge <%= act.traffic_light_class %>">
+                        <%= act.next_activity_day_label %>
+                    </span>
+                </td>
+
+                <!-- Descrição (destaque em negrito), com a Esfera da Vida logo abaixo (discreto) -->
+                <td class="c-desc align-middle text-left">
+                    <a href="/cms-Activity-V/<%= act.id %>" class="activity-desc-link" data-activity-view="<%= act.id %>">
+                        <%= act.description %>
+                    </a>
+                    <% if (act.recurrence_description) { %>
+                        <span class="activity-recurrence-icon" title="Repete: <%= act.recurrence_description %>">
+                            <i class="fas fa-redo-alt" aria-hidden="true"></i>
+                            <span class="sr-only">Repete: <%= act.recurrence_description %></span>
+                        </span>
+                    <% } %>
+                    <%# Esfera da Vida e Tipo de Ação na mesma linha, separados por hífen %>
+                    <% if (act.life_sphere || act.action_type) { %>
+                        <span class="activity-subtext"><% if (act.life_sphere) { %><span title="Esfera da Vida"><span class="sr-only">Esfera da Vida: </span><%= act.life_sphere %></span><% } %><% if (act.life_sphere && act.action_type) { %><span aria-hidden="true"> - </span><% } %><% if (act.action_type) { %><span title="Tipo de Ação"><span class="sr-only">. Tipo de Ação: </span><%= act.action_type %></span><% } %></span>
+                    <% } %>
+                </td>
+
+                <!-- Resumo para o cartão no celular (oculto na tabela; ver main.css) -->
+                <td class="c-mobile-summary">
+                    <div class="card-line card-line--date">
+                        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+                        <%= act.next_activity_date_br || '-' %><% if (act.scheduled_time) { %> · <%= act.scheduled_time.slice(0, 5) %><% } %>
+                        <% if (act.final_deadline_br) { %>
+                            <span class="card-muted">· Prazo <%= act.final_deadline_br %></span>
+                        <% } %>
+                    </div>
+                    <div class="card-line card-muted">
+                        <%= act.life_sphere %> · <%= act.activity_type %> · <%= act.status_name || (act.status === 1 ? 'Ativo' : 'Inativo') %>
+                    </div>
+                    <% if (act.recurrence_description) { %>
+                        <div class="card-line card-muted">
+                            <i class="fas fa-redo-alt" aria-hidden="true"></i> <%= act.recurrence_description %>
+                        </div>
+                    <% } %>
+                </td>
+
+                <% if (withType) { %>
+                <!-- Tipo de Atividade (tela com todas as atividades) -->
+                <td class="c-activity-type align-middle text-center">
+                    <%= act.activity_type || '-' %>
+                </td>
+                <% } %>
+
+                <%
+                    // Período do dia sem o prefixo de ordenação ("2 - Tarde" -> "Tarde")
+                    const periodText = act.day_period ? act.day_period.replace(/^\d+\s*-\s*/, '') : null;
+                %>
+                <!-- Próxima Atividade: data e horário, período do dia (discreto) e,
+                     logo abaixo, os dias que faltam (discreto) -->
+                <td class="c-next align-middle text-center">
+                    <%# Data, hora e período na mesma linha: a coluna se ajusta ao necessário %>
+                    <span class="activity-when"><span class="activity-datetime"><%= act.next_activity_date_br || '-' %><% if (act.scheduled_time) { %> <span class="activity-datetime__sep" aria-hidden="true">-</span> <%= act.scheduled_time.slice(0, 5) %><% } %></span><% if (periodText) { %> <span class="activity-period" title="Período do dia"><span class="sr-only">Período do dia: </span>(<%= periodText %>)</span><% } %></span>
+                    <% if (act.days_next_activity !== null) { %>
+                        <span class="activity-subtext"><%= daysText(act.days_next_activity) %></span>
+                    <% } %>
+                </td>
+
+                <!-- Prazo Final, com os dias que faltam logo abaixo (discreto) -->
+                <td class="c-deadline align-middle text-center">
+                    <%= act.final_deadline_br || '-' %>
+                    <% if (act.days_final_deadline !== null) { %>
+                        <span class="activity-subtext"><%= daysText(act.days_final_deadline) %></span>
+                    <% } %>
+                </td>
+
+                <!-- Repetição (regra da atividade recorrente) -->
+                <td class="c-recurrence align-middle text-center">
+                    <span class="activity-subtext"><%= act.recurrence_description || '-' %></span>
+                </td>
+
+                <!-- Status -->
+                <td class="c-status align-middle text-center">
+                    <span class="badge activity-status-badge" style="background-color: <%= act.status_color_code %>; color: <%= act.status_text_color %>;">
+                        <%= act.status_name || (act.status === 1 ? 'Ativo' : 'Inativo') %>
+                    </span>
+                </td>
+
+                <!-- Ações: botões de ícone discretos (cor só ao passar o mouse) -->
+                <td class="c-actions align-middle text-center text-nowrap">
+                    <%- include('cms-Activity-Q-actions', { act }) %>
+                </td>
+            </tr>
+        <% }) %>
+    </tbody>
+</table>

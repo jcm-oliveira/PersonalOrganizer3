@@ -15,6 +15,8 @@ const viewDetails = requireAnyPermission([
 ]);
 
 routes.get("/cms-Activity-Q", view, ActivityController.loadShowPage);
+// Todas as atividades (todos os tipos), sem a divisão em blocos
+routes.get("/cms-Activity-L", view, ActivityController.loadAllPage);
 routes.get("/cms-Activity-C", create, ActivityController.loadInsertPage);
 routes.post("/cms-Activity-C", create, ActivityController.insertActivityPage);
 routes.get("/cms-Activity-C/:id", update, ActivityController.loadUpdatePage);

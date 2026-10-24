@@ -388,13 +388,28 @@ describe("Bloqueio conforme o perfil", () => {
         const token = csrfFrom(list.text);
         await agent.post("/cms-Activity-D/3").type("form").send({ _csrf: token }).expect(403);
         await agent.post("/cms-Activity-R/3").type("form").send({ _csrf: token }).expect(403);
+        // Setas de sequência só para quem pode alterar
+        await agent
+            .post("/cms-Activity-M/3")
+            .type("form")
+            .send({ _csrf: token, direction: "up" })
+            .expect(403);
         assert.equal(remove.mock.callCount(), 0);
+
+        // Todas as atividades: só leitura (ícone no menu, sem inserir/alterar)
+        assert.match(list.text, /href="\/cms-Activity-L"/);
+        const all = await agent.get("/cms-Activity-L").expect(200);
+        assert.doesNotMatch(all.text, /href="\/cms-Activity-C"|title="Editar atividade"/);
+        assert.match(all.text, /title="Visualizar atividade"/);
     });
 
     it("sem nenhum perfil, a tela inicial avisa que não há acesso", async () => {
         const agent = await loginAgent(sessionUser({ permissionRows: [] }));
         const home = await agent.get("/").expect(200);
         assert.match(home.text, /não tem acesso a nenhuma tela/);
+        // Sem o ícone e sem acesso a Todas as Atividades
+        assert.doesNotMatch(home.text, /href="\/cms-Activity-L"/);
+        await agent.get("/cms-Activity-L").expect(403);
     });
 
     it("calendário só deixa arrastar com permissão de alterar", async () => {

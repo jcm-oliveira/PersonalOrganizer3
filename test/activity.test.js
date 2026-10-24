@@ -570,6 +570,72 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.match(res.text, /<option value="">\(Nenhum\)<\/option>/);
     });
 
+    it("tela com todas as atividades: todos os tipos e status, mesmo filtro e ações", async () => {
+        const count = mock.method(Activity, "countActivities", async () => 2);
+        const select = mock.method(Activity, "selectActivities", async () => [
+            {
+                id: 41,
+                description: "Reunião",
+                activity_type: "Programada",
+                next_activity_date: "2026-10-20",
+                status: 1,
+            },
+            {
+                id: 42,
+                description: "Trocar lâmpada",
+                activity_type: "Ordem de Serviço",
+                next_activity_date: null,
+                status: 1,
+            },
+        ]);
+
+        const res = await request(app).get("/cms-Activity-L").expect(200);
+
+        // Uma consulta só: sem filtro de tipo (blocos) e com todos os status
+        assert.equal(count.mock.callCount(), 1);
+        assert.equal(select.mock.callCount(), 1);
+        const criteria = select.mock.calls[0].arguments[0];
+        assert.equal(criteria.status, null);
+        assert.equal(criteria.activityTypeIn, undefined);
+        assert.equal(criteria.activityTypeNotIn, undefined);
+
+        assert.match(res.text, /<h1 class="h3 mb-0 text-dark">Todas as Atividades<\/h1>/);
+        assert.match(res.text, /activity-th-label">Tipo de Atividade</);
+        assert.match(
+            res.text,
+            /<td class="c-activity-type align-middle text-center">\s*Ordem de Serviço\s*<\/td>/,
+        );
+        // Mesmo filtro (enviado para esta tela), mesmas ações e retorno para esta tela
+        assert.match(
+            res.text,
+            /<form class="modal-content" method="get" action="\/cms-Activity-L">/,
+        );
+        assert.match(res.text, /href="\/cms-Activity-U\/42"/);
+        assert.match(res.text, /data-target="#rescheduleModal"/);
+        assert.match(res.text, /name="returnTo" value="\/cms-Activity-L\?status=all&amp;/);
+        assert.match(res.text, /href="\/cms-Activity-C"/);
+        // Ícone de banco de dados no menu, ao lado da engrenagem
+        assert.match(
+            res.text,
+            /href="\/cms-Activity-L"\s+title="Todas as Atividades"[\s\S]*?fa-database/,
+        );
+    });
+
+    it("ações rápidas voltam para a tela de origem (todas as atividades)", async () => {
+        mock.method(Activity, "updateNextActivityDate", async () => 1);
+
+        const res = await request(app)
+            .post("/cms-Activity-R/41")
+            .type("form")
+            .send({
+                next_activity_date: "2026-11-02",
+                returnTo: "/cms-Activity-L?status=all&page=2",
+            })
+            .expect(303);
+
+        assert.equal(res.headers.location, "/cms-Activity-L?status=all&page=2&msg=rescheduled");
+    });
+
     it("setas de sequência: move a atividade (JSON pelo script ou redirecionando)", async () => {
         const move = mock.method(Activity, "moveActivity", async () => true);
 

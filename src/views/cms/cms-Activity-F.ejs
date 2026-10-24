@@ -1,6 +1,8 @@
+<%# Filtro das telas de consulta. listBaseUrl: tela que recebe o filtro (padrão: consulta por blocos) %>
+<% const filterBaseUrl = locals.listBaseUrl || '/cms-Activity-Q'; %>
 <div class="modal fade" id="filterModal" tabindex="-1" role="dialog" aria-labelledby="filterModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
-        <form class="modal-content" method="get" action="/cms-Activity-Q">
+        <form class="modal-content" method="get" action="<%= filterBaseUrl %>">
             <div class="modal-header">
                 <h5 class="modal-title" id="filterModalTitle">Filtrar Atividades</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
@@ -88,7 +90,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <a class="btn btn-link" href="/cms-Activity-Q">Limpar</a>
+                <a class="btn btn-link" href="<%= filterBaseUrl %>">Limpar</a>
                 <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
             </div>
         </form>

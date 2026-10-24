@@ -51,6 +51,8 @@ const {
 } = require("../validation/recurrence");
 
 const LIST_URL = "/cms-Activity-Q";
+// Todas as atividades (todos os tipos), sem a divisão em blocos
+const ALL_LIST_URL = "/cms-Activity-L";
 
 const MESSAGES = {
     created: { alertType: "alert-success", text: "Atividade inserida com sucesso." },
@@ -87,12 +89,13 @@ function messageFor(code) {
     return Object.hasOwn(MESSAGES, code) ? MESSAGES[code] : null;
 }
 
-// Volta para a consulta mantendo os filtros/página de origem. Só aceita a própria
-// tela de consulta como destino (evita redirecionamento aberto). msgCode é opcional.
+// Volta para a tela de consulta de origem (por blocos ou todas as atividades), mantendo
+// filtros/página. Só aceita essas telas como destino (evita redirecionamento aberto).
+// msgCode é opcional.
 function returnToListUrl(returnTo, msgCode) {
-    const isListPath = typeof returnTo === "string" && /^\/cms-Activity-Q(\?|$)/.test(returnTo);
+    const isListPath = typeof returnTo === "string" && /^\/cms-Activity-[QL](\?|$)/.test(returnTo);
     const url = new URL(isListPath ? returnTo : LIST_URL, "http://localhost");
-    if (url.pathname !== LIST_URL) {
+    if (url.pathname !== LIST_URL && url.pathname !== ALL_LIST_URL) {
         return msgCode ? `${LIST_URL}?msg=${msgCode}` : LIST_URL;
     }
     if (msgCode) url.searchParams.set("msg", msgCode);
@@ -134,6 +137,21 @@ const LIST_BLOCKS = [
         sortable: true,
     },
 ];
+
+// Endereço da tela com todas as atividades, mantendo o filtro
+function allListUrl(filter, page) {
+    const params = new URLSearchParams({
+        status: filter.status,
+        search: filter.search,
+        lifeSphere: filter.lifeSphere,
+        activityType: filter.activityType,
+        actionType: filter.actionType,
+        trafficLight: filter.trafficLight,
+        perPage: String(filter.perPage),
+        page: String(page),
+    });
+    return `${ALL_LIST_URL}?${params}`;
+}
 
 // pages: { page, pageService, pageShopping } (página de cada bloco)
 function listUrl(filter, pages) {
@@ -424,6 +442,41 @@ function recurrenceInfo(act) {
     };
 }
 
+// Critérios das telas de consulta a partir do filtro. Mesma referência do farol:
+// atrasada também a de hoje com início + 5 min já passado.
+function listCriteria(filter) {
+    const { todayStr, overdueTime } = getOverdueReference();
+    return {
+        status: toStatusCriteria(filter.status),
+        search: filter.search,
+        lifeSphere: filter.lifeSphere,
+        activityType: filter.activityType,
+        actionType: filter.actionType,
+        trafficLight: filter.trafficLight,
+        todayStr,
+        overdueTime,
+    };
+}
+
+// Campos exibidos nas telas de consulta: farol, status (nome e cores), cor da esfera e repetição
+function buildListDecorator(lookups) {
+    const statusMap = new Map((lookups.activityStatuses || []).map((s) => [s.id, s]));
+    const resolveSphereColor = buildSphereColorResolver(lookups.lifeSphereColors);
+    return (act) => {
+        const enriched = enrichActivity(act);
+        const statusObj = statusMap.get(act.status);
+        const statusColor = statusObj?.color_code || (act.status === 1 ? "#28a745" : "#6c757d");
+        return {
+            ...enriched,
+            status_name: statusObj?.name || (act.status === 1 ? "Ativo" : "Inativo"),
+            status_color_code: statusColor,
+            status_text_color: getContrastTextColor(statusColor) || "#ffffff",
+            ...resolveSphereColor(act.life_sphere),
+            ...recurrenceInfo(act),
+        };
+    };
+}
+
 // Atividade com os campos calculados exibidos na visualização (página e pop-up)
 async function loadActivityForView(rawId) {
     const id = parseId(rawId);
@@ -462,19 +515,7 @@ module.exports = {
 
     async loadShowPage(req, res) {
         const filter = activityListQuerySchema.parse(req.query);
-        // Mesma referência do farol: atrasada também a de hoje com início + 5 min já passado
-        const { todayStr, overdueTime } = getOverdueReference();
-
-        const criteria = {
-            status: toStatusCriteria(filter.status),
-            search: filter.search,
-            lifeSphere: filter.lifeSphere,
-            activityType: filter.activityType,
-            actionType: filter.actionType,
-            trafficLight: filter.trafficLight,
-            todayStr,
-            overdueTime,
-        };
+        const criteria = listCriteria(filter);
 
         // Total de cada bloco e página válida de cada um
         const totals = await Promise.all(
@@ -500,22 +541,7 @@ module.exports = {
             ),
         ]);
 
-        const statusMap = new Map((lookups.activityStatuses || []).map((s) => [s.id, s]));
-        const resolveSphereColor = buildSphereColorResolver(lookups.lifeSphereColors);
-
-        const decorate = (act) => {
-            const enriched = enrichActivity(act);
-            const statusObj = statusMap.get(act.status);
-            const statusColor = statusObj?.color_code || (act.status === 1 ? "#28a745" : "#6c757d");
-            return {
-                ...enriched,
-                status_name: statusObj?.name || (act.status === 1 ? "Ativo" : "Inativo"),
-                status_color_code: statusColor,
-                status_text_color: getContrastTextColor(statusColor) || "#ffffff",
-                ...resolveSphereColor(act.life_sphere),
-                ...recurrenceInfo(act),
-            };
-        };
+        const decorate = buildListDecorator(lookups);
 
         // Blocos por chave (programmed, service, shopping), cada um com a sua paginação
         const blocks = {};
@@ -554,6 +580,51 @@ module.exports = {
             themeOrganizations: lookups.themeOrganizations,
             activityStatuses: lookups.activityStatuses,
             returnTo: listUrl(filter, pages),
+            message: messageFor(req.query.msg),
+        });
+    },
+
+    // Todas as atividades (ícone de banco de dados no menu): uma tabela só, com todos os
+    // tipos e, por padrão, todos os status; mesmo filtro e mesmas ações da consulta.
+    async loadAllPage(req, res) {
+        const filter = activityListQuerySchema.parse({ status: STATUS_FILTER_ALL, ...req.query });
+        const criteria = listCriteria(filter);
+
+        const total = await Activity.countActivities(criteria);
+        const totalPages = Math.max(1, Math.ceil(total / filter.perPage));
+        const page = Math.min(filter.page, totalPages);
+        const offset = (page - 1) * filter.perPage;
+
+        const [lookups, rows] = await Promise.all([
+            loadLookupOptions(),
+            Activity.selectActivities({ ...criteria, limit: filter.perPage, offset }),
+        ]);
+        const activities = rows.map(buildListDecorator(lookups));
+
+        return res.render("cms/cms-Activity-L", {
+            title: "Todas as Atividades",
+            activities,
+            filter,
+            listBaseUrl: ALL_LIST_URL,
+            pageSizes: PAGE_SIZES,
+            lifeSpheres: lookups.lifeSpheres,
+            activityTypeOptions: lookups.activityTypeOptions,
+            actionTypes: lookups.actionTypes,
+            themeOrganizations: lookups.themeOrganizations,
+            activityStatuses: lookups.activityStatuses,
+            returnTo: allListUrl(filter, page),
+            block: {
+                title: "Todas as Atividades",
+                pagination: {
+                    page,
+                    totalPages,
+                    total,
+                    firstItem: total === 0 ? 0 : offset + 1,
+                    lastItem: offset + activities.length,
+                    previousUrl: page > 1 ? allListUrl(filter, page - 1) : null,
+                    nextUrl: page < totalPages ? allListUrl(filter, page + 1) : null,
+                },
+            },
             message: messageFor(req.query.msg),
         });
     },

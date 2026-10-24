@@ -1560,9 +1560,59 @@ a.hbar-label:focus {
 }
 
 .auth-subtitle {
+    margin: 0 0 1rem;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.auth-slogan {
     margin: 0;
     font-size: 0.9rem;
     color: #6c757d;
+}
+
+/* ---------- Identidade visual: 7lifes / Your personal organizer ---------- */
+
+.brand-name {
+    font-family: "IBM Plex Sans", "Inter", sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.brand-slogan {
+    font-family: "IBM Plex Sans", "Inter", sans-serif;
+    letter-spacing: 0.02em;
+}
+
+/* Logo no menu: ícone e, ao lado, o nome com o slogan abaixo */
+.app-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-top: 0.15rem;
+    padding-bottom: 0.15rem;
+}
+
+.app-brand__logo {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+}
+
+.app-brand__text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.05;
+}
+
+.app-brand__name {
+    font-size: 1.2rem;
+}
+
+.app-brand__slogan {
+    font-size: 0.68rem;
+    font-weight: 400;
+    opacity: 0.75;
 }
 
 .auth-help {

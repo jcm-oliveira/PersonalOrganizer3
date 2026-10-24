@@ -2,13 +2,15 @@
 
 <main class="auth-page">
     <div class="auth-card">
+        <%# Identidade visual: 7lifes, com o slogan abaixo %>
         <div class="auth-brand">
-            <img src="/images/logo-personal-organizer.svg" alt="" width="56" height="56">
+            <img src="/images/logo-7lifes.svg" alt="" width="56" height="56">
             <div>
-                <h1 class="auth-title">Personal Organizer</h1>
-                <p class="auth-subtitle">Entre para continuar</p>
+                <h1 class="auth-title brand-name">7lifes</h1>
+                <p class="auth-slogan brand-slogan">Your personal organizer</p>
             </div>
         </div>
+        <p class="auth-subtitle">Entre para continuar</p>
 
         <% if (message) { %>
             <div class="alert alert-info py-2" role="status"><%= message %></div>

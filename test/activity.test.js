@@ -252,8 +252,12 @@ describe("Módulo Activity (Painel de Vôo)", () => {
     it("renderiza a tela inicial com logotipo e atalhos", async () => {
         const res = await request(app).get("/").expect(200);
 
-        assert.match(res.text, /Personal Organizer 3\.0/);
-        assert.match(res.text, /Vida organizada, mente saudável\./);
+        // Identidade visual: 7lifes, com o slogan abaixo
+        assert.match(res.text, /<h1 class="home-title brand-name">7lifes<\/h1>/);
+        assert.match(
+            res.text,
+            /<p class="lead text-muted mb-0 brand-slogan">Your personal organizer<\/p>/,
+        );
         assert.match(res.text, /Atividades/);
         assert.match(res.text, /Gestão/);
         assert.match(

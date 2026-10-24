@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="26 34 148 140" width="148" height="140" role="img" aria-label="7lifes">
+  <!-- Logo 7lifes: coração branco com uma linha de batimento (vida), sem fundo.
+       Contorno cinza sutil e sombra leve para aparecer também sobre fundos claros. -->
+  <defs>
+    <linearGradient id="lifesGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0062cc" />
+      <stop offset="100%" stop-color="#17a2b8" />
+    </linearGradient>
+    <filter id="heartShadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#002752" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Coração branco -->
+  <path
+    d="M100 164
+       C 60 136, 38 112, 38 84
+       C 38 61, 55 45, 76 45
+       C 88 45, 96 51, 100 60
+       C 104 51, 112 45, 124 45
+       C 145 45, 162 61, 162 84
+       C 162 112, 140 136, 100 164 Z"
+    fill="#ffffff"
+    stroke="#d5dbe1"
+    stroke-width="2.5"
+    stroke-linejoin="round"
+    filter="url(#heartShadow)" />
+
+  <!-- Batimento cardíaco (vida) atravessando o coração -->
+  <polyline
+    points="50,100 76,100 86,82 99,122 111,86 119,100 150,100"
+    fill="none"
+    stroke="url(#lifesGradient)"
+    stroke-width="8"
+    stroke-linecap="round"
+    stroke-linejoin="round" />
+</svg>

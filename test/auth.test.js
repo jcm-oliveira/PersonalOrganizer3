@@ -146,6 +146,10 @@ describe("Login e sessão", () => {
         mock.method(UserModel, "countUsers", async () => 1);
         const res = await request(createApp()).get("/login").expect(200);
         assert.doesNotMatch(res.text, /<nav class="navbar/);
+        // Identidade visual: 7lifes, com o slogan abaixo
+        assert.match(res.text, /<h1 class="auth-title brand-name">7lifes<\/h1>/);
+        assert.match(res.text, /<p class="auth-slogan brand-slogan">Your personal organizer<\/p>/);
+        assert.match(res.text, /<title>[^<]* · 7lifes<\/title>/);
         csrfFrom(res.text);
         const cookie = res.headers["set-cookie"].join(";");
         assert.match(cookie, /po\.sid=/);

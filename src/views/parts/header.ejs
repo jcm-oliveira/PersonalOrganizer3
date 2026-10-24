@@ -19,7 +19,14 @@
         : '';
 %>
 <nav class="navbar navbar-expand-md navbar-dark bg-dark">
-    <a class="navbar-brand" href="/">Personal Organizer</a>
+    <%# Logo: ícone, nome 7lifes e o slogan abaixo %>
+    <a class="navbar-brand app-brand" href="/" aria-label="7lifes - Your personal organizer">
+        <img class="app-brand__logo" src="/images/logo-7lifes.svg" alt="" width="30" height="30">
+        <span class="app-brand__text">
+            <span class="brand-name app-brand__name">7lifes</span>
+            <span class="brand-slogan app-brand__slogan">Your personal organizer</span>
+        </span>
+    </a>
     <% if (user) { %>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#mainNavbar"
         aria-controls="mainNavbar" aria-expanded="false" aria-label="Abrir menu">

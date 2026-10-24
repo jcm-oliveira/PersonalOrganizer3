@@ -40,7 +40,7 @@
     <div class="col-12 activity-blocks__main">
     <section class="activity-block" aria-labelledby="activityBlock-all">
     <h2 class="activity-block__title" id="activityBlock-all">
-        <%= block.title %> <span class="activity-block__count"><%= block.pagination.total %></span>
+        <i class="<%= block.icon %> activity-block__icon" aria-hidden="true"></i> <%= block.title %> <span class="activity-block__count"><%= block.pagination.total %></span>
     </h2>
 
     <div class="activity-block__body activity-table-wrap">

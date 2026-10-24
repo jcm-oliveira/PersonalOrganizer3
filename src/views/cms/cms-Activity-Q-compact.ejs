@@ -7,7 +7,7 @@
 %>
 <section class="activity-block activity-block--compact" aria-labelledby="activityBlock-<%= block.key %>">
     <h2 class="activity-block__title" id="activityBlock-<%= block.key %>">
-        <%= block.title %> <span class="activity-block__count"><%= block.pagination.total %></span>
+        <i class="<%= block.icon %> activity-block__icon" aria-hidden="true"></i> <%= block.title %> <span class="activity-block__count"><%= block.pagination.total %></span>
     </h2>
     <div class="activity-block__body">
         <% if (block.activities.length === 0) { %>

@@ -124,12 +124,14 @@ const LIST_BLOCKS = [
     {
         key: "programmed",
         title: "Atividades Programadas",
+        icon: "far fa-calendar-check",
         pageParam: "page",
         criteria: { activityTypeNotIn: [ACTIVITY_TYPE_SERVICE_ORDER, ACTIVITY_TYPE_SHOPPING_LIST] },
     },
     {
         key: "service",
         title: "Ordens de Serviço",
+        icon: "fas fa-wrench",
         pageParam: "pageService",
         // Sequência manual (setas para subir/descer)
         criteria: { activityTypeIn: [ACTIVITY_TYPE_SERVICE_ORDER], manualOrder: true },
@@ -138,6 +140,7 @@ const LIST_BLOCKS = [
     {
         key: "shopping",
         title: "Lista de Compras",
+        icon: "fas fa-shopping-cart",
         pageParam: "pageShopping",
         criteria: { activityTypeIn: [ACTIVITY_TYPE_SHOPPING_LIST], manualOrder: true },
         sortable: true,
@@ -561,6 +564,7 @@ module.exports = {
             blocks[block.key] = {
                 key: block.key,
                 title: block.title,
+                icon: block.icon,
                 sortable: Boolean(block.sortable),
                 activities,
                 pagination: {
@@ -621,6 +625,7 @@ module.exports = {
             returnTo: allListUrl(filter, page),
             block: {
                 title: "Todas as Atividades",
+                icon: "fas fa-database",
                 pagination: {
                     page,
                     totalPages,

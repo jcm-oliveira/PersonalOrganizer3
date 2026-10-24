@@ -260,6 +260,14 @@ h5,
     }
 }
 
+/* Ícone ao lado do título do bloco (calendário, ferramenta, carrinho, banco de dados) */
+.activity-block__icon {
+    width: 1.1rem;
+    text-align: center;
+    color: #0062cc;
+    opacity: 0.85;
+}
+
 .activity-block__count {
     padding: 0.1rem 0.5rem;
     border-radius: 999px;

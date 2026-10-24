@@ -1536,13 +1536,19 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             res.text,
             /class="table table-sm table-hover table-activity mb-0 table-activity--headless"/,
         );
-        // Títulos com a quantidade de cada bloco
+        // Títulos com ícone e a quantidade de cada bloco
         assert.match(
             res.text,
-            /Atividades Programadas <span class="activity-block__count">1<\/span>/,
+            /<i class="far fa-calendar-check activity-block__icon" aria-hidden="true"><\/i> Atividades Programadas <span class="activity-block__count">1<\/span>/,
         );
-        assert.match(res.text, /Ordens de Serviço <span class="activity-block__count">120<\/span>/);
-        assert.match(res.text, /Lista de Compras <span class="activity-block__count">1<\/span>/);
+        assert.match(
+            res.text,
+            /<i class="fas fa-wrench activity-block__icon" aria-hidden="true"><\/i> Ordens de Serviço <span class="activity-block__count">120<\/span>/,
+        );
+        assert.match(
+            res.text,
+            /<i class="fas fa-shopping-cart activity-block__icon" aria-hidden="true"><\/i> Lista de Compras <span class="activity-block__count">1<\/span>/,
+        );
         // Cada atividade no seu bloco: tabela à esquerda, listas compactas à direita
         const section = (key) =>
             res.text.match(

@@ -570,6 +570,23 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.match(res.text, /<option value="">\(Nenhum\)<\/option>/);
     });
 
+    it("mensagem após uma ação tem botão de fechar e fecha sozinha após 5 segundos", async () => {
+        mock.method(Activity, "countActivities", async () => 0);
+        mock.method(Activity, "selectActivities", async () => []);
+
+        const res = await request(app).get("/cms-Activity-Q?msg=updated").expect(200);
+
+        assert.match(
+            res.text,
+            /<div class="alert alert-success alert-dismissible fade show" role="alert" data-auto-dismiss="5000">/,
+        );
+        assert.match(
+            res.text,
+            /<button type="button" class="close" data-dismiss="alert" aria-label="Fechar">/,
+        );
+        assert.match(res.text, /<script src="\/scripts\/flash-messages.js"><\/script>/);
+    });
+
     it("formulário organizado em seções, na ordem definida", async () => {
         const res = await request(app).get("/cms-Activity-C").expect(200);
 

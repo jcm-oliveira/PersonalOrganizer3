@@ -3,6 +3,8 @@
 <main class="container py-4">
     <form method="post" action="/cms-Activity-U/<%= activityId %>">
         <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+        <%# Consulta de origem: salvar e "Voltar" retornam a ela %>
+        <input type="hidden" name="returnTo" value="<%= locals.returnTo || '/cms-Activity-Q' %>">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h1 class="h3 mb-0">Editar Atividade nº <%= activityId %></h1>
             <div class="d-flex align-items-center">
@@ -18,7 +20,7 @@
                     title="Salvar Alterações" aria-label="Salvar Alterações">
                     <i class="fas fa-save mr-1" aria-hidden="true"></i> Salvar
                 </button>
-                <a class="btn btn-sm btn-outline-secondary" href="/cms-Activity-Q"
+                <a class="btn btn-sm btn-outline-secondary" href="<%= locals.returnTo || '/cms-Activity-Q' %>"
                     title="Voltar à Lista" aria-label="Voltar à Lista">
                     <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Voltar
                 </a>

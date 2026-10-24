@@ -89,6 +89,12 @@ function messageFor(code) {
     return Object.hasOwn(MESSAGES, code) ? MESSAGES[code] : null;
 }
 
+// Consulta de origem para os botões "Voltar" e campos ocultos de cadastro/edição: só as
+// telas de consulta (por blocos ou todas as atividades); senão, a consulta por blocos.
+function safeListReturn(value) {
+    return typeof value === "string" && /^\/cms-Activity-[QL](\?|$)/.test(value) ? value : LIST_URL;
+}
+
 // Volta para a tela de consulta de origem (por blocos ou todas as atividades), mantendo
 // filtros/página. Só aceita essas telas como destino (evita redirecionamento aberto).
 // msgCode é opcional.
@@ -669,6 +675,7 @@ module.exports = {
             themeOrganizations: lookups.themeOrganizations,
             activityStatuses: lookups.activityStatuses,
             notifyBeforeOptions: NOTIFY_BEFORE_OPTIONS,
+            returnTo: safeListReturn(req.query.returnTo),
             errors: {},
         });
     },
@@ -688,12 +695,13 @@ module.exports = {
                 themeOrganizations: lookups.themeOrganizations,
                 activityStatuses: lookups.activityStatuses,
                 notifyBeforeOptions: NOTIFY_BEFORE_OPTIONS,
+                returnTo: safeListReturn(req.body?.returnTo),
                 errors: parsed.errors,
             });
         }
 
         await Activity.insertActivity(parsed.data);
-        return res.redirect(303, `${LIST_URL}?msg=created`);
+        return res.redirect(303, returnToListUrl(req.body?.returnTo, "created"));
     },
 
     //------------------------------------------------
@@ -748,6 +756,7 @@ module.exports = {
             themeOrganizations: lookups.themeOrganizations,
             activityStatuses: lookups.activityStatuses,
             notifyBeforeOptions: NOTIFY_BEFORE_OPTIONS,
+            returnTo: safeListReturn(req.query.returnTo),
             errors: {},
         });
     },
@@ -769,6 +778,7 @@ module.exports = {
                 themeOrganizations: lookups.themeOrganizations,
                 activityStatuses: lookups.activityStatuses,
                 notifyBeforeOptions: NOTIFY_BEFORE_OPTIONS,
+                returnTo: safeListReturn(req.body?.returnTo),
                 errors: parsed.errors,
             });
         }
@@ -777,7 +787,7 @@ module.exports = {
         if (affectedRows === 0) {
             throw new HttpError(404, "Atividade não encontrada.");
         }
-        return res.redirect(303, `${LIST_URL}?msg=updated`);
+        return res.redirect(303, returnToListUrl(req.body?.returnTo, "updated"));
     },
 
     //------------------------------------------------
@@ -1076,6 +1086,6 @@ module.exports = {
         if (affectedRows === 0) {
             throw new HttpError(404, "Atividade não encontrada.");
         }
-        return res.redirect(303, `${LIST_URL}?msg=deleted`);
+        return res.redirect(303, returnToListUrl(req.body?.returnTo, "deleted"));
     },
 };

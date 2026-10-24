@@ -67,7 +67,8 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             res.text,
             /class="badge activity-status-badge" style="background-color: #28a745; color: #212529;"/,
         );
-        assert.match(res.text, /href="\/cms-Activity-U\/1"/);
+        // Editar leva a consulta de origem: salvar volta para ela
+        assert.match(res.text, /href="\/cms-Activity-U\/1\?returnTo=%2Fcms-Activity-Q%3F/);
         // Datas exibidas em dd/mm/aaaa (o atributo do botão Remarcar continua em ISO)
         assert.match(res.text, />\s*10\/10\/2026 <span class="activity-datetime__sep"/); // horário ao lado
         assert.match(res.text, />\s*15\/10\/2026\s*</);
@@ -601,6 +602,8 @@ describe("Módulo Activity (Painel de Vôo)", () => {
 
         assert.match(res.text, /<h1 class="h3 mb-0 text-dark">Todas as Atividades<\/h1>/);
         assert.match(res.text, /activity-th-label">Tipo de Atividade</);
+        // Aqui o cabeçalho da tabela continua visível
+        assert.doesNotMatch(res.text, /table-activity--headless/);
         assert.match(
             res.text,
             /<td class="c-activity-type align-middle text-center">\s*Ordem de Serviço\s*<\/td>/,
@@ -610,15 +613,82 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             res.text,
             /<form class="modal-content" method="get" action="\/cms-Activity-L">/,
         );
-        assert.match(res.text, /href="\/cms-Activity-U\/42"/);
+        assert.match(res.text, /href="\/cms-Activity-U\/42\?returnTo=%2Fcms-Activity-L%3F/);
         assert.match(res.text, /data-target="#rescheduleModal"/);
         assert.match(res.text, /name="returnTo" value="\/cms-Activity-L\?status=all&amp;/);
-        assert.match(res.text, /href="\/cms-Activity-C"/);
+        assert.match(res.text, /href="\/cms-Activity-C\?returnTo=%2Fcms-Activity-L%3F/);
         // Ícone de banco de dados no menu, ao lado da engrenagem
         assert.match(
             res.text,
             /href="\/cms-Activity-L"\s+title="Todas as Atividades"[\s\S]*?fa-database/,
         );
+    });
+
+    it("editar, cadastrar e excluir voltam para a tela de consulta de origem", async () => {
+        mock.method(Activity, "selectActivityById", async () => ({
+            id: 41,
+            life_sphere: "Profissão e Carreira",
+            description: "Reunião",
+            activity_type: "Programada",
+            next_activity_date: "2026-10-20",
+            status: 1,
+        }));
+        mock.method(Activity, "updateActivity", async () => 1);
+        mock.method(Activity, "insertActivity", async () => 99);
+        mock.method(Activity, "deleteActivity", async () => 1);
+        const origin = "/cms-Activity-L?status=all&page=2";
+        const form = {
+            life_sphere: "Profissão e Carreira",
+            description: "Reunião",
+            activity_type: "Programada",
+            status: "1",
+            returnTo: origin,
+        };
+
+        // A tela de edição guarda a origem (campo oculto, "Voltar" e exclusão)
+        const page = await request(app)
+            .get(`/cms-Activity-U/41?returnTo=${encodeURIComponent(origin)}`)
+            .expect(200);
+        const escaped = "/cms-Activity-L?status=all&amp;page=2";
+        assert.match(
+            page.text,
+            new RegExp(`name="returnTo" value="${escaped.replace(/[?]/g, "\\?")}"`),
+        );
+        assert.match(
+            page.text,
+            new RegExp(`href="${escaped.replace(/[?]/g, "\\?")}"\\s+title="Voltar à Lista"`),
+        );
+
+        const saved = await request(app)
+            .post("/cms-Activity-U/41")
+            .type("form")
+            .send(form)
+            .expect(303);
+        assert.equal(saved.headers.location, `${origin}&msg=updated`);
+        const created = await request(app)
+            .post("/cms-Activity-C")
+            .type("form")
+            .send(form)
+            .expect(303);
+        assert.equal(created.headers.location, `${origin}&msg=created`);
+        const removed = await request(app)
+            .post("/cms-Activity-D/41")
+            .type("form")
+            .send({ returnTo: origin })
+            .expect(303);
+        assert.equal(removed.headers.location, `${origin}&msg=deleted`);
+
+        // Destino fora das telas de consulta é ignorado (sem redirecionamento aberto)
+        const outside = await request(app)
+            .post("/cms-Activity-U/41")
+            .type("form")
+            .send({ ...form, returnTo: "https://exemplo.com/" })
+            .expect(303);
+        assert.equal(outside.headers.location, "/cms-Activity-Q?msg=updated");
+        const evil = await request(app)
+            .get(`/cms-Activity-U/41?returnTo=${encodeURIComponent("https://exemplo.com/")}`)
+            .expect(200);
+        assert.match(evil.text, /name="returnTo" value="\/cms-Activity-Q"/);
     });
 
     it("ações rápidas voltam para a tela de origem (todas as atividades)", async () => {
@@ -1460,6 +1530,11 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         );
         assert.match(res.text, /<div class="col-lg-4 activity-blocks__side">/);
         assert.equal(res.text.match(/class="activity-block__body/g).length, 3);
+        // Atividades Programadas sem cabeçalho visível (só os cartões)
+        assert.match(
+            res.text,
+            /class="table table-sm table-hover table-activity mb-0 table-activity--headless"/,
+        );
         // Títulos com a quantidade de cada bloco
         assert.match(
             res.text,

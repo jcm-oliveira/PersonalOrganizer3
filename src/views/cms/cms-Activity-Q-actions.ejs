@@ -5,7 +5,8 @@
         <i class="fas fa-search" aria-hidden="true"></i>
     </a>
     <% if (can('activities', 'update')) { %>
-    <a class="btn-icon" href="/cms-Activity-U/<%= act.id %>"
+    <%# Leva a consulta de origem (returnTo): salvar a edição volta para ela %>
+    <a class="btn-icon" href="/cms-Activity-U/<%= act.id %><%= locals.returnTo ? '?returnTo=' + encodeURIComponent(returnTo) : '' %>"
         title="Editar atividade" aria-label="Editar atividade">
         <i class="fas fa-pen" aria-hidden="true"></i>
     </a>

@@ -26,9 +26,16 @@
         }
         const seq = ++requestSeq;
         field("title").textContent = `Atividade nº ${id}`;
-        // O botão Editar só existe para quem pode alterar atividades
+        // O botão Editar só existe para quem pode alterar atividades. Aberto de uma tela de
+        // consulta, leva o endereço dela: salvar a edição volta para essa tela.
         const editLink = field("edit-link");
-        if (editLink) editLink.setAttribute("href", `/cms-Activity-U/${encodeURIComponent(id)}`);
+        if (editLink) {
+            const fromList = /^\/cms-Activity-[QL]$/.test(window.location.pathname);
+            const returnTo = fromList
+                ? `?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`
+                : "";
+            editLink.setAttribute("href", `/cms-Activity-U/${encodeURIComponent(id)}${returnTo}`);
+        }
         showMessage("Carregando...");
         window.jQuery(modal).modal("show");
 

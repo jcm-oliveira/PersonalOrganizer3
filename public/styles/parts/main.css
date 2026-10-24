@@ -198,6 +198,29 @@ h5,
     z-index: 1;
 }
 
+/* Tabela sem cabeçalho visível (bloco Atividades Programadas): só os cartões. O
+   cabeçalho segue no HTML, com altura zero, para leitores de tela e para as larguras
+   mínimas das colunas (definidas nos <th>). */
+.table-activity--headless thead th {
+    position: static;
+    height: 0;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    border: 0 !important;
+    line-height: 0;
+    overflow: hidden;
+}
+
+.table-activity--headless thead th > * {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
 /* Telas grandes: lado a lado, com a mesma altura total */
 @media (min-width: 992px) {
     .activity-blocks__main .activity-block {

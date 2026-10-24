@@ -1,11 +1,13 @@
 <%#
     Tabela de atividades (estilo planilha / Painel de Vôo), usada no bloco Atividades
     Programadas da consulta e na tela com todas as atividades.
-    Recebe: activities e, opcional, showActivityType (coluna Tipo de Atividade, para
-    listas que misturam os tipos).
+    Recebe: activities e, opcionais, showActivityType (coluna Tipo de Atividade, para
+    listas que misturam os tipos) e hideHeader (cabeçalho oculto na tela, só os cartões;
+    continua para leitores de tela e para as larguras das colunas).
 %>
 <%
     const withType = locals.showActivityType === true;
+    const headless = locals.hideHeader === true;
     // Dias até a data, exibidos abaixo dela: "hoje", "1 dia", "5 dias", "há 2 dias"
     const daysText = (days) => {
         if (days === 0) return 'hoje';
@@ -14,7 +16,7 @@
         return days > 0 ? label : `há ${label}`;
     };
 %>
-<table class="table table-sm table-hover table-activity mb-0">
+<table class="table table-sm table-hover table-activity mb-0<%= headless ? ' table-activity--headless' : '' %>">
     <thead>
         <!-- Linha inferior de colunas específicas com ícones acima dos textos -->
         <tr class="text-center">

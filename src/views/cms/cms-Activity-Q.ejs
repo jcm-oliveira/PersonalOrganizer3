@@ -21,7 +21,7 @@
                 <i class="fas fa-print" aria-hidden="true"></i>
             </button>
             <% if (can('activities', 'create')) { %>
-            <a class="btn btn-sm btn-outline-primary" href="/cms-Activity-C"
+            <a class="btn btn-sm btn-outline-primary" href="/cms-Activity-C?returnTo=<%= encodeURIComponent(returnTo) %>"
                 title="Nova Atividade" aria-label="Nova Atividade">
                 <i class="fas fa-plus" aria-hidden="true"></i>
             </a>
@@ -44,7 +44,8 @@
 
     <!-- Tabela Estilo Planilha / Painel de Vôo -->
     <div class="activity-block__body activity-table-wrap">
-        <%- include('cms-Activity-Q-table', { activities: blocks.programmed.activities }) %>
+        <%# Sem cabeçalho visível: só os cartões, como nos blocos da direita %>
+        <%- include('cms-Activity-Q-table', { activities: blocks.programmed.activities, hideHeader: true }) %>
     </div>
 
     <div class="activity-block__footer">

@@ -1,6 +1,6 @@
 <%#
     Bloco estreito da consulta (Ordem de Serviço / Lista de Compras): lista compacta com
-    descrição, a Organização por tema abaixo e ações. Sem farol: esses tipos não têm data
+    descrição e status, a Organização por tema abaixo e ações. Sem farol: esses tipos não têm data
     (ao receber uma data, a atividade passa a ser Programada).
     Recebe: block (key, title, activities, pagination)
 %>
@@ -24,6 +24,10 @@
                                 <span class="activity-subtext" title="Organização por tema"><span class="sr-only">Organização por tema: </span><%= act.theme_organization %></span>
                             <% } %>
                         </div>
+                        <%# Status em coluna própria, centralizado verticalmente no item %>
+                        <span class="badge activity-status-badge" title="Status" style="background-color: <%= act.status_color_code %>; color: <%= act.status_text_color %>;">
+                            <%= act.status_name %>
+                        </span>
                         <div class="activity-compact__actions">
                             <%- include('cms-Activity-Q-actions', { act }) %>
                         </div>

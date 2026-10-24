@@ -235,7 +235,7 @@ describe("Recorrência de atividades (RRULE)", () => {
             assert.doesNotMatch(res.text, /activity-th-label">Periodicidade/);
             assert.match(
                 res.text,
-                /<td class="c-recurrence align-middle text-center">\s*Todo mês, no dia 15\s*<\/td>/,
+                /<td class="c-recurrence align-middle text-center">\s*<span class="activity-subtext">Todo mês, no dia 15<\/span>\s*<\/td>/,
             );
             assert.match(
                 res.text,

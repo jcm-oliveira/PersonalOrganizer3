@@ -36,7 +36,20 @@ h5,
     white-space: normal;
 }
 
-/* Próxima atividade: data e horário juntos; período do dia ao lado, bem discreto */
+/* Repetição: texto discreto como a esfera, podendo quebrar linha (regras longas);
+   coluna fina, de até ~110 px */
+.table-activity .c-recurrence .activity-subtext {
+    white-space: normal;
+}
+
+.table-activity .th-recurrence,
+.table-activity .c-recurrence {
+    max-width: 7rem;
+}
+
+/* Próxima atividade: data, horário e período do dia (bem discreto) numa linha só;
+   a coluna alarga o necessário para não quebrar */
+.table-activity .activity-when,
 .table-activity .activity-datetime {
     white-space: nowrap;
 }
@@ -165,9 +178,10 @@ h5,
 }
 
 /* Lista compacta: descrição (Organização por tema abaixo) | ações. Sem farol nem data */
+/* Itens centralizados verticalmente: nome | status | ações (como as linhas da tabela) */
 .activity-compact__item {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 0.5rem;
     padding: 0.55rem 0.6rem;
     border-left: 4px solid transparent; /* cor da Esfera da Vida (sphere-colors.js) */
@@ -194,9 +208,21 @@ h5,
     flex-shrink: 0;
 }
 
-.activity-compact__actions .btn-icon {
+/* Ícones de ação do mesmo tamanho nos três blocos (no celular, a tabela usa botões
+   maiores, de toque; ver a media query dos cartões) */
+.activity-compact__actions .btn-icon,
+.table-activity .btn-icon {
     width: 24px;
     height: 24px;
+}
+
+/* Status em coluna própria, no mesmo padrão da coluna Status das Programadas */
+.activity-compact .activity-status-badge {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.3em 0.6em;
+    border: 1px solid rgba(0, 0, 0, 0.15);
 }
 
 /* Espaçamento maior entre os itens do menu principal (telas médias e maiores) */

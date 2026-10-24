@@ -1285,10 +1285,11 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.match(section("programmed"), /Reunião semanal/);
         assert.match(section("service"), /class="activity-compact__item[\s\S]*Trocar lâmpada/);
         assert.doesNotMatch(section("service"), /Reunião semanal|Mercado do mês/);
-        // Blocos da direita: sem farol; Organização por tema abaixo do nome
+        // Blocos da direita: sem farol; nome com a Organização por tema abaixo e, em coluna
+        // própria (centralizada no item), o status
         assert.match(
             section("shopping"),
-            /Mercado do mês[\s\S]*<span class="activity-subtext" title="Organização por tema">[\s\S]*\[Casa\] Manutenção<\/span>/,
+            /Mercado do mês[\s\S]*<span class="activity-subtext" title="Organização por tema">[\s\S]*\[Casa\] Manutenção<\/span>\s*<\/div>[\s\S]*?<span class="badge activity-status-badge" title="Status"[^>]*>\s*Ativo\s*<\/span>/,
         );
         assert.doesNotMatch(section("service") + section("shopping"), /class="badge badge-/);
         // Programadas: sem a coluna Organização por tema

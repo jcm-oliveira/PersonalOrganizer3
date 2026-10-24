@@ -83,7 +83,7 @@
                             <span class="activity-th-label">Prazo Final</span>
                         </span>
                     </th>
-                    <th style="min-width: 130px;">
+                    <th style="min-width: 90px;" class="th-recurrence">
                         <span class="activity-th-content">
                             <i class="fas fa-redo-alt activity-th-icon" aria-hidden="true"></i>
                             <span class="activity-th-label">Repetição</span>
@@ -170,10 +170,8 @@
                         <!-- Próxima Atividade: data e horário, período do dia (discreto) e,
                              logo abaixo, os dias que faltam (discreto) -->
                         <td class="c-next align-middle text-center">
-                            <span class="activity-datetime"><%= act.next_activity_date_br || '-' %><% if (act.scheduled_time) { %> <span class="activity-datetime__sep" aria-hidden="true">-</span> <%= act.scheduled_time.slice(0, 5) %><% } %></span>
-                            <% if (periodText) { %>
-                                <span class="activity-period" title="Período do dia"><span class="sr-only">Período do dia: </span>(<%= periodText %>)</span>
-                            <% } %>
+                            <%# Data, hora e período na mesma linha: a coluna se ajusta ao necessário %>
+                            <span class="activity-when"><span class="activity-datetime"><%= act.next_activity_date_br || '-' %><% if (act.scheduled_time) { %> <span class="activity-datetime__sep" aria-hidden="true">-</span> <%= act.scheduled_time.slice(0, 5) %><% } %></span><% if (periodText) { %> <span class="activity-period" title="Período do dia"><span class="sr-only">Período do dia: </span>(<%= periodText %>)</span><% } %></span>
                             <% if (act.days_next_activity !== null) { %>
                                 <span class="activity-subtext"><%= daysText(act.days_next_activity) %></span>
                             <% } %>
@@ -189,7 +187,7 @@
 
                         <!-- Repetição (regra da atividade recorrente) -->
                         <td class="c-recurrence align-middle text-center">
-                            <%= act.recurrence_description || '-' %>
+                            <span class="activity-subtext"><%= act.recurrence_description || '-' %></span>
                         </td>
 
 

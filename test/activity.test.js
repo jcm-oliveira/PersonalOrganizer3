@@ -526,6 +526,28 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.equal(getOverdueReference(new Date(2026, 9, 13, 0, 3)).overdueTime, null);
     });
 
+    it("farol usa o horário de Brasília, independente do fuso do servidor", () => {
+        const {
+            enrichActivity,
+            getOverdueReference,
+        } = require("../src/validation/activitySchemas");
+        // O app (config/env) fixa o fuso da aplicação
+        assert.equal(process.env.TZ, "America/Sao_Paulo");
+
+        // 26/10/2026 03:30 UTC = 26/10 00:30 em Brasília (nos EUA ainda seria dia 25)
+        assert.deepEqual(getOverdueReference(new Date("2026-10-26T03:30:00Z")), {
+            todayStr: "2026-10-26",
+            overdueTime: "00:25:00",
+        });
+        // 25/10/2026 17:06 UTC = 14:06 em Brasília: atividade de hoje às 14:00 já atrasada
+        const at = new Date("2026-10-25T17:06:00Z");
+        const act = { next_activity_date: "2026-10-25", scheduled_time: "14:00:00" };
+        assert.equal(enrichActivity(act, at).next_activity_day_label, "ATRASADO");
+        // 14:04 em Brasília: ainda HOJE (atrasada só 5 min após o início)
+        const before = new Date("2026-10-25T17:04:00Z");
+        assert.equal(enrichActivity(act, before).next_activity_day_label, "HOJE");
+    });
+
     it("filtro Atrasadas recebe a referência de horário do farol", async () => {
         mock.method(Activity, "countActivities", async () => 0);
         const select = mock.method(Activity, "selectActivities", async () => []);

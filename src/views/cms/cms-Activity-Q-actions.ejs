@@ -1,42 +1,65 @@
-<%# Botões de ação de uma atividade na consulta (tabela e listas compactas). Recebe: act %>
-<div class="row-actions">
-    <a class="btn-icon" href="/cms-Activity-V/<%= act.id %>" data-activity-view="<%= act.id %>"
-        title="Visualizar atividade" aria-label="Visualizar atividade">
-        <i class="fas fa-search" aria-hidden="true"></i>
-    </a>
-    <% if (can('activities', 'update')) { %>
-    <%# Leva a consulta de origem (returnTo): salvar a edição volta para ela %>
-    <a class="btn-icon" href="/cms-Activity-U/<%= act.id %><%= locals.returnTo ? '?returnTo=' + encodeURIComponent(returnTo) : '' %>"
-        title="Editar atividade" aria-label="Editar atividade">
-        <i class="fas fa-pen" aria-hidden="true"></i>
-    </a>
-    <button type="button" class="btn-icon"
-        data-toggle="modal" data-target="#rescheduleModal"
-        data-activity-id="<%= act.id %>"
-        data-activity-description="<%= act.description %>"
-        data-next-date="<%= act.next_activity_date_formatted || '' %>"
-        title="Remarcar atividade" aria-label="Remarcar atividade">
-        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+<%#
+    Ações de uma atividade nas telas de consulta (tabela e listas compactas): um botão
+    "⋮" que abre um menu com as opções (ícone à esquerda e o texto da antiga dica).
+    O menu é controlado por public/scripts/row-menu.js.
+    Recebe: act e, opcional, move (setas de sequência dos blocos OS e Compras:
+    { upDisabled, downDisabled }).
+%>
+<div class="row-menu">
+    <button type="button" class="btn-icon row-menu__toggle" aria-haspopup="true" aria-expanded="false"
+        title="Ações" aria-label="Ações da atividade <%= act.description %>">
+        <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
     </button>
-    <button type="button" class="btn-icon"
-        data-toggle="modal" data-target="#statusModal"
-        data-activity-id="<%= act.id %>"
-        data-activity-description="<%= act.description %>"
-        data-status="<%= act.status %>"
-        title="Status da atividade" aria-label="Status da atividade">
-        <i class="fas fa-sync-alt" aria-hidden="true"></i>
-    </button>
-    <% if (act.recurrence_description) { %>
-        <button type="button" class="btn-icon btn-icon--success"
-            data-toggle="modal" data-target="#occurrenceModal"
+    <div class="row-menu__list" role="menu" hidden>
+        <a class="row-menu__item" role="menuitem" href="/cms-Activity-V/<%= act.id %>" data-activity-view="<%= act.id %>">
+            <i class="fas fa-search" aria-hidden="true"></i> Visualizar atividade
+        </a>
+        <% if (can('activities', 'update')) { %>
+        <%# Leva a consulta de origem (returnTo): salvar a edição volta para ela %>
+        <a class="row-menu__item" role="menuitem" href="/cms-Activity-U/<%= act.id %><%= locals.returnTo ? '?returnTo=' + encodeURIComponent(returnTo) : '' %>">
+            <i class="fas fa-pen" aria-hidden="true"></i> Editar atividade
+        </a>
+        <button type="button" class="row-menu__item" role="menuitem"
+            data-toggle="modal" data-target="#rescheduleModal"
             data-activity-id="<%= act.id %>"
             data-activity-description="<%= act.description %>"
-            data-recurrence="<%= act.recurrence_description %>"
-            data-next-date="<%= act.next_activity_date_formatted || '' %>"
-            data-next-occurrence="<%= act.next_occurrence_date || '' %>"
-            title="Concluir ocorrência" aria-label="Concluir ocorrência">
-            <i class="fas fa-check" aria-hidden="true"></i>
+            data-next-date="<%= act.next_activity_date_formatted || '' %>">
+            <i class="far fa-calendar-alt" aria-hidden="true"></i> Remarcar atividade
         </button>
-    <% } %>
-    <% } %>
+        <button type="button" class="row-menu__item" role="menuitem"
+            data-toggle="modal" data-target="#statusModal"
+            data-activity-id="<%= act.id %>"
+            data-activity-description="<%= act.description %>"
+            data-status="<%= act.status %>">
+            <i class="fas fa-sync-alt" aria-hidden="true"></i> Status da atividade
+        </button>
+        <% if (act.recurrence_description) { %>
+            <button type="button" class="row-menu__item row-menu__item--success" role="menuitem"
+                data-toggle="modal" data-target="#occurrenceModal"
+                data-activity-id="<%= act.id %>"
+                data-activity-description="<%= act.description %>"
+                data-recurrence="<%= act.recurrence_description %>"
+                data-next-date="<%= act.next_activity_date_formatted || '' %>"
+                data-next-occurrence="<%= act.next_occurrence_date || '' %>">
+                <i class="fas fa-check" aria-hidden="true"></i> Concluir ocorrência
+            </button>
+        <% } %>
+        <% if (locals.move) { %>
+            <%# Subir/descer na sequência (activity-quick-actions.js troca na tela, sem recarregar) %>
+            <div class="row-menu__divider" role="separator"></div>
+            <form method="post" action="/cms-Activity-M/<%= act.id %>" class="row-menu__form" data-activity-move>
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                <input type="hidden" name="returnTo" value="<%= locals.returnTo || '' %>">
+                <button type="submit" name="direction" value="up" class="row-menu__item" role="menuitem" data-move="up"
+                    <%= move.upDisabled ? 'disabled' : '' %>>
+                    <i class="fas fa-arrow-up" aria-hidden="true"></i> Subir
+                </button>
+                <button type="submit" name="direction" value="down" class="row-menu__item" role="menuitem" data-move="down"
+                    <%= move.downDisabled ? 'disabled' : '' %>>
+                    <i class="fas fa-arrow-down" aria-hidden="true"></i> Descer
+                </button>
+            </form>
+        <% } %>
+        <% } %>
+    </div>
 </div>

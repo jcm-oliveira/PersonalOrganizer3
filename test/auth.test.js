@@ -377,9 +377,10 @@ describe("Bloqueio conforme o perfil", () => {
         const list = await agent.get("/cms-Activity-Q?status=all").expect(200);
         // Sem botões de inserir/alterar
         assert.doesNotMatch(list.text, /href="\/cms-Activity-C"/);
-        assert.doesNotMatch(list.text, /title="Editar atividade"/);
+        assert.doesNotMatch(list.text, /Editar atividade|href="\/cms-Activity-U\//);
         assert.doesNotMatch(list.text, /data-target="#rescheduleModal"/);
-        assert.match(list.text, /title="Visualizar atividade"/);
+        // No menu "⋮" só sobra Visualizar
+        assert.match(list.text, /<\/i> Visualizar atividade\s*<\/a>/);
         // Menu só com o permitido
         assert.match(list.text, /href="\/cms-Activity-Q">Atividades/);
         assert.doesNotMatch(list.text, /href="\/dashboard"|href="\/cms-Calendar"|Cadastros/);
@@ -403,8 +404,11 @@ describe("Bloqueio conforme o perfil", () => {
         // Todas as atividades: só leitura (ícone no menu, sem inserir/alterar)
         assert.match(list.text, /href="\/cms-Activity-L"/);
         const all = await agent.get("/cms-Activity-L").expect(200);
-        assert.doesNotMatch(all.text, /href="\/cms-Activity-C"|title="Editar atividade"/);
-        assert.match(all.text, /title="Visualizar atividade"/);
+        assert.doesNotMatch(
+            all.text,
+            /href="\/cms-Activity-C"|Editar atividade|href="\/cms-Activity-U\//,
+        );
+        assert.match(all.text, /<\/i> Visualizar atividade\s*<\/a>/);
     });
 
     it("sem nenhum perfil, a tela inicial avisa que não há acesso", async () => {

@@ -37,24 +37,16 @@
                             <%= act.status_name %>
                         </span>
                         <div class="activity-compact__actions">
-                            <% if (canSort) { %>
-                                <%# Subir/descer na sequência (activity-quick-actions.js troca na tela, sem recarregar) %>
-                                <form method="post" action="/cms-Activity-M/<%= act.id %>" class="activity-move" data-activity-move>
-                                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-                                    <input type="hidden" name="returnTo" value="<%= locals.returnTo || '' %>">
-                                    <button type="submit" name="direction" value="up" class="btn-icon" data-move="up"
-                                        title="Subir" aria-label="Subir <%= act.description %>"
-                                        <%= isFirstPage && index === 0 ? 'disabled' : '' %>>
-                                        <i class="fas fa-arrow-up" aria-hidden="true"></i>
-                                    </button>
-                                    <button type="submit" name="direction" value="down" class="btn-icon" data-move="down"
-                                        title="Descer" aria-label="Descer <%= act.description %>"
-                                        <%= isLastPage && index === block.activities.length - 1 ? 'disabled' : '' %>>
-                                        <i class="fas fa-arrow-down" aria-hidden="true"></i>
-                                    </button>
-                                </form>
-                            <% } %>
-                            <%- include('cms-Activity-Q-actions', { act }) %>
+                            <%# Menu "⋮" com as ações e, nos blocos ordenáveis, Subir/Descer %>
+                            <%- include('cms-Activity-Q-actions', {
+                                act,
+                                move: canSort
+                                    ? {
+                                          upDisabled: isFirstPage && index === 0,
+                                          downDisabled: isLastPage && index === block.activities.length - 1,
+                                      }
+                                    : null,
+                            }) %>
                         </div>
                     </li>
                 <% }) %>

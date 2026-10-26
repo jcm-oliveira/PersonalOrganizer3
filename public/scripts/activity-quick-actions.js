@@ -103,12 +103,8 @@
                     if (direction === "up") list.insertBefore(item, neighbor);
                     else list.insertBefore(neighbor, item);
                     updateMoveButtons(list);
-                    // Mantém o foco na seta usada, para mover de novo pelo teclado
-                    const again = item.querySelector(`[data-move="${direction}"]`);
-                    (again && !again.disabled
-                        ? again
-                        : item.querySelector(".activity-desc-link")
-                    )?.focus();
+                    // Foco no botão "⋮" do item movido, para mover de novo pelo teclado
+                    item.querySelector(".row-menu__toggle")?.focus();
                 } catch {
                     window.location.reload();
                 }

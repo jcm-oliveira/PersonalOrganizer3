@@ -769,10 +769,12 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             /aria-labelledby="activityBlock-shopping">([\s\S]*?)<\/section>/,
         )[1];
         assert.match(shopping, /data-sortable-list data-first-page="true" data-last-page="true"/);
-        const arrows = [
-            ...shopping.matchAll(/data-move="(up|down)"[\s\S]*?aria-label="[^"]+"\s*(disabled)?/g),
-        ].map((m) => `${m[1]}${m[2] ? ":off" : ""}`);
+        // Subir/Descer dentro do menu "⋮" de cada item
+        const arrows = [...shopping.matchAll(/data-move="(up|down)"\s*(disabled)?>/g)].map(
+            (m) => `${m[1]}${m[2] ? ":off" : ""}`,
+        );
         assert.deepEqual(arrows, ["up:off", "down", "up", "down:off"]);
+        assert.match(shopping, /<\/i> Subir\s*<\/button>[\s\S]*?<\/i> Descer\s*<\/button>/);
         assert.match(shopping, /action="\/cms-Activity-M\/31"/);
     });
 
@@ -891,6 +893,47 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.doesNotMatch(res.text, /<option value="[234]" selected>/);
     });
 
+    it("menu ⋮ dos registros: um botão só, com ícone e texto em cada opção", async () => {
+        mock.method(Activity, "countActivities", async () => 1);
+        mock.method(Activity, "selectActivities", async ({ activityTypeIn }) =>
+            activityTypeIn
+                ? []
+                : [
+                      {
+                          id: 8,
+                          life_sphere: "Profissão e Carreira",
+                          description: "Reunião mensal",
+                          activity_type: "Programada",
+                          next_activity_date: "2026-10-20",
+                          recurrence_rule: "FREQ=MONTHLY;BYMONTHDAY=20",
+                          status: 1,
+                      },
+                  ],
+        );
+
+        const res = await request(app).get("/cms-Activity-Q").expect(200);
+        const cell = res.text.match(/<td class="c-actions[^"]*">([\s\S]*?)<\/td>/)[1];
+
+        // Um único botão de ações (⋮); as opções ficam no menu, ocultas até abrir
+        assert.equal(cell.match(/<button[^>]*row-menu__toggle/g).length, 1);
+        assert.match(cell, /aria-label="Ações da atividade Reunião mensal"[\s\S]*?fa-ellipsis-v/);
+        assert.match(cell, /<div class="row-menu__list" role="menu" hidden>/);
+        // Cada opção: ícone à esquerda e o texto da antiga dica
+        const options = [
+            ...cell.matchAll(
+                /<i class="([^"]+)" aria-hidden="true"><\/i> ([^<]+?)\s*<\/(?:a|button)>/g,
+            ),
+        ].map((m) => `${m[1]} | ${m[2]}`);
+        assert.deepEqual(options, [
+            "fas fa-search | Visualizar atividade",
+            "fas fa-pen | Editar atividade",
+            "far fa-calendar-alt | Remarcar atividade",
+            "fas fa-sync-alt | Status da atividade",
+            "fas fa-check | Concluir ocorrência",
+        ]);
+        assert.doesNotMatch(cell, /class="row-actions"/);
+    });
+
     it("exibe os botões Remarcar atividade e Status da atividade com seus pop-ups", async () => {
         mockLookupsWithStatuses();
         mock.method(Activity, "countActivities", async () => 1);
@@ -910,9 +953,10 @@ describe("Módulo Activity (Painel de Vôo)", () => {
 
         assert.match(res.text, /data-target="#rescheduleModal"[\s\S]*?data-activity-id="5"/);
         assert.match(res.text, /data-next-date="2026-10-20"/);
-        assert.match(res.text, /title="Remarcar atividade"/);
+        assert.match(res.text, /<\/i> Remarcar atividade\s*<\/button>/);
         assert.match(res.text, /data-target="#statusModal"[\s\S]*?data-status="2"/);
-        assert.match(res.text, /title="Status da atividade"/);
+        assert.match(res.text, /<\/i> Status da atividade\s*<\/button>/);
+        assert.match(res.text, /src="\/scripts\/row-menu.js"/);
         assert.match(res.text, /id="rescheduleModal"/);
         assert.match(res.text, /id="statusModal"/);
         assert.match(res.text, /name="returnTo" value="\/cms-Activity-Q\?status=all&amp;/);

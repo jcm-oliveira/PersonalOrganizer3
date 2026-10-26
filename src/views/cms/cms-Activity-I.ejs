@@ -197,7 +197,7 @@
             Anotações / Próximas Atividades
         </label>
         <textarea class="form-control <%= errors.notes ? 'is-invalid' : '' %>" id="notes" name="notes"
-            rows="3" maxlength="5000" placeholder="Anotações complementares..."><%= values.notes || '' %></textarea>
+            rows="8" maxlength="5000" placeholder="Anotações complementares..."><%= values.notes || '' %></textarea>
         <% if (errors.notes) { %><div class="invalid-feedback"><%= errors.notes %></div><% } %>
     </div>
 </div>

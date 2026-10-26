@@ -59,8 +59,12 @@
                             <% }) %>
                         </select>
                     </div>
-                    <% if (showActivityTypeField) { %>
+                    <%#
+                        Ao lado da Esfera: Tipo de Atividade (quando há o campo) ou Tipo de Ação,
+                        para não sobrar espaço vazio na linha
+                    %>
                     <div class="form-group col-md-6">
+                        <% if (showActivityTypeField) { %>
                         <label for="filterActivityType">Tipo de Atividade</label>
                         <select class="form-control" id="filterActivityType" name="activityType">
                             <option value="">Todas</option>
@@ -68,12 +72,22 @@
                                 <option value="<%= rel %>" <%= filter.activityType === rel ? "selected" : "" %>><%= rel %></option>
                             <% }) %>
                         </select>
+                        <% } else { %>
+                        <label for="filterActionType">Tipo de Ação</label>
+                        <select class="form-control" id="filterActionType" name="actionType">
+                            <option value="">Todos</option>
+                            <% actionTypes.forEach((actType) => { %>
+                                <option value="<%= actType %>" <%= filter.actionType === actType ? "selected" : "" %>><%= actType %></option>
+                            <% }) %>
+                        </select>
+                        <% } %>
                     </div>
-                    <% } %>
                 </div>
 
+                <%# Última linha sempre completa: (Tipo de Ação) + Farol + Itens por página %>
                 <div class="form-row">
-                    <div class="form-group col-md-6">
+                    <% if (showActivityTypeField) { %>
+                    <div class="form-group col-md-4">
                         <label for="filterActionType">Tipo de Ação</label>
                         <select class="form-control" id="filterActionType" name="actionType">
                             <option value="">Todos</option>
@@ -82,7 +96,8 @@
                             <% }) %>
                         </select>
                     </div>
-                    <div class="form-group col-md-6">
+                    <% } %>
+                    <div class="form-group <%= showActivityTypeField ? 'col-md-5' : 'col-md-8' %>">
                         <label for="filterTrafficLight">Farol / Vencimento</label>
                         <select class="form-control" id="filterTrafficLight" name="trafficLight">
                             <option value="">Todos</option>
@@ -93,10 +108,7 @@
                             <option value="PRAZO" <%= filter.trafficLight === "PRAZO" ? "selected" : "" %>>Prazo Final em 7 dias</option>
                         </select>
                     </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group col-md-4">
+                    <div class="form-group <%= showActivityTypeField ? 'col-md-3' : 'col-md-4' %>">
                         <label for="filterPerPage">Itens por página</label>
                         <select class="form-control" id="filterPerPage" name="perPage">
                             <% pageSizes.forEach((size) => { %>

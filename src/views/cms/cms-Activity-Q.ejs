@@ -1,21 +1,12 @@
 <%- include('../parts/head') %>
 
 <main class="container-fluid py-4 px-lg-5">
-    <!-- Barra de Ações (Filtros e Novo) -->
+    <!-- Barra de Ações (Imprimir e Novo). O filtro fica em cada bloco. -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h1 class="h3 mb-0 text-dark">Atividades</h1>
-            <% if (filter.trafficLight || filter.search || filter.lifeSphere || filter.activityType || filter.actionType || filter.status !== 'visible') { %>
-                <span class="badge badge-info mt-1">Filtros aplicados</span>
-                <a href="/cms-Activity-Q" class="small text-danger ml-2">Limpar filtros</a>
-            <% } %>
         </div>
         <div class="d-flex align-items-center">
-            <% const hasActiveFilter = Boolean(filter.trafficLight || filter.search || filter.lifeSphere || filter.activityType || filter.actionType || filter.status !== 'visible'); %>
-            <button type="button" class="btn btn-sm <%= hasActiveFilter ? 'btn-primary' : 'btn-outline-secondary' %> mr-1"
-                data-toggle="modal" data-target="#filterModal" title="Filtrar atividades" aria-label="Filtrar atividades">
-                <i class="fas fa-filter" aria-hidden="true"></i>
-            </button>
             <button type="button" class="btn btn-sm btn-outline-secondary mr-1" onclick="window.print()"
                 title="Imprimir" aria-label="Imprimir">
                 <i class="fas fa-print" aria-hidden="true"></i>
@@ -38,9 +29,7 @@
     <div class="row activity-blocks">
     <div class="col-lg-8 activity-blocks__main">
     <section class="activity-block" aria-labelledby="activityBlock-programmed">
-    <h2 class="activity-block__title" id="activityBlock-programmed">
-        <i class="<%= blocks.programmed.icon %> activity-block__icon" aria-hidden="true"></i> <%= blocks.programmed.title %> <span class="activity-block__count"><%= blocks.programmed.pagination.total %></span>
-    </h2>
+    <%- include('cms-Activity-Q-block-header', { block: blocks.programmed, withFilter: true }) %>
 
     <!-- Tabela Estilo Planilha / Painel de Vôo -->
     <div class="activity-block__body activity-table-wrap">
@@ -61,7 +50,18 @@
     </div>
 
     <!-- Modal de Filtros -->
-    <%- include('cms-Activity-F') %>
+    <%# Atividades Programadas: farol, tipo de ação etc. (sem Tipo de Atividade) %>
+    <%- include('cms-Activity-F', {
+        filter: blocks.programmed.filter,
+        modalId: 'filterModal-programmed',
+        modalTitle: 'Filtrar ' + blocks.programmed.title,
+        hideActivityType: true,
+        preserve: blocks.programmed.preserve,
+        clearUrl: blocks.programmed.clearUrl,
+    }) %>
+    <%# Ordens de Serviço e Lista de Compras: sem farol, com Organização por Tema %>
+    <%- include('cms-Activity-F-block', { block: blocks.service }) %>
+    <%- include('cms-Activity-F-block', { block: blocks.shopping }) %>
 
     <!-- Pop-ups de ações rápidas -->
     <%- include('cms-Activity-R') %>

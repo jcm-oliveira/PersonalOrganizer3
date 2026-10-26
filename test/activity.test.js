@@ -68,7 +68,8 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             /class="badge activity-status-badge" style="background-color: #28a745; color: #212529;"/,
         );
         // Editar leva a consulta de origem: salvar volta para ela
-        assert.match(res.text, /href="\/cms-Activity-U\/1\?returnTo=%2Fcms-Activity-Q%3F/);
+        // (sem filtros: a consulta volta sem parâmetros)
+        assert.match(res.text, /href="\/cms-Activity-U\/1\?returnTo=%2Fcms-Activity-Q"/);
         // Datas exibidas em dd/mm/aaaa (o atributo do botão Remarcar continua em ISO)
         assert.match(res.text, />\s*10\/10\/2026 <span class="activity-datetime__sep"/); // horário ao lado
         assert.match(res.text, /data-next-date="2026-10-10"/);
@@ -901,9 +902,77 @@ describe("Módulo Activity (Painel de Vôo)", () => {
 
         const res = await request(app).get("/cms-Activity-Q?status=2").expect(200);
 
+        // O status vale só para o bloco Atividades Programadas (filtro do bloco)
         assert.equal(select.mock.calls[0].arguments[0].status, 2);
+        assert.equal(select.mock.calls[1].arguments[0].status, "visible");
         assert.match(res.text, /<option value="2" selected>\s*Em andamento\s*<\/option>/);
-        assert.match(res.text, /Filtros aplicados/);
+        assert.match(
+            res.text,
+            /activity-block__filter activity-block__filter--active"\s+data-toggle="modal" data-target="#filterModal-programmed"/,
+        );
+        assert.match(
+            res.text,
+            /class="activity-block__clear" href="\/cms-Activity-Q">Limpar filtro<\/a>/,
+        );
+    });
+
+    it("filtro separado por bloco: cada bloco filtra só a si e mantém os outros", async () => {
+        mockLookupsWithStatuses();
+        mock.method(Activity, "countActivities", async () => 0);
+        const select = mock.method(Activity, "selectActivities", async () => []);
+
+        const res = await request(app)
+            .get("/cms-Activity-Q")
+            .query({
+                trafficLight: "ATRASADA",
+                serviceSearch: "lâmpada",
+                serviceThemeOrganization: "[Casa] Manutenção",
+                shoppingStatus: "all",
+            })
+            .expect(200);
+
+        const [programmed, service, shopping] = select.mock.calls.map((c) => c.arguments[0]);
+        // Programadas: só o farol dele
+        assert.equal(programmed.trafficLight, "ATRASADA");
+        assert.equal(programmed.search, "");
+        // Ordens de Serviço: busca e Organização por Tema próprias, sem farol
+        assert.equal(service.search, "lâmpada");
+        assert.equal(service.themeOrganization, "[Casa] Manutenção");
+        assert.equal(service.trafficLight, undefined);
+        assert.equal(service.status, "visible");
+        // Lista de Compras: só o status dele
+        assert.equal(shopping.status, null);
+        assert.equal(shopping.search, "");
+
+        // Pop-ups próprios: Programadas com farol e sem Tipo de Atividade; OS e Compras com
+        // Organização por Tema e sem farol
+        const modal = (key) =>
+            res.text.match(new RegExp(`id="filterModal-${key}"[\\s\\S]*?</form>`))[0];
+        assert.match(modal("programmed"), /name="trafficLight"/);
+        assert.doesNotMatch(modal("programmed"), /name="activityType"/);
+        assert.match(modal("service"), /name="serviceThemeOrganization"/);
+        assert.doesNotMatch(modal("service"), /<select[^>]*name="\w*[tT]rafficLight"/);
+        assert.match(modal("shopping"), /name="shoppingSearch"/);
+        // Aplicar o filtro de um bloco mantém os filtros dos outros (campos ocultos)
+        assert.match(
+            modal("service"),
+            /<input type="hidden" name="trafficLight" value="ATRASADA">/,
+        );
+        assert.match(modal("service"), /<input type="hidden" name="shoppingStatus" value="all">/);
+        assert.doesNotMatch(modal("service"), /type="hidden" name="serviceSearch"/);
+        // "Limpar filtro" de um bloco só limpa o dele
+        const shoppingSection = res.text.match(
+            /aria-labelledby="activityBlock-shopping">([\s\S]*?)<\/section>/,
+        )[1];
+        const clear = shoppingSection.match(
+            /class="activity-block__clear" href="([^"]+)">Limpar filtro/,
+        )[1];
+        assert.equal(
+            clear.replace(/&amp;/g, "&"),
+            "/cms-Activity-Q?trafficLight=ATRASADA&serviceSearch=l%C3%A2mpada&serviceThemeOrganization=%5BCasa%5D+Manuten%C3%A7%C3%A3o",
+        );
+        // Sem filtro geral na barra superior
+        assert.doesNotMatch(res.text, /data-target="#filterModal"/);
     });
 
     it("nova atividade vem com o registro 1 do cadastro de status como padrão", async () => {
@@ -981,7 +1050,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.match(res.text, /src="\/scripts\/row-menu.js"/);
         assert.match(res.text, /id="rescheduleModal"/);
         assert.match(res.text, /id="statusModal"/);
-        assert.match(res.text, /name="returnTo" value="\/cms-Activity-Q\?status=all&amp;/);
+        assert.match(res.text, /name="returnTo" value="\/cms-Activity-Q\?status=all"/);
         assert.match(res.text, /src="\/scripts\/activity-quick-actions.js"/);
     });
 
@@ -1634,7 +1703,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.doesNotMatch(section("programmed"), /c-theme|Organização por tema/);
         // Paginação própria (120 OS em páginas de 50): o link mantém a página dos outros blocos
         assert.match(section("service"), /Página 1 de 3/);
-        assert.match(section("service"), /href="[^"]*page=1&amp;pageService=2&amp;pageShopping=1"/);
+        assert.match(section("service"), /href="\/cms-Activity-Q\?pageService=2"/);
     });
 
     it("Ordem de Serviço ou Lista de Compras com data passa a ser Programada", async () => {

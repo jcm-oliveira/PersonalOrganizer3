@@ -39,9 +39,7 @@
     <div class="row activity-blocks">
     <div class="col-12 activity-blocks__main">
     <section class="activity-block" aria-labelledby="activityBlock-all">
-    <h2 class="activity-block__title" id="activityBlock-all">
-        <i class="<%= block.icon %> activity-block__icon" aria-hidden="true"></i> <%= block.title %> <span class="activity-block__count"><%= block.pagination.total %></span>
-    </h2>
+    <%- include('cms-Activity-Q-block-header', { block: { ...block, key: 'all' } }) %>
 
     <div class="activity-block__body activity-table-wrap">
         <%- include('cms-Activity-Q-table', { activities, showActivityType: true }) %>

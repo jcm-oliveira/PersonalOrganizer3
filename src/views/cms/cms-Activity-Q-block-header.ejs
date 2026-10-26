@@ -1,0 +1,23 @@
+<%#
+    Cabeçalho de um bloco das telas de consulta: ícone, título, quantidade e, quando o
+    bloco tem filtro próprio (consulta por blocos), o botão de filtro e "Limpar".
+    Recebe: block (key, title, icon, pagination; opcionais filterActive e clearUrl) e,
+    opcional, withFilter (mostra o botão de filtro do bloco).
+%>
+<div class="activity-block__header">
+    <h2 class="activity-block__title" id="activityBlock-<%= block.key %>">
+        <i class="<%= block.icon %> activity-block__icon" aria-hidden="true"></i> <%= block.title %> <span class="activity-block__count"><%= block.pagination.total %></span>
+    </h2>
+    <% if (locals.withFilter) { %>
+        <div class="activity-block__tools">
+            <% if (block.filterActive) { %>
+                <a class="activity-block__clear" href="<%= block.clearUrl %>">Limpar filtro</a>
+            <% } %>
+            <button type="button" class="btn-icon activity-block__filter<%= block.filterActive ? ' activity-block__filter--active' : '' %>"
+                data-toggle="modal" data-target="#filterModal-<%= block.key %>"
+                title="Filtrar <%= block.title %>" aria-label="Filtrar <%= block.title %><%= block.filterActive ? ' (filtro aplicado)' : '' %>">
+                <i class="fas fa-filter" aria-hidden="true"></i>
+            </button>
+        </div>
+    <% } %>
+</div>

@@ -22,12 +22,9 @@ const envSchema = z
         SESSION_SECRET: z.string().min(32).optional(),
         // Fuso horário de "hoje" e "agora" (farol, atrasos, calendário, avisos). Independe
         // do fuso do servidor (em produção, nos EUA). Padrão: horário de Brasília.
-        APP_TIMEZONE: z
-            .string()
-            .default("America/Sao_Paulo")
-            .refine(isValidTimeZone, {
-                message: "Fuso horário inválido (ex.: America/Sao_Paulo).",
-            }),
+        APP_TIMEZONE: z.string().default("America/Sao_Paulo").refine(isValidTimeZone, {
+            message: "Fuso horário inválido (ex.: America/Sao_Paulo).",
+        }),
     })
     .transform((env) => ({
         ...env,

@@ -36,6 +36,7 @@ function buildWhere({
     activityType,
     activityTypeIn,
     activityTypeNotIn,
+    themeOrganization,
     actionType,
     trafficLight,
     todayStr,
@@ -64,6 +65,12 @@ function buildWhere({
     if (activityTypeNotIn?.length) {
         conditions.push(`activity_type NOT IN (${activityTypeNotIn.map(() => "?").join(", ")})`);
         values.push(...activityTypeNotIn);
+    }
+
+    // Filtro dos blocos Ordem de Serviço e Lista de Compras
+    if (themeOrganization) {
+        conditions.push("theme_organization = ?");
+        values.push(themeOrganization);
     }
 
     if (actionType) {

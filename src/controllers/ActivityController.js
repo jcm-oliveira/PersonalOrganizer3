@@ -28,6 +28,10 @@ const {
     ACTION_TYPES,
     THEME_ORGANIZATIONS,
     activityListQuerySchema,
+    BLOCK_FILTER_FIELDS,
+    blockParamName,
+    parseBlockFilter,
+    DEFAULT_PAGE_SIZE,
     activityFormSchema,
     activityRescheduleSchema,
     activityStatusChangeSchema,
@@ -118,21 +122,23 @@ function parseId(rawId) {
 }
 
 // Blocos da consulta: "Programada" à esquerda (também com qualquer outro tipo) e, à
-// direita, "Ordem de Serviço" e "Lista de Compras". Os filtros valem para os três;
-// cada bloco tem a própria página (pageParam).
+// direita, "Ordem de Serviço" e "Lista de Compras". Cada bloco tem o próprio filtro e a
+// própria página. Programadas usa os parâmetros sem prefixo (search, trafficLight, page...,
+// também usados pelos links do dashboard); os demais, o prefixo do bloco (serviceSearch,
+// pageService...).
 const LIST_BLOCKS = [
     {
         key: "programmed",
         title: "Atividades Programadas",
         icon: "far fa-calendar-check",
-        pageParam: "page",
+        filterPrefix: null,
         criteria: { activityTypeNotIn: [ACTIVITY_TYPE_SERVICE_ORDER, ACTIVITY_TYPE_SHOPPING_LIST] },
     },
     {
         key: "service",
         title: "Ordens de Serviço",
         icon: "fas fa-wrench",
-        pageParam: "pageService",
+        filterPrefix: "service",
         // Sequência manual (setas para subir/descer)
         criteria: { activityTypeIn: [ACTIVITY_TYPE_SERVICE_ORDER], manualOrder: true },
         sortable: true,
@@ -141,11 +147,68 @@ const LIST_BLOCKS = [
         key: "shopping",
         title: "Lista de Compras",
         icon: "fas fa-shopping-cart",
-        pageParam: "pageShopping",
+        filterPrefix: "shopping",
         criteria: { activityTypeIn: [ACTIVITY_TYPE_SHOPPING_LIST], manualOrder: true },
         sortable: true,
     },
 ];
+
+// Campos do filtro do bloco Programadas na URL (sem prefixo)
+const PROGRAMMED_FILTER_FIELDS = [
+    "status",
+    "search",
+    "lifeSphere",
+    "activityType",
+    "actionType",
+    "trafficLight",
+    "perPage",
+    "page",
+];
+// Valores padrão dos filtros (não vão para a URL); os demais campos, vazio
+const FILTER_DEFAULTS = { status: STATUS_FILTER_VISIBLE, perPage: DEFAULT_PAGE_SIZE, page: 1 };
+
+/** Lê da URL o filtro de um bloco da consulta */
+function parseListBlockFilter(block, query) {
+    return block.filterPrefix
+        ? parseBlockFilter(query, block.filterPrefix)
+        : activityListQuerySchema.parse(query ?? {});
+}
+
+/** Parâmetros de URL do filtro de um bloco, só os diferentes do padrão: [[nome, valor]] */
+function blockUrlParams(block, filter) {
+    const fields = block.filterPrefix ? [...BLOCK_FILTER_FIELDS, "page"] : PROGRAMMED_FILTER_FIELDS;
+    return fields.flatMap((field) => {
+        const value = filter[field];
+        if (value === undefined || value === "" || value === (FILTER_DEFAULTS[field] ?? "")) {
+            return [];
+        }
+        const name = block.filterPrefix ? blockParamName(block.filterPrefix, field) : field;
+        return [[name, String(value)]];
+    });
+}
+
+/** Endereço da consulta por blocos com o filtro de cada bloco (filters: { programmed, ... }) */
+function listUrl(filters) {
+    const query = new URLSearchParams(
+        LIST_BLOCKS.flatMap((block) => blockUrlParams(block, filters[block.key])),
+    ).toString();
+    return query ? `${LIST_URL}?${query}` : LIST_URL;
+}
+
+/** Critérios de consulta de um bloco a partir do filtro dele */
+function listBlockCriteria(block, filter) {
+    const base = block.filterPrefix
+        ? {
+              ...listCriteria({
+                  status: filter.status,
+                  search: filter.search,
+                  lifeSphere: filter.lifeSphere,
+              }),
+              themeOrganization: filter.themeOrganization,
+          }
+        : listCriteria(filter);
+    return { ...base, ...block.criteria };
+}
 
 // Endereço da tela com todas as atividades, mantendo o filtro
 function allListUrl(filter, page) {
@@ -160,21 +223,6 @@ function allListUrl(filter, page) {
         page: String(page),
     });
     return `${ALL_LIST_URL}?${params}`;
-}
-
-// pages: { page, pageService, pageShopping } (página de cada bloco)
-function listUrl(filter, pages) {
-    const params = new URLSearchParams({
-        status: filter.status,
-        search: filter.search,
-        lifeSphere: filter.lifeSphere,
-        activityType: filter.activityType,
-        actionType: filter.actionType,
-        trafficLight: filter.trafficLight,
-        perPage: String(filter.perPage),
-    });
-    LIST_BLOCKS.forEach(({ pageParam }) => params.set(pageParam, String(pages[pageParam] || 1)));
-    return `${LIST_URL}?${params}`;
 }
 
 async function loadLookupOptions() {
@@ -523,50 +571,65 @@ module.exports = {
     //------------------------------------------------
 
     async loadShowPage(req, res) {
-        const filter = activityListQuerySchema.parse(req.query);
-        const criteria = listCriteria(filter);
+        // Cada bloco com o próprio filtro (e página)
+        const filters = {};
+        LIST_BLOCKS.forEach((block) => {
+            filters[block.key] = parseListBlockFilter(block, req.query);
+        });
 
         // Total de cada bloco e página válida de cada um
         const totals = await Promise.all(
             LIST_BLOCKS.map((block) =>
-                Activity.countActivities({ ...criteria, ...block.criteria }),
+                Activity.countActivities(listBlockCriteria(block, filters[block.key])),
             ),
         );
-        const pages = {};
         LIST_BLOCKS.forEach((block, i) => {
+            const filter = filters[block.key];
             const totalPages = Math.max(1, Math.ceil(totals[i] / filter.perPage));
-            pages[block.pageParam] = Math.min(filter[block.pageParam], totalPages);
+            filter.page = Math.min(filter.page, totalPages);
         });
 
         const [lookups, ...blockRows] = await Promise.all([
             loadLookupOptions(),
-            ...LIST_BLOCKS.map((block) =>
-                Activity.selectActivities({
-                    ...criteria,
-                    ...block.criteria,
+            ...LIST_BLOCKS.map((block) => {
+                const filter = filters[block.key];
+                return Activity.selectActivities({
+                    ...listBlockCriteria(block, filter),
                     limit: filter.perPage,
-                    offset: (pages[block.pageParam] - 1) * filter.perPage,
-                }),
-            ),
+                    offset: (filter.page - 1) * filter.perPage,
+                });
+            }),
         ]);
 
         const decorate = buildListDecorator(lookups);
 
-        // Blocos por chave (programmed, service, shopping), cada um com a sua paginação
+        // Blocos por chave (programmed, service, shopping), cada um com o seu filtro e a
+        // sua paginação; os links de um bloco mantêm o filtro e a página dos outros
         const blocks = {};
         LIST_BLOCKS.forEach((block, i) => {
+            const filter = filters[block.key];
             const total = totals[i];
-            const page = pages[block.pageParam];
-            const totalPages = Math.max(1, Math.ceil(total / filter.perPage));
-            const offset = (page - 1) * filter.perPage;
+            const { page, perPage } = filter;
+            const totalPages = Math.max(1, Math.ceil(total / perPage));
+            const offset = (page - 1) * perPage;
             const activities = blockRows[i].map(decorate);
-            const urlFor = (target) => listUrl(filter, { ...pages, [block.pageParam]: target });
+            const urlFor = (target) =>
+                listUrl({ ...filters, [block.key]: { ...filter, page: target } });
             blocks[block.key] = {
                 key: block.key,
                 title: block.title,
                 icon: block.icon,
                 sortable: Boolean(block.sortable),
                 activities,
+                filterPrefix: block.filterPrefix,
+                filter,
+                filterActive: blockUrlParams(block, { ...filter, page: 1 }).length > 0,
+                // "Limpar": só o filtro deste bloco volta ao padrão
+                clearUrl: listUrl({ ...filters, [block.key]: parseListBlockFilter(block, {}) }),
+                // Campos ocultos do pop-up de filtro: filtros e páginas dos outros blocos
+                preserve: LIST_BLOCKS.filter((other) => other !== block).flatMap((other) =>
+                    blockUrlParams(other, filters[other.key]),
+                ),
                 pagination: {
                     page,
                     totalPages,
@@ -582,14 +645,13 @@ module.exports = {
         return res.render("cms/cms-Activity-Q", {
             title: "Atividades",
             blocks,
-            filter,
             pageSizes: PAGE_SIZES,
             lifeSpheres: lookups.lifeSpheres,
             activityTypeOptions: lookups.activityTypeOptions,
             actionTypes: lookups.actionTypes,
             themeOrganizations: lookups.themeOrganizations,
             activityStatuses: lookups.activityStatuses,
-            returnTo: listUrl(filter, pages),
+            returnTo: listUrl(filters),
             message: messageFor(req.query.msg),
         });
     },

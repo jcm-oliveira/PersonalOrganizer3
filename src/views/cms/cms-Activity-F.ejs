@@ -1,10 +1,25 @@
-<%# Filtro das telas de consulta. listBaseUrl: tela que recebe o filtro (padrão: consulta por blocos) %>
-<% const filterBaseUrl = locals.listBaseUrl || '/cms-Activity-Q'; %>
-<div class="modal fade" id="filterModal" tabindex="-1" role="dialog" aria-labelledby="filterModalTitle" aria-hidden="true">
+<%#
+    Filtro das telas de consulta (com farol): tela Todas as Atividades e bloco Atividades
+    Programadas da consulta. Opcionais:
+    - listBaseUrl: tela que recebe o filtro (padrão: consulta por blocos)
+    - modalId / modalTitle: identificação do pop-up (um por bloco na consulta)
+    - hideActivityType: sem o campo Tipo de Atividade (o bloco já é de um tipo)
+    - preserve: [[nome, valor]] dos filtros/páginas dos outros blocos, mantidos ao aplicar
+    - clearUrl: destino do "Limpar"
+%>
+<%
+    const filterBaseUrl = locals.listBaseUrl || '/cms-Activity-Q';
+    const filterModalId = locals.modalId || 'filterModal';
+    const showActivityTypeField = locals.hideActivityType !== true;
+%>
+<div class="modal fade" id="<%= filterModalId %>" tabindex="-1" role="dialog" aria-labelledby="<%= filterModalId %>Title" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <form class="modal-content" method="get" action="<%= filterBaseUrl %>">
+            <% (locals.preserve || []).forEach(([name, value]) => { %>
+                <input type="hidden" name="<%= name %>" value="<%= value %>">
+            <% }) %>
             <div class="modal-header">
-                <h5 class="modal-title" id="filterModalTitle">Filtrar Atividades</h5>
+                <h5 class="modal-title" id="<%= filterModalId %>Title"><%= locals.modalTitle || 'Filtrar Atividades' %></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -44,6 +59,7 @@
                             <% }) %>
                         </select>
                     </div>
+                    <% if (showActivityTypeField) { %>
                     <div class="form-group col-md-6">
                         <label for="filterActivityType">Tipo de Atividade</label>
                         <select class="form-control" id="filterActivityType" name="activityType">
@@ -53,6 +69,7 @@
                             <% }) %>
                         </select>
                     </div>
+                    <% } %>
                 </div>
 
                 <div class="form-row">
@@ -90,7 +107,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <a class="btn btn-link" href="<%= filterBaseUrl %>">Limpar</a>
+                <a class="btn btn-link" href="<%= locals.clearUrl || filterBaseUrl %>">Limpar</a>
                 <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
             </div>
         </form>

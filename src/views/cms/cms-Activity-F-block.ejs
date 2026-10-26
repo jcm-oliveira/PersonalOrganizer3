@@ -1,0 +1,85 @@
+<%#
+    Filtro de um bloco sem data da consulta (Ordem de Serviço / Lista de Compras):
+    busca, status, Esfera da Vida, Organização por Tema e itens por página. Sem farol (não
+    há data) e sem Tipo de Atividade (o bloco já é de um tipo). Os campos levam o prefixo
+    do bloco na URL (ex.: serviceSearch); os filtros e páginas dos outros blocos seguem em
+    campos ocultos.
+    Recebe: block (key, title, filterPrefix, filter, preserve, clearUrl)
+%>
+<%
+    const f = block.filter;
+    const id = (name) => `${block.key}Filter${name}`;
+    const param = (field) => block.filterPrefix + field.charAt(0).toUpperCase() + field.slice(1);
+%>
+<div class="modal fade" id="filterModal-<%= block.key %>" tabindex="-1" role="dialog" aria-labelledby="<%= id('Title') %>" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form class="modal-content" method="get" action="/cms-Activity-Q">
+            <% block.preserve.forEach(([name, value]) => { %>
+                <input type="hidden" name="<%= name %>" value="<%= value %>">
+            <% }) %>
+            <div class="modal-header">
+                <h5 class="modal-title" id="<%= id('Title') %>">Filtrar <%= block.title %></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="<%= id('Search') %>">Nome, Tema ou Código</label>
+                    <input type="text" class="form-control" id="<%= id('Search') %>" name="<%= param('search') %>" maxlength="150"
+                        placeholder="Buscar por texto ou código..." value="<%= f.search %>">
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-sm-6">
+                        <label for="<%= id('Status') %>">Status</label>
+                        <select class="form-control" id="<%= id('Status') %>" name="<%= param('status') %>">
+                            <option value="visible" <%= f.status === "visible" ? "selected" : "" %>>Visíveis por padrão</option>
+                            <option value="all" <%= f.status === "all" ? "selected" : "" %>>Todos os Status</option>
+                            <% if (typeof activityStatuses !== 'undefined' && activityStatuses.length > 0) { %>
+                                <optgroup label="Status de Atividade">
+                                    <% activityStatuses.forEach((st) => { %>
+                                        <option value="<%= st.id %>" <%= String(f.status) === String(st.id) ? "selected" : "" %>><%= st.name %></option>
+                                    <% }) %>
+                                </optgroup>
+                            <% } %>
+                        </select>
+                    </div>
+                    <div class="form-group col-sm-6">
+                        <label for="<%= id('LifeSphere') %>">Esfera da Vida</label>
+                        <select class="form-control" id="<%= id('LifeSphere') %>" name="<%= param('lifeSphere') %>">
+                            <option value="">Todas</option>
+                            <% lifeSpheres.forEach((sphere) => { %>
+                                <option value="<%= sphere %>" <%= f.lifeSphere === sphere ? "selected" : "" %>><%= sphere %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-sm-8">
+                        <label for="<%= id('Theme') %>">Organização por Tema</label>
+                        <select class="form-control" id="<%= id('Theme') %>" name="<%= param('themeOrganization') %>">
+                            <option value="">Todas</option>
+                            <% (locals.themeOrganizations || []).forEach((t) => {
+                                const label = t.life_sphere_name ? `[${t.life_sphere_name}] ${t.name}` : t.name;
+                            %>
+                                <option value="<%= t.name %>" <%= f.themeOrganization === t.name ? "selected" : "" %>><%= label %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="form-group col-sm-4">
+                        <label for="<%= id('PerPage') %>">Itens por página</label>
+                        <select class="form-control" id="<%= id('PerPage') %>" name="<%= param('perPage') %>">
+                            <% pageSizes.forEach((size) => { %>
+                                <option value="<%= size %>" <%= f.perPage === size ? "selected" : "" %>><%= size %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-link" href="<%= block.clearUrl %>">Limpar</a>
+                <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+            </div>
+        </form>
+    </div>
+</div>

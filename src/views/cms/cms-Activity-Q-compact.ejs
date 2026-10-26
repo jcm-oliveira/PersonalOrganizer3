@@ -6,9 +6,7 @@
     Recebe: block (key, title, sortable, activities, pagination)
 %>
 <section class="activity-block activity-block--compact" aria-labelledby="activityBlock-<%= block.key %>">
-    <h2 class="activity-block__title" id="activityBlock-<%= block.key %>">
-        <i class="<%= block.icon %> activity-block__icon" aria-hidden="true"></i> <%= block.title %> <span class="activity-block__count"><%= block.pagination.total %></span>
-    </h2>
+    <%- include('cms-Activity-Q-block-header', { block, withFilter: true }) %>
     <div class="activity-block__body">
         <% if (block.activities.length === 0) { %>
             <p class="text-center text-muted small py-3 mb-0">Nenhuma atividade.</p>

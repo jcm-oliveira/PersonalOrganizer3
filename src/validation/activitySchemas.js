@@ -80,31 +80,62 @@ const DEFAULT_ACTIVITY_STATUS_ID = 1;
 const STATUS_FILTER_VISIBLE = "visible";
 const STATUS_FILTER_ALL = "all";
 
-// Filtros da listagem (Q + F)
+const statusFilterField = z
+    .string()
+    .trim()
+    .refine(
+        (val) => val === STATUS_FILTER_ALL || val === STATUS_FILTER_VISIBLE || /^\d+$/.test(val),
+        { message: "Status inválido." },
+    )
+    .catch(STATUS_FILTER_VISIBLE);
+const pageField = z.coerce.number().int().min(1).catch(1);
+const perPageField = z.coerce
+    .number()
+    .refine((val) => PAGE_SIZES.includes(val))
+    .catch(DEFAULT_PAGE_SIZE);
+
+// Filtros da listagem (Q + F): bloco Atividades Programadas da consulta e tela com
+// todas as atividades
 const activityListQuerySchema = z.object({
-    status: z
-        .string()
-        .trim()
-        .refine(
-            (val) =>
-                val === STATUS_FILTER_ALL || val === STATUS_FILTER_VISIBLE || /^\d+$/.test(val),
-            { message: "Status inválido." },
-        )
-        .catch(STATUS_FILTER_VISIBLE),
+    status: statusFilterField,
     search: z.string().trim().max(150).catch(""),
     lifeSphere: z.string().trim().catch(""),
     activityType: z.string().trim().catch(""),
     actionType: z.string().trim().catch(""),
     trafficLight: z.enum(["", "ATRASADA", "HOJE", "7_DIAS", "15_DIAS", "PRAZO"]).catch(""),
-    // Página de cada bloco: Programada (page), Ordem de Serviço e Lista de Compras
-    page: z.coerce.number().int().min(1).catch(1),
-    pageService: z.coerce.number().int().min(1).catch(1),
-    pageShopping: z.coerce.number().int().min(1).catch(1),
-    perPage: z.coerce
-        .number()
-        .refine((val) => PAGE_SIZES.includes(val))
-        .catch(DEFAULT_PAGE_SIZE),
+    page: pageField,
+    perPage: perPageField,
 });
+
+// Filtro próprio dos blocos sem data da consulta (Ordem de Serviço e Lista de Compras).
+// Na URL, cada campo leva o prefixo do bloco (ex.: serviceSearch, shoppingStatus) e a
+// página é page + bloco (pageService, pageShopping). Ver parseBlockFilter.
+const BLOCK_FILTER_FIELDS = ["status", "search", "lifeSphere", "themeOrganization", "perPage"];
+const blockFilterSchema = z.object({
+    status: statusFilterField,
+    search: z.string().trim().max(150).catch(""),
+    lifeSphere: z.string().trim().catch(""),
+    themeOrganization: z.string().trim().catch(""),
+    page: pageField,
+    perPage: perPageField,
+});
+
+const capitalize = (text) => text.charAt(0).toUpperCase() + text.slice(1);
+
+/** Nome do parâmetro na URL de um campo do filtro de bloco (ex.: service + search) */
+function blockParamName(prefix, field) {
+    return field === "page" ? `page${capitalize(prefix)}` : `${prefix}${capitalize(field)}`;
+}
+
+/** Lê da URL o filtro de um bloco sem data (campos com o prefixo do bloco) */
+function parseBlockFilter(query, prefix) {
+    const raw = {};
+    [...BLOCK_FILTER_FIELDS, "page"].forEach((field) => {
+        const value = query?.[blockParamName(prefix, field)];
+        if (value !== undefined) raw[field] = value;
+    });
+    return blockFilterSchema.parse(raw);
+}
 
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 const timeRegex = /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/;
@@ -502,6 +533,7 @@ function enrichActivity(activity, referenceDate = new Date()) {
 
 module.exports = {
     PAGE_SIZES,
+    DEFAULT_PAGE_SIZE,
     DEFAULT_NOTIFY_BEFORE_MINUTES,
     NOTIFY_BEFORE_OPTIONS,
     NOTIFY_BEFORE_MAX_DAYS,
@@ -519,6 +551,9 @@ module.exports = {
     ACTION_TYPES,
     THEME_ORGANIZATIONS,
     activityListQuerySchema,
+    BLOCK_FILTER_FIELDS,
+    blockParamName,
+    parseBlockFilter,
     activityFormSchema,
     activityRescheduleSchema,
     activityStatusChangeSchema,

@@ -527,6 +527,21 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.equal(getOverdueReference(new Date(2026, 9, 13, 0, 3)).overdueTime, null);
     });
 
+    it("Atividades Programadas: ordem por data, depois horário e, por fim, as sem horário", async () => {
+        const { pool } = require("../src/db/config");
+        const query = mock.method(pool, "query", async () => [[]]);
+
+        await Activity.selectActivities({ status: null, limit: 50, offset: 0 });
+        assert.match(
+            query.mock.calls[0].arguments[0],
+            /ORDER BY next_activity_date IS NULL, next_activity_date ASC, scheduled_time IS NULL, scheduled_time ASC, id DESC/,
+        );
+
+        // Blocos OS e Compras continuam na sequência manual (setas)
+        await Activity.selectActivities({ status: null, limit: 50, offset: 0, manualOrder: true });
+        assert.match(query.mock.calls[1].arguments[0], /ORDER BY sort_order ASC, id ASC/);
+    });
+
     it("farol usa o horário de Brasília, independente do fuso do servidor", () => {
         const {
             enrichActivity,

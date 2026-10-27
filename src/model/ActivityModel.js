@@ -124,12 +124,14 @@ function buildWhere({
 //------------------------------------------------
 
 // Critérios de filtro: ver buildWhere (status, busca, esfera, ..., todayStr, overdueTime).
-// manualOrder: sequência definida pelas setas (blocos OS e Compras); senão, pela data.
+// manualOrder: sequência definida pelas setas (blocos OS e Compras). Senão, pela data e,
+// no mesmo dia, pelo horário: primeiro as com horário (da mais cedo para a mais tarde),
+// depois as sem horário; atividades sem data ficam no fim.
 async function selectActivities({ limit, offset, manualOrder = false, ...criteria }) {
     const { where, values } = buildWhere(criteria);
     const orderBy = manualOrder
         ? "sort_order ASC, id ASC"
-        : "next_activity_date IS NULL, next_activity_date ASC, id DESC";
+        : "next_activity_date IS NULL, next_activity_date ASC, scheduled_time IS NULL, scheduled_time ASC, id DESC";
 
     const sql = `
         SELECT

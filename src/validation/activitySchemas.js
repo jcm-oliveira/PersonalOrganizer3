@@ -243,6 +243,14 @@ const activityRescheduleSchema = z.object({
         .string({ error: "Informe a nova data da próxima atividade." })
         .trim()
         .regex(dateRegex, "Data da próxima atividade inválida (AAAA-MM-DD)."),
+    // Horário (opcional): em branco, a atividade fica sem horário
+    scheduled_time: z
+        .string()
+        .trim()
+        .regex(timeRegex, "Horário inválido (HH:MM).")
+        .optional()
+        .or(z.literal(""))
+        .transform((val) => (val ? `${val.slice(0, 5)}:00` : null)),
 });
 
 // Pop-up "Status da atividade" (Q)
@@ -449,6 +457,37 @@ function getNextActivityDayLabel(daysNext, referenceDate = new Date()) {
     return "MAIS DE 15 DIAS";
 }
 
+// Status "Em andamento" (cadastro de Status de Atividade, reconhecido pelo nome, sem
+// diferenciar maiúsculas nem acentos): o farol mostra AGORA, no lugar de hoje/atrasada
+const IN_PROGRESS_STATUS_NAME = "em andamento";
+
+function isInProgressStatus(statusName) {
+    return (
+        String(statusName || "")
+            .normalize("NFD")
+            .replace(/[̀-ͯ]/g, "")
+            .trim()
+            .toLowerCase() === IN_PROGRESS_STATUS_NAME
+    );
+}
+
+/**
+ * Farol "AGORA" para a atividade em andamento: substitui o farol calculado pela data
+ * (inclusive "atrasada") e cancela a troca automática para atrasada na tela.
+ */
+function applyInProgressLight(activity, statusName) {
+    if (!isInProgressStatus(statusName)) return activity;
+    return {
+        ...activity,
+        traffic_light: "AGORA",
+        traffic_light_label: "AGORA",
+        next_activity_day_label: "AGORA",
+        traffic_light_class: "badge-now",
+        traffic_light_dot_color: "#6f42c1",
+        overdue_at: null,
+    };
+}
+
 /**
  * Enriquece uma atividade com campos calculados de farol, dias restantes e resumo
  */
@@ -568,6 +607,8 @@ module.exports = {
     addDurationToDateTime,
     getOverdueReference,
     enrichActivity,
+    isInProgressStatus,
+    applyInProgressLight,
     getNextActivityDayLabel,
     getContrastTextColor,
 };

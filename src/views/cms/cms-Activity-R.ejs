@@ -1,4 +1,4 @@
-<!-- Pop-up "Remarcar atividade": altera a data da próxima atividade (preenchido por /scripts/activity-quick-actions.js) -->
+<!-- Pop-up "Remarcar atividade": altera a data e o horário da próxima atividade (preenchido por /scripts/activity-quick-actions.js) -->
 <div class="modal fade" id="rescheduleModal" tabindex="-1" role="dialog" aria-labelledby="rescheduleModalTitle" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <form class="modal-content" method="post" action="" data-action-prefix="/cms-Activity-R/">
@@ -19,13 +19,23 @@
                 <p class="text-muted small mb-2">
                     Próxima atividade atual: <strong data-field="current-date"></strong>
                 </p>
-                <div class="form-group mb-0">
-                    <label for="reschedule_next_activity_date">
-                        Nova data da próxima atividade <span class="text-danger">*</span>
-                    </label>
-                    <input type="date" class="form-control" id="reschedule_next_activity_date"
-                        name="next_activity_date" required>
+                <div class="form-row">
+                    <div class="form-group col-sm-7 mb-0">
+                        <label for="reschedule_next_activity_date">
+                            Nova data <span class="text-danger">*</span>
+                        </label>
+                        <input type="date" class="form-control" id="reschedule_next_activity_date"
+                            name="next_activity_date" required>
+                    </div>
+                    <div class="form-group col-sm-5 mb-0">
+                        <label for="reschedule_scheduled_time">Hora</label>
+                        <input type="time" class="form-control" id="reschedule_scheduled_time"
+                            name="scheduled_time" aria-describedby="reschedule_time_help">
+                    </div>
                 </div>
+                <small id="reschedule_time_help" class="form-text text-muted">
+                    Deixe a hora em branco para a atividade ficar sem horário.
+                </small>
                 <input type="hidden" name="returnTo" value="<%= returnTo %>">
             </div>
             <div class="modal-footer">

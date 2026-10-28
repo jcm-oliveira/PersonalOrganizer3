@@ -118,9 +118,12 @@
 
         onModalShow("rescheduleModal", (form, button) => {
             const currentDate = button.getAttribute("data-next-date") || "";
+            const currentTime = button.getAttribute("data-scheduled-time") || "";
+            // "Próxima atividade atual": data e, se houver, o horário
             form.querySelector('[data-field="current-date"]').textContent =
-                formatDateBr(currentDate);
+                formatDateBr(currentDate) + (currentTime ? ` às ${currentTime}` : "");
             form.querySelector('[name="next_activity_date"]').value = currentDate;
+            form.querySelector('[name="scheduled_time"]').value = currentTime;
         });
 
         onModalShow("occurrenceModal", (form, button) => {

@@ -527,6 +527,59 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.equal(getOverdueReference(new Date(2026, 9, 13, 0, 3)).overdueTime, null);
     });
 
+    it("farol AGORA quando o status é Em andamento (mesmo vencida)", async () => {
+        const { isInProgressStatus } = require("../src/validation/activitySchemas");
+        assert.equal(isInProgressStatus("Em andamento"), true);
+        assert.equal(isInProgressStatus("  EM ANDAMENTO "), true);
+        assert.equal(isInProgressStatus("Pendente"), false);
+
+        mockLookupsWithStatuses(); // status 2 = "Em andamento"
+        mock.method(Activity, "countActivities", async () => 1);
+        mock.method(Activity, "selectActivities", async ({ activityTypeIn }) =>
+            activityTypeIn
+                ? []
+                : [
+                      {
+                          id: 61,
+                          life_sphere: "Profissão e Carreira",
+                          description: "Em execução",
+                          activity_type: "Programada",
+                          next_activity_date: "2026-01-10", // já vencida
+                          scheduled_time: "09:00:00",
+                          status: 2,
+                      },
+                      {
+                          id: 62,
+                          life_sphere: "Profissão e Carreira",
+                          description: "Pendente vencida",
+                          activity_type: "Programada",
+                          next_activity_date: "2026-01-10",
+                          scheduled_time: "09:00:00",
+                          status: 1,
+                      },
+                  ],
+        );
+
+        const res = await request(app).get("/cms-Activity-Q?status=all").expect(200);
+        const row = (text) =>
+            res.text.match(
+                new RegExp(`<tr [^>]*>(?:(?!</tr>)[\\s\\S])*?${text}[\\s\\S]*?</tr>`),
+            )[0];
+
+        // Em andamento: AGORA (roxo), sem troca automática para atrasada nem linha vermelha
+        const inProgress = row("Em execução");
+        assert.match(inProgress, /<span class="badge badge-now">\s*AGORA\s*<\/span>/);
+        assert.doesNotMatch(inProgress, /data-overdue-at|table-danger/);
+        // Outro status: continua ATRASADO
+        assert.match(
+            row("Pendente vencida"),
+            /<span class="badge badge-danger">\s*ATRASADO\s*<\/span>/,
+        );
+        // Remarcar leva o horário atual para o pop-up
+        assert.match(inProgress, /data-next-date="2026-01-10"\s+data-scheduled-time="09:00"/);
+        assert.match(res.text, /name="scheduled_time" aria-describedby="reschedule_time_help"/);
+    });
+
     it("Atividades Programadas: ordem por data, depois horário e, por fim, as sem horário", async () => {
         const { pool } = require("../src/db/config");
         const query = mock.method(pool, "query", async () => [[]]);
@@ -731,7 +784,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
     });
 
     it("ações rápidas voltam para a tela de origem (todas as atividades)", async () => {
-        mock.method(Activity, "updateNextActivityDate", async () => 1);
+        mock.method(Activity, "updateNextActivitySchedule", async () => 1);
 
         const res = await request(app)
             .post("/cms-Activity-R/41")
@@ -1069,37 +1122,51 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.match(res.text, /src="\/scripts\/activity-quick-actions.js"/);
     });
 
-    it("remarca a atividade e volta para a consulta mantendo os filtros", async () => {
-        const update = mock.method(Activity, "updateNextActivityDate", async () => 1);
+    it("remarca a atividade (data e hora) e volta para a consulta mantendo os filtros", async () => {
+        const update = mock.method(Activity, "updateNextActivitySchedule", async () => 1);
 
         const res = await request(app)
             .post("/cms-Activity-R/5")
             .type("form")
             .send({
                 next_activity_date: "2026-11-02",
+                scheduled_time: "15:30",
                 returnTo: "/cms-Activity-Q?status=all&page=2",
             })
             .expect(303);
 
-        assert.deepEqual(update.mock.calls[0].arguments, [5, "2026-11-02"]);
+        assert.deepEqual(update.mock.calls[0].arguments, [5, "2026-11-02", "15:30:00"]);
         assert.equal(res.headers.location, "/cms-Activity-Q?status=all&page=2&msg=rescheduled");
+
+        // Hora em branco: a atividade fica sem horário
+        await request(app)
+            .post("/cms-Activity-R/5")
+            .type("form")
+            .send({ next_activity_date: "2026-11-03", scheduled_time: "" })
+            .expect(303);
+        assert.deepEqual(update.mock.calls[1].arguments, [5, "2026-11-03", null]);
     });
 
-    it("não remarca com data inválida", async () => {
-        const update = mock.method(Activity, "updateNextActivityDate", async () => 1);
+    it("não remarca com data ou hora inválida", async () => {
+        const update = mock.method(Activity, "updateNextActivitySchedule", async () => 1);
 
         const res = await request(app)
             .post("/cms-Activity-R/5")
             .type("form")
             .send({ next_activity_date: "02/11/2026" })
             .expect(303);
-
-        assert.equal(update.mock.callCount(), 0);
         assert.equal(res.headers.location, "/cms-Activity-Q?msg=invalidDate");
+
+        await request(app)
+            .post("/cms-Activity-R/5")
+            .type("form")
+            .send({ next_activity_date: "2026-11-02", scheduled_time: "25:00" })
+            .expect(303);
+        assert.equal(update.mock.callCount(), 0);
     });
 
     it("ignora destino de retorno externo (redirecionamento aberto)", async () => {
-        mock.method(Activity, "updateNextActivityDate", async () => 1);
+        mock.method(Activity, "updateNextActivitySchedule", async () => 1);
 
         for (const returnTo of ["https://exemplo.com/cms-Activity-Q", "//exemplo.com", "/outra"]) {
             const res = await request(app)
@@ -1140,7 +1207,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
     });
 
     it("retorna 404 ao remarcar atividade inexistente", async () => {
-        mock.method(Activity, "updateNextActivityDate", async () => 0);
+        mock.method(Activity, "updateNextActivitySchedule", async () => 0);
         await request(app)
             .post("/cms-Activity-R/999")
             .type("form")

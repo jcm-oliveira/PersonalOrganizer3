@@ -23,7 +23,8 @@
             data-toggle="modal" data-target="#rescheduleModal"
             data-activity-id="<%= act.id %>"
             data-activity-description="<%= act.description %>"
-            data-next-date="<%= act.next_activity_date_formatted || '' %>">
+            data-next-date="<%= act.next_activity_date_formatted || '' %>"
+            data-scheduled-time="<%= act.scheduled_time ? String(act.scheduled_time).slice(0, 5) : '' %>">
             <i class="far fa-calendar-alt" aria-hidden="true"></i> Remarcar atividade
         </button>
         <button type="button" class="row-menu__item" role="menuitem"

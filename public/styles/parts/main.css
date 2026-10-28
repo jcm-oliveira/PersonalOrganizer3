@@ -302,6 +302,42 @@ h5,
     opacity: 0.85;
 }
 
+/* Farol "AGORA" (status Em andamento): roxo, com um ponto pulsando, como "ao vivo" */
+.badge-now {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    color: #ffffff;
+    background-color: #6f42c1;
+}
+
+.badge-now::before {
+    content: "";
+    width: 0.5em;
+    height: 0.5em;
+    border-radius: 50%;
+    background-color: #ffffff;
+    animation: badge-now-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes badge-now-pulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.35;
+        transform: scale(0.7);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .badge-now::before {
+        animation: none;
+    }
+}
+
 .activity-block__count {
     padding: 0.1rem 0.5rem;
     border-radius: 999px;

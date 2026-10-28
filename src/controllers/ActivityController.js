@@ -41,6 +41,7 @@ const {
     idParamSchema,
     toFieldErrors,
     enrichActivity,
+    applyInProgressLight,
     getContrastTextColor,
     toDateOnlyString,
     addDurationToDateTime,
@@ -69,7 +70,7 @@ const MESSAGES = {
     },
     invalidDate: {
         alertType: "alert-danger",
-        text: "Data inválida. Informe a nova data da próxima atividade.",
+        text: "Data ou horário inválido. Informe a nova data (e, se quiser, o horário) da próxima atividade.",
     },
     occurrenceDone: {
         alertType: "alert-success",
@@ -520,8 +521,8 @@ function buildListDecorator(lookups) {
     const statusMap = new Map((lookups.activityStatuses || []).map((s) => [s.id, s]));
     const resolveSphereColor = buildSphereColorResolver(lookups.lifeSphereColors);
     return (act) => {
-        const enriched = enrichActivity(act);
         const statusObj = statusMap.get(act.status);
+        const enriched = applyInProgressLight(enrichActivity(act), statusObj?.name);
         const statusColor = statusObj?.color_code || (act.status === 1 ? "#28a745" : "#6c757d");
         return {
             ...enriched,
@@ -549,7 +550,7 @@ async function loadActivityForView(rawId) {
     const resolveSphereColor = buildSphereColorResolver(lookups.lifeSphereColors);
     const statusObj = statusMap.get(rawActivity.status);
     return {
-        ...enrichActivity(rawActivity),
+        ...applyInProgressLight(enrichActivity(rawActivity), statusObj?.name),
         status_name: statusObj?.name || (rawActivity.status === 1 ? "Ativo" : "Inativo"),
         status_color_code:
             statusObj?.color_code || (rawActivity.status === 1 ? "#28a745" : "#6c757d"),
@@ -1064,9 +1065,11 @@ module.exports = {
             return res.redirect(303, returnToListUrl(returnTo, "invalidDate"));
         }
 
-        const affectedRows = await Activity.updateNextActivityDate(
+        // Data e horário (em branco, a atividade fica sem horário)
+        const affectedRows = await Activity.updateNextActivitySchedule(
             id,
             parsed.data.next_activity_date,
+            parsed.data.scheduled_time,
         );
         if (affectedRows === 0) {
             throw new HttpError(404, "Atividade não encontrada.");

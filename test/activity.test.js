@@ -661,7 +661,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.match(res.text, /<option value="">\(Nenhum\)<\/option>/);
     });
 
-    it("tela com todas as atividades: todos os tipos e status, mesmo filtro e ações", async () => {
+    it("tela com todas as atividades: todos os tipos, status visíveis, mesmo filtro e ações", async () => {
         const count = mock.method(Activity, "countActivities", async () => 2);
         const select = mock.method(Activity, "selectActivities", async () => [
             {
@@ -682,11 +682,13 @@ describe("Módulo Activity (Painel de Vôo)", () => {
 
         const res = await request(app).get("/cms-Activity-L").expect(200);
 
-        // Uma consulta só: sem filtro de tipo (blocos) e com todos os status
+        // Uma consulta só: sem filtro de tipo (blocos) e com os status visíveis por padrão
         assert.equal(count.mock.callCount(), 1);
         assert.equal(select.mock.callCount(), 1);
         const criteria = select.mock.calls[0].arguments[0];
-        assert.equal(criteria.status, null);
+        assert.equal(criteria.status, "visible");
+        assert.match(res.text, /<option value="visible" selected>Visíveis por padrão<\/option>/);
+        assert.doesNotMatch(res.text, /Filtros aplicados/);
         assert.equal(criteria.activityTypeIn, undefined);
         assert.equal(criteria.activityTypeNotIn, undefined);
 
@@ -707,13 +709,38 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         );
         assert.match(res.text, /href="\/cms-Activity-U\/42\?returnTo=%2Fcms-Activity-L%3F/);
         assert.match(res.text, /data-target="#rescheduleModal"/);
-        assert.match(res.text, /name="returnTo" value="\/cms-Activity-L\?status=all&amp;/);
+        assert.match(res.text, /name="returnTo" value="\/cms-Activity-L\?status=visible&amp;/);
         assert.match(res.text, /href="\/cms-Activity-C\?returnTo=%2Fcms-Activity-L%3F/);
         // Ícone de banco de dados no menu, ao lado da engrenagem
         assert.match(
             res.text,
             /href="\/cms-Activity-L"\s+title="Todas as Atividades"[\s\S]*?fa-database/,
         );
+        // Botões de filtro rápido por Esfera da Vida, nenhum marcado
+        assert.match(res.text, /class="sphere-quick-filter /);
+        assert.match(res.text, /sphere-quick-filter__btn btn-outline-secondary/);
+        assert.doesNotMatch(res.text, /aria-pressed="true"/);
+    });
+
+    it("tela com todas as atividades: botão de esfera marcado filtra e desmarca", async () => {
+        mock.method(Activity, "countActivities", async () => 0);
+        const select = mock.method(Activity, "selectActivities", async () => []);
+        const sphere = "Profissão e Carreira";
+
+        const res = await request(app)
+            .get(`/cms-Activity-L?lifeSphere=${encodeURIComponent(sphere)}`)
+            .expect(200);
+
+        assert.equal(select.mock.calls[0].arguments[0].lifeSphere, sphere);
+        const active = res.text.match(/<a class="btn btn-sm sphere-quick-filter__btn active[^>]*>/);
+        assert.ok(active, "botão da esfera marcado");
+        assert.match(active[0], /aria-pressed="true"/);
+        // Clicar de novo remove o filtro da esfera, mantendo os demais
+        assert.match(
+            active[0],
+            /href="\/cms-Activity-L\?status=visible&amp;search=&amp;lifeSphere=&amp;/,
+        );
+        assert.match(res.text, /Filtros aplicados/);
     });
 
     it("editar, cadastrar e excluir voltam para a tela de consulta de origem", async () => {

@@ -365,6 +365,28 @@ h5,
     background-color: #ffffff;
 }
 
+/* Filtro rápido por Esfera da Vida (Todas as Atividades): faixa com a cor da esfera */
+.sphere-quick-filter__btn {
+    border-left-width: 4px;
+}
+
+.sphere-quick-filter__btn.active {
+    font-weight: 600;
+    border-color: transparent;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+.sphere-quick-filter__btn.active:not([data-bg-color]) {
+    color: #ffffff;
+    background-color: #6c757d;
+}
+
+@media print {
+    .sphere-quick-filter {
+        display: none !important;
+    }
+}
+
 .activity-compact__item + .activity-compact__item {
     margin-top: 0.4rem;
 }

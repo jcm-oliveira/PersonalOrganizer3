@@ -2,21 +2,34 @@
 
 <%#
     Todas as atividades (ícone de banco de dados no menu): uma tabela só, com todos os
-    Tipos de Atividade e, por padrão, todos os status. Mesmo filtro, mesmas ações e mesmo
-    visual do bloco Atividades Programadas da consulta.
+    Tipos de Atividade e, por padrão, os status visíveis por padrão. Mesmo filtro, mesmas
+    ações e mesmo visual do bloco Atividades Programadas da consulta, além dos botões de
+    filtro rápido por Esfera da Vida.
 %>
 <main class="container-fluid py-4 px-lg-5">
     <!-- Barra de Ações (Filtros e Novo) -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h1 class="h3 mb-0 text-dark">Todas as Atividades</h1>
-            <% const hasActiveFilter = Boolean(filter.trafficLight || filter.search || filter.lifeSphere || filter.activityType || filter.actionType || filter.status !== 'all'); %>
+            <% const hasActiveFilter = Boolean(filter.trafficLight || filter.search || filter.lifeSphere || filter.activityType || filter.actionType || filter.status !== 'visible'); %>
             <% if (hasActiveFilter) { %>
                 <span class="badge badge-info mt-1">Filtros aplicados</span>
                 <a href="<%= listBaseUrl %>" class="small text-danger ml-2">Limpar filtros</a>
             <% } %>
         </div>
-        <div class="d-flex align-items-center">
+        <div class="d-flex align-items-center flex-wrap justify-content-end">
+            <%# Filtro rápido por Esfera da Vida: o botão marcado desmarca o filtro %>
+            <div class="sphere-quick-filter d-flex flex-wrap justify-content-end mr-2" role="group" aria-label="Filtrar por Esfera da Vida">
+                <% sphereFilters.forEach((sphere) => { %>
+                <a class="btn btn-sm sphere-quick-filter__btn <%= sphere.active ? 'active' : 'btn-outline-secondary' %> mr-1 mb-1"
+                    href="<%= sphere.url %>" aria-pressed="<%= sphere.active %>"
+                    title="<%= sphere.active ? 'Remover filtro: ' : 'Filtrar: ' %><%= sphere.name %>"
+                    <% if (sphere.color) { %>data-sphere-color="<%= sphere.color %>"<% } %>
+                    <% if (sphere.active && sphere.color) { %>data-bg-color="<%= sphere.color %>" data-text-color="auto"<% } %>>
+                    <%= sphere.name %>
+                </a>
+                <% }) %>
+            </div>
             <button type="button" class="btn btn-sm <%= hasActiveFilter ? 'btn-primary' : 'btn-outline-secondary' %> mr-1"
                 data-toggle="modal" data-target="#filterModal" title="Filtrar atividades" aria-label="Filtrar atividades">
                 <i class="fas fa-filter" aria-hidden="true"></i>

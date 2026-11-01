@@ -658,9 +658,10 @@ module.exports = {
     },
 
     // Todas as atividades (ícone de banco de dados no menu): uma tabela só, com todos os
-    // tipos e, por padrão, todos os status; mesmo filtro e mesmas ações da consulta.
+    // tipos e, por padrão, os status visíveis por padrão; mesmo filtro e mesmas ações da
+    // consulta, além dos botões de filtro rápido por Esfera da Vida.
     async loadAllPage(req, res) {
-        const filter = activityListQuerySchema.parse({ status: STATUS_FILTER_ALL, ...req.query });
+        const filter = activityListQuerySchema.parse(req.query ?? {});
         const criteria = listCriteria(filter);
 
         const total = await Activity.countActivities(criteria);
@@ -674,9 +675,22 @@ module.exports = {
         ]);
         const activities = rows.map(buildListDecorator(lookups));
 
+        // Filtro rápido por esfera: o botão marcado desmarca (volta para todas as esferas)
+        const resolveSphereColor = buildSphereColorResolver(lookups.lifeSphereColors);
+        const sphereFilters = lookups.lifeSpheres.map((name) => {
+            const active = normalizeSphereName(filter.lifeSphere) === normalizeSphereName(name);
+            return {
+                name,
+                active,
+                color: resolveSphereColor(name).life_sphere_color,
+                url: allListUrl({ ...filter, lifeSphere: active ? "" : name }, 1),
+            };
+        });
+
         return res.render("cms/cms-Activity-L", {
             title: "Todas as Atividades",
             activities,
+            sphereFilters,
             filter,
             listBaseUrl: ALL_LIST_URL,
             pageSizes: PAGE_SIZES,

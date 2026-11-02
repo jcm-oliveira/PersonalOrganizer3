@@ -41,6 +41,13 @@
             const color = el.getAttribute("data-sphere-color");
             if (HEX_COLOR.test(color)) el.style.borderLeftColor = color;
         });
+        // Cor de destaque em variáveis CSS (ex.: botões de filtro rápido por esfera)
+        root.querySelectorAll("[data-accent-color]").forEach((el) => {
+            const color = el.getAttribute("data-accent-color");
+            if (!HEX_COLOR.test(color)) return;
+            el.style.setProperty("--accent-color", color);
+            el.style.setProperty("--accent-text-color", contrastTextColor(color));
+        });
     }
 
     // Disponível para conteúdo carregado depois (ex.: pop-up de visualização)

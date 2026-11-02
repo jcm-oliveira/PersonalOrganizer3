@@ -716,9 +716,12 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             res.text,
             /href="\/cms-Activity-L"\s+title="Todas as Atividades"[\s\S]*?fa-database/,
         );
-        // Botões de filtro rápido por Esfera da Vida, nenhum marcado
-        assert.match(res.text, /class="sphere-quick-filter /);
-        assert.match(res.text, /sphere-quick-filter__btn btn-outline-secondary/);
+        // Botões de filtro rápido por Esfera da Vida (iniciais), nenhum marcado
+        assert.match(res.text, /class="sphere-quick-filter"/);
+        assert.match(
+            res.text,
+            /title="Filtrar: Família, Lazer e Social"[\s\S]*?<span aria-hidden="true">FL<\/span>/,
+        );
         assert.doesNotMatch(res.text, /aria-pressed="true"/);
     });
 
@@ -732,7 +735,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
             .expect(200);
 
         assert.equal(select.mock.calls[0].arguments[0].lifeSphere, sphere);
-        const active = res.text.match(/<a class="btn btn-sm sphere-quick-filter__btn active[^>]*>/);
+        const active = res.text.match(/<a class="sphere-quick-filter__btn active"[^>]*>/);
         assert.ok(active, "botão da esfera marcado");
         assert.match(active[0], /aria-pressed="true"/);
         // Clicar de novo remove o filtro da esfera, mantendo os demais

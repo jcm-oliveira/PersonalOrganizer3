@@ -365,20 +365,63 @@ h5,
     background-color: #ffffff;
 }
 
-/* Filtro rápido por Esfera da Vida (Todas as Atividades): faixa com a cor da esfera */
+/* Filtro rápido por Esfera da Vida (Todas as Atividades): selos com as iniciais,
+   contornados na cor da esfera e preenchidos quando marcados (cor via sphere-colors.js) */
+.sphere-quick-filter {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.4rem;
+    /* Afastamento e divisória discreta antes dos botões de ação (filtrar, imprimir, nova) */
+    margin-right: 1rem;
+    padding-right: 1rem;
+    border-right: 1px solid #dee2e6;
+}
+
 .sphere-quick-filter__btn {
-    border-left-width: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.9375rem; /* mesma altura dos botões btn-sm */
+    height: 1.9375rem;
+    border: 2px solid var(--accent-color, #adb5bd);
+    border-radius: 50%;
+    background-color: #ffffff;
+    color: #495057;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    line-height: 1;
+    text-decoration: none;
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.15s ease;
 }
 
-.sphere-quick-filter__btn.active {
-    font-weight: 600;
-    border-color: transparent;
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+.sphere-quick-filter__btn:hover,
+.sphere-quick-filter__btn:focus {
+    color: #212529;
+    text-decoration: none;
+    background-color: color-mix(in srgb, var(--accent-color, #adb5bd) 18%, #ffffff);
+    transform: translateY(-1px);
 }
 
-.sphere-quick-filter__btn.active:not([data-bg-color]) {
-    color: #ffffff;
-    background-color: #6c757d;
+.sphere-quick-filter__btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.35);
+}
+
+.sphere-quick-filter__btn.active,
+.sphere-quick-filter__btn.active:hover,
+.sphere-quick-filter__btn.active:focus {
+    background-color: var(--accent-color, #6c757d);
+    color: var(--accent-text-color, #ffffff);
+    box-shadow:
+        0 0 0 2px #ffffff,
+        0 0 0 4px var(--accent-color, #6c757d);
+    transform: none;
 }
 
 @media print {

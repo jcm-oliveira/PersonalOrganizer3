@@ -290,6 +290,23 @@ function normalizeSphereName(name) {
         .toLocaleLowerCase("pt-BR");
 }
 
+// Iniciais da esfera para os botões de filtro rápido: primeira letra das palavras
+// (sem "e", "de", "da"...), até duas; com uma palavra só, as duas primeiras letras
+const SPHERE_INITIALS_SKIP = new Set(["e", "de", "da", "do", "das", "dos"]);
+function sphereInitials(name) {
+    const words = String(name ?? "")
+        .split(/[\s,/-]+/)
+        .filter((w) => w && !SPHERE_INITIALS_SKIP.has(w.toLocaleLowerCase("pt-BR")));
+    const initials =
+        words.length > 1
+            ? words
+                  .slice(0, 2)
+                  .map((w) => w[0])
+                  .join("")
+            : (words[0] ?? "").slice(0, 2);
+    return initials.toLocaleUpperCase("pt-BR");
+}
+
 function buildSphereColorResolver(lifeSpheresWithColor) {
     const colorMap = new Map(
         (lifeSpheresWithColor || [])
@@ -681,6 +698,7 @@ module.exports = {
             const active = normalizeSphereName(filter.lifeSphere) === normalizeSphereName(name);
             return {
                 name,
+                initials: sphereInitials(name),
                 active,
                 color: resolveSphereColor(name).life_sphere_color,
                 url: allListUrl({ ...filter, lifeSphere: active ? "" : name }, 1),

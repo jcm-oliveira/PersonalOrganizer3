@@ -19,14 +19,14 @@
         </div>
         <div class="d-flex align-items-center flex-wrap justify-content-end">
             <%# Filtro rápido por Esfera da Vida: o botão marcado desmarca o filtro %>
-            <div class="sphere-quick-filter d-flex flex-wrap justify-content-end mr-2" role="group" aria-label="Filtrar por Esfera da Vida">
+            <div class="sphere-quick-filter" role="group" aria-label="Filtrar por Esfera da Vida">
                 <% sphereFilters.forEach((sphere) => { %>
-                <a class="btn btn-sm sphere-quick-filter__btn <%= sphere.active ? 'active' : 'btn-outline-secondary' %> mr-1 mb-1"
+                <a class="sphere-quick-filter__btn<%= sphere.active ? ' active' : '' %>"
                     href="<%= sphere.url %>" aria-pressed="<%= sphere.active %>"
                     title="<%= sphere.active ? 'Remover filtro: ' : 'Filtrar: ' %><%= sphere.name %>"
-                    <% if (sphere.color) { %>data-sphere-color="<%= sphere.color %>"<% } %>
-                    <% if (sphere.active && sphere.color) { %>data-bg-color="<%= sphere.color %>" data-text-color="auto"<% } %>>
-                    <%= sphere.name %>
+                    aria-label="<%= sphere.active ? 'Remover filtro: ' : 'Filtrar: ' %><%= sphere.name %>"
+                    <% if (sphere.color) { %>data-accent-color="<%= sphere.color %>"<% } %>>
+                    <span aria-hidden="true"><%= sphere.initials %></span>
                 </a>
                 <% }) %>
             </div>

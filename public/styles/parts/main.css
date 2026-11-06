@@ -313,9 +313,9 @@ h5,
 /* Ponto da esfera: mesmo marcador da lista do calendário (cor via sphere-colors.js) */
 .activity-daylist__dot {
     display: block;
-    width: 10px;
-    height: 10px;
-    border: 5px solid var(--accent-color, #adb5bd);
+    width: 14px;
+    height: 14px;
+    border: 7px solid var(--accent-color, #adb5bd);
     border-radius: 50%;
     box-sizing: border-box;
 }
@@ -353,6 +353,18 @@ h5,
 .activity-daylist__badges .badge + .badge,
 .activity-daylist__badges .c-dayprox + .badge {
     margin-left: 0.3rem;
+}
+
+/* Farol e Status com largura mínima e texto centralizado: os selos formam colunas
+   alinhadas entre as linhas, com o texto no meio de cada selo */
+.activity-daylist__badges .c-dayprox .badge {
+    min-width: 7.5rem;
+    text-align: center;
+}
+
+.activity-daylist__badges .activity-status-badge {
+    min-width: 6.5rem;
+    text-align: center;
 }
 
 .activity-daylist__actions {
@@ -489,6 +501,7 @@ h5,
 .badge-now {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.35em;
     color: #ffffff;
     background-color: #6f42c1;

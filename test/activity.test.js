@@ -57,73 +57,42 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.match(res.text, /Atividades/);
         assert.match(res.text, /Reunião de Governança/);
         assert.match(res.text, /Profissão e Carreira/);
-        // Mesmo atrasada, a linha mantém a cor da Esfera da Vida
+        // Lista por dia (visual da "Lista" do calendário): cabeçalho com dia da semana,
+        // selo relativo e data por extenso; ponto com a cor da Esfera da Vida
+        assert.match(res.text, /class="activity-daylist"/);
+        assert.doesNotMatch(res.text, /class="table table-sm table-hover table-activity/);
         assert.match(
             res.text,
-            /<tr class="activity-row--sphere"\s+data-bg-color="#007bff" data-text-color="#212529">/,
+            /<span class="activity-daylist__weekday">sábado<\/span>\s*<span class="calendar-relative-day calendar-relative-day--past">há \d+ dias<\/span>\s*<span class="activity-daylist__date">10 de outubro de 2026<\/span>/,
         );
+        assert.match(
+            res.text,
+            /<span class="activity-daylist__dot" title="Profissão e Carreira"\s+data-accent-color="#007bff"><\/span>/,
+        );
+        // Atrasada: só o farol fica vermelho (sem linha vermelha)
+        assert.match(res.text, /<span class="badge badge-danger">\s*ATRASADO\s*<\/span>/);
         assert.doesNotMatch(res.text, /table-danger/);
         assert.match(
             res.text,
-            /class="badge activity-status-badge" style="background-color: #28a745; color: #212529;"/,
+            /class="badge activity-status-badge" title="Status" style="background-color: #28a745; color: #212529;"/,
         );
         // Editar leva a consulta de origem: salvar volta para ela
         // (sem filtros: a consulta volta sem parâmetros)
         assert.match(res.text, /href="\/cms-Activity-U\/1\?returnTo=%2Fcms-Activity-Q"/);
-        // Datas exibidas em dd/mm/aaaa (o atributo do botão Remarcar continua em ISO)
-        assert.match(res.text, />\s*10\/10\/2026 <span class="activity-datetime__sep"/); // horário ao lado
+        // O atributo do botão Remarcar continua em ISO
         assert.match(res.text, /data-next-date="2026-10-10"/);
-        assert.doesNotMatch(res.text, /table-bordered/);
-        // Cartão no celular: resumo com data, prazo, esfera, tipo de atividade e status
-        const summary = res.text.match(/<td class="c-mobile-summary">([\s\S]*?)<\/td>/)[1];
-        assert.match(summary, /10\/10\/2026 · 14:00/);
-        assert.match(summary, /Prazo 15\/10\/2026/);
-        assert.match(summary, /Profissão e Carreira · Prioridade · /);
-        assert.match(res.text, />\s*ATRASADO\s*</); // Data 2026-10-10 é anterior a 2026-10-13
-        // Colunas: "Farol" primeiro, sem "Faltam (dias)", sem Prazo Final (oculto no bloco
-        // Atividades Programadas) e sem a linha de agrupamento
-        const labels = [...res.text.matchAll(/activity-th-label">([^<]+)/g)].map((m) =>
-            m[1].trim(),
-        );
-        assert.deepEqual(labels, [
-            "Farol",
-            "Nome",
-            "Próxima Atividade",
-            "Repetição",
-            "Status",
-            "Ações",
-        ]);
-        assert.doesNotMatch(res.text, /INFORMAÇÕES OBRIGATÓRIAS|table-activity-group|Dia Próx\./);
-        const cells = [...res.text.matchAll(/<td class="(c-[a-z-]+)/g)].map((m) => m[1]);
-        assert.deepEqual(cells.slice(0, 5), [
-            "c-dayprox",
-            "c-desc",
-            "c-mobile-summary",
-            "c-next",
-            "c-recurrence",
-        ]);
-        assert.doesNotMatch(res.text, /class="c-deadline/);
-        // Descrição com Esfera da Vida e Tipo de Ação abaixo, discretos e separados por hífen
-        const descCell = res.text.match(/<td class="c-desc[^"]*">([\s\S]*?)<\/td>/)[1];
+        // Horário e período do dia (sem o prefixo "2 - ")
+        const timeCell = res.text.match(/<td class="activity-daylist__time">([\s\S]*?)<\/td>/)[1];
+        assert.match(timeCell, /<span class="activity-daylist__time-range">14:00<\/span>/);
+        assert.match(timeCell, /title="Período do dia">[\s\S]*Tarde<\/span>/);
+        // Nome com Esfera da Vida e Tipo de Ação abaixo; prazo final com os dias
+        const titleCell = res.text.match(/<td class="activity-daylist__title">([\s\S]*?)<\/td>/)[1];
         assert.match(
-            descCell,
-            /Reunião de Governança[\s\S]*<span class="activity-subtext"><span title="Esfera da Vida">[\s\S]*Profissão e Carreira<\/span><span aria-hidden="true"> - <\/span><span title="Tipo de Ação">[\s\S]*Compromisso<\/span><\/span>/,
+            titleCell,
+            /Reunião de Governança[\s\S]*<span class="activity-daylist__meta"><span title="Esfera da Vida">[\s\S]*Profissão e Carreira<\/span><span aria-hidden="true"> · <\/span><span title="Tipo de Ação">[\s\S]*Compromisso<\/span><\/span>/,
         );
-        assert.doesNotMatch(descCell, /Prioridade/);
-        // Sem coluna de Tipo de Atividade
-        assert.doesNotMatch(res.text, /class="c-activity-type/);
-        // Próxima atividade: data e horário juntos, período do dia discreto (sem o prefixo
-        // "2 - ") e, abaixo, os dias sem parênteses (as duas datas já passaram)
-        const nextCell = res.text.match(/<td class="c-next[^"]*">([\s\S]*?)<\/td>/)[1];
-        assert.match(
-            nextCell,
-            /<span class="activity-datetime">10\/10\/2026 <span class="activity-datetime__sep" aria-hidden="true">-<\/span> 14:00<\/span>/,
-        );
-        assert.match(
-            nextCell,
-            /<span class="activity-period" title="Período do dia">[\s\S]*\(Tarde\)<\/span>/,
-        );
-        assert.match(nextCell, /<span class="activity-subtext">há \d+ dias?<\/span>/);
+        assert.match(titleCell, /fa-flag-checkered[\s\S]*15\/10\/2026 \(há \d+ dias\)/);
+        assert.doesNotMatch(titleCell, /Prioridade/);
     });
 
     it("renderiza a tela de dashboard com o quadrante de status das atividades", async () => {
@@ -470,7 +439,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
 
         assert.match(
             res.text,
-            /<tr class="activity-row--sphere"\s+data-bg-color="#6f42c1" data-text-color="#ffffff">/,
+            /<span class="activity-daylist__dot" title="esfera antiga "\s+data-accent-color="#6f42c1"><\/span>/,
         );
     });
 
@@ -1101,7 +1070,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         );
 
         const res = await request(app).get("/cms-Activity-Q").expect(200);
-        const cell = res.text.match(/<td class="c-actions[^"]*">([\s\S]*?)<\/td>/)[1];
+        const cell = res.text.match(/<td class="activity-daylist__actions">([\s\S]*?)<\/td>/)[1];
 
         // Um único botão de ações (⋮); as opções ficam no menu, ocultas até abrir
         assert.equal(cell.match(/<button[^>]*row-menu__toggle/g).length, 1);
@@ -1778,10 +1747,10 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         );
         assert.match(res.text, /<div class="col-lg-4 activity-blocks__side">/);
         assert.equal(res.text.match(/class="activity-block__body/g).length, 3);
-        // Atividades Programadas sem cabeçalho visível (só os cartões)
+        // Atividades Programadas: lista por dia, no visual da "Lista" do calendário
         assert.match(
             res.text,
-            /class="table table-sm table-hover table-activity mb-0 table-activity--headless"/,
+            /<div class="activity-block__body activity-block__body--daylist">\s*<table class="activity-daylist">/,
         );
         // Títulos com ícone e a quantidade de cada bloco
         assert.match(

@@ -225,6 +225,189 @@ h5,
     border-top: 1px solid #e9ecef;
 }
 
+/* ---------- Atividades Programadas: lista por dia (visual da "Lista" do calendário) ---------- */
+
+.activity-block__body--daylist {
+    background-color: #ffffff;
+}
+
+.activity-daylist {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.88rem;
+    color: #212529;
+}
+
+/* Cabeçalho do dia: preso no topo ao rolar, como no calendário */
+.activity-daylist__day th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 0;
+    background-color: #eceef0;
+    border-top: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.activity-daylist tbody:first-of-type .activity-daylist__day th {
+    border-top: 0;
+}
+
+.activity-daylist__day-cushion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.15rem 0.4rem;
+    padding: 0.5rem 0.85rem;
+    font-weight: 700;
+}
+
+.activity-daylist__weekday::first-letter {
+    text-transform: uppercase;
+}
+
+.activity-daylist__day .calendar-relative-day {
+    margin-left: 0;
+}
+
+.activity-daylist__date {
+    margin-left: auto;
+}
+
+/* Linhas das atividades */
+.activity-daylist__event td {
+    padding: 0.55rem 0.85rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #e9ecef;
+    background-color: #ffffff;
+    transition: background-color 0.12s ease;
+}
+
+.activity-daylist__event:hover td {
+    background-color: #f5f6f7;
+}
+
+.activity-daylist__time {
+    width: 1%;
+    white-space: nowrap;
+    color: #495057;
+}
+
+.activity-daylist__time-range,
+.activity-daylist__period {
+    display: block;
+}
+
+.activity-daylist__period {
+    font-size: 0.75rem;
+    color: #868e96;
+}
+
+.activity-daylist__graphic {
+    width: 1%;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* Ponto da esfera: mesmo marcador da lista do calendário (cor via sphere-colors.js) */
+.activity-daylist__dot {
+    display: block;
+    width: 10px;
+    height: 10px;
+    border: 5px solid var(--accent-color, #adb5bd);
+    border-radius: 50%;
+    box-sizing: border-box;
+}
+
+.activity-daylist__title {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.activity-daylist__title .activity-desc-link {
+    font-weight: 600;
+    color: #212529;
+}
+
+.activity-daylist__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.75rem;
+    margin-top: 0.1rem;
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.activity-daylist__tag .fas {
+    margin-right: 0.2rem;
+    font-size: 0.85em;
+}
+
+.activity-daylist__badges {
+    width: 1%;
+    white-space: nowrap;
+    text-align: right;
+}
+
+.activity-daylist__badges .badge + .badge,
+.activity-daylist__badges .c-dayprox + .badge {
+    margin-left: 0.3rem;
+}
+
+.activity-daylist__actions {
+    width: 1%;
+    padding-left: 0 !important;
+    text-align: center;
+}
+
+.activity-daylist__empty {
+    padding: 1.5rem 0.85rem;
+    text-align: center;
+    color: #6c757d;
+}
+
+/* Celular: farol e status um abaixo do outro; espaçamentos menores */
+@media (max-width: 767.98px) {
+    .activity-daylist__day-cushion {
+        padding: 0.4rem 0.6rem;
+    }
+
+    .activity-daylist__date {
+        font-weight: 500;
+        color: #6c757d;
+    }
+
+    .activity-daylist__event td {
+        padding: 0.45rem 0.5rem;
+    }
+
+    .activity-daylist__time {
+        font-size: 0.75rem;
+    }
+
+    .activity-daylist__badges {
+        white-space: normal;
+    }
+
+    .activity-daylist__badges .badge,
+    .activity-daylist__badges .c-dayprox {
+        display: block;
+        width: fit-content;
+        margin: 0 0 0.2rem auto !important;
+    }
+}
+
+@media print {
+    .activity-daylist__day th {
+        position: static;
+    }
+
+    .activity-daylist__actions {
+        display: none;
+    }
+}
+
 /* Cabeçalho da tabela fica visível ao rolar dentro do bloco */
 .activity-block__body .table-activity thead th {
     position: sticky;

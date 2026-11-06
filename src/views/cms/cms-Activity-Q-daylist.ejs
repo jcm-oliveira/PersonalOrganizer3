@@ -1,0 +1,152 @@
+<%#
+    Bloco Atividades Programadas da consulta: lista agrupada por dia, no mesmo visual da
+    visão "Lista" do calendário (cabeçalho do dia com "Hoje", "Amanhã", "em N dias"...;
+    horário, ponto com a cor da Esfera da Vida e nome). Além do que o calendário mostra,
+    cada linha traz o farol, o status, a Esfera da Vida e o Tipo de Ação, a repetição, o
+    prazo final e o menu de ações. Atividades sem data ficam no fim, em "Sem data".
+    Recebe: activities (já na ordem da próxima atividade e do horário).
+%>
+<%
+    // "segunda-feira" e "2 de novembro de 2026" (data sem horário: UTC evita troca de dia)
+    const dayParts = (isoDate) => {
+        const date = new Date(`${isoDate}T00:00:00Z`);
+        return {
+            weekday: date.toLocaleDateString('pt-BR', { weekday: 'long', timeZone: 'UTC' }),
+            longDate: date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }),
+        };
+    };
+    // Mesmo selo do calendário: Hoje, Amanhã, Ontem, em N dias, há N dias
+    const relativeDay = (days) => {
+        if (days === 0) return { text: 'Hoje', modifier: 'today' };
+        if (days === 1) return { text: 'Amanhã', modifier: null };
+        if (days === -1) return { text: 'Ontem', modifier: 'past' };
+        return days > 0 ? { text: `em ${days} dias`, modifier: null } : { text: `há ${-days} dias`, modifier: 'past' };
+    };
+    const daysText = (days) => {
+        if (days === 0) return 'hoje';
+        const n = Math.abs(days);
+        const label = `${n} ${n === 1 ? 'dia' : 'dias'}`;
+        return days > 0 ? `em ${label}` : `há ${label}`;
+    };
+    // Grupos por dia, na ordem recebida (sem data: grupo próprio, no fim)
+    const groups = [];
+    activities.forEach((act) => {
+        const key = act.next_activity_date_formatted || '';
+        const last = groups[groups.length - 1];
+        if (last && last.key === key) last.items.push(act);
+        else groups.push({ key, days: act.days_next_activity, items: [act] });
+    });
+%>
+<table class="activity-daylist">
+    <caption class="sr-only">Atividades Programadas por dia</caption>
+    <thead class="sr-only">
+        <tr>
+            <th scope="col">Horário</th>
+            <th scope="col">Esfera da Vida</th>
+            <th scope="col">Nome</th>
+            <th scope="col">Farol e Status</th>
+            <th scope="col">Ações</th>
+        </tr>
+    </thead>
+    <% if (activities.length === 0) { %>
+        <tbody>
+            <tr>
+                <td colspan="5" class="activity-daylist__empty">
+                    Nenhuma atividade encontrada com os filtros selecionados.
+                </td>
+            </tr>
+        </tbody>
+    <% } %>
+    <% groups.forEach((group) => { %>
+        <tbody>
+            <%# Cabeçalho do dia (fica preso no topo ao rolar o bloco) %>
+            <tr class="activity-daylist__day">
+                <th colspan="5" scope="colgroup">
+                    <div class="activity-daylist__day-cushion">
+                        <% if (group.key) {
+                            const { weekday, longDate } = dayParts(group.key);
+                            const rel = group.days !== null && group.days !== undefined ? relativeDay(group.days) : null;
+                        %>
+                            <span class="activity-daylist__weekday"><%= weekday %></span>
+                            <% if (rel) { %>
+                                <span class="calendar-relative-day<%= rel.modifier ? ' calendar-relative-day--' + rel.modifier : '' %>"><%= rel.text %></span>
+                            <% } %>
+                            <span class="activity-daylist__date"><%= longDate %></span>
+                        <% } else { %>
+                            <span class="activity-daylist__weekday">Sem data</span>
+                        <% } %>
+                    </div>
+                </th>
+            </tr>
+            <% group.items.forEach((act) => {
+                // Período do dia sem o prefixo de ordenação ("2 - Tarde" -> "Tarde")
+                const periodText = act.day_period ? act.day_period.replace(/^\d+\s*-\s*/, '') : null;
+                const startTime = act.scheduled_time ? String(act.scheduled_time).slice(0, 5) : null;
+                const statusName = act.status_name || (act.status === 1 ? 'Ativo' : 'Inativo');
+            %>
+                <tr class="activity-daylist__event"<% if (act.overdue_at) { %> data-overdue-at="<%= act.overdue_at %>"<% } %>>
+                    <!-- Horário (com o término, se houver duração) e período do dia -->
+                    <td class="activity-daylist__time">
+                        <% if (startTime) { %>
+                            <span class="activity-daylist__time-range"><%= startTime %><% if (act.scheduled_end_time) { %> – <%= act.scheduled_end_time %><% } %></span>
+                        <% } else { %>
+                            <span class="activity-daylist__time-range"><%= periodText || 'Dia todo' %></span>
+                        <% } %>
+                        <% if (startTime && periodText) { %>
+                            <span class="activity-daylist__period" title="Período do dia"><span class="sr-only">Período do dia: </span><%= periodText %></span>
+                        <% } %>
+                    </td>
+
+                    <!-- Ponto com a cor da Esfera da Vida (como no calendário) -->
+                    <td class="activity-daylist__graphic">
+                        <span class="activity-daylist__dot" title="<%= act.life_sphere || 'Sem Esfera da Vida' %>"
+                            <% if (act.life_sphere_color) { %>data-accent-color="<%= act.life_sphere_color %>"<% } %>></span>
+                    </td>
+
+                    <!-- Nome, com Esfera da Vida, Tipo de Ação, repetição e prazo final abaixo -->
+                    <td class="activity-daylist__title">
+                        <a href="/cms-Activity-V/<%= act.id %>" class="activity-desc-link" data-activity-view="<%= act.id %>">
+                            <%= act.description %>
+                        </a>
+                        <% if (act.life_sphere || act.action_type) { %>
+                            <span class="activity-daylist__meta"><% if (act.life_sphere) { %><span title="Esfera da Vida"><span class="sr-only">Esfera da Vida: </span><%= act.life_sphere %></span><% } %><% if (act.life_sphere && act.action_type) { %><span aria-hidden="true"> · </span><% } %><% if (act.action_type) { %><span title="Tipo de Ação"><span class="sr-only">Tipo de Ação: </span><%= act.action_type %></span><% } %></span>
+                        <% } %>
+                        <% if (act.recurrence_description || act.final_deadline_br) { %>
+                            <span class="activity-daylist__meta">
+                                <% if (act.recurrence_description) { %>
+                                    <span class="activity-daylist__tag" title="Repete: <%= act.recurrence_description %>">
+                                        <i class="fas fa-redo-alt" aria-hidden="true"></i>
+                                        <span class="sr-only">Repete: </span><%= act.recurrence_description %>
+                                    </span>
+                                <% } %>
+                                <% if (act.final_deadline_br) { %>
+                                    <span class="activity-daylist__tag" title="Prazo final">
+                                        <i class="fas fa-flag-checkered" aria-hidden="true"></i>
+                                        <span class="sr-only">Prazo final: </span><%= act.final_deadline_br %><% if (act.days_final_deadline !== null) { %> (<%= daysText(act.days_final_deadline) %>)<% } %>
+                                    </span>
+                                <% } %>
+                            </span>
+                        <% } %>
+                    </td>
+
+                    <!-- Farol (ATRASADO, HOJE, AMANHÃ, dia da semana...) e Status -->
+                    <td class="activity-daylist__badges">
+                        <span class="c-dayprox" title="Farol">
+                            <span class="badge <%= act.traffic_light_class %>">
+                                <%= act.next_activity_day_label %>
+                            </span>
+                        </span>
+                        <span class="badge activity-status-badge" title="Status" style="background-color: <%= act.status_color_code %>; color: <%= act.status_text_color %>;">
+                            <%= statusName %>
+                        </span>
+                    </td>
+
+                    <!-- Ações (menu "⋮") -->
+                    <td class="activity-daylist__actions">
+                        <%- include('cms-Activity-Q-actions', { act }) %>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    <% }) %>
+</table>

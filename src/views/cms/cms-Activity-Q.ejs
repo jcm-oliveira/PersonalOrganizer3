@@ -31,10 +31,9 @@
     <section class="activity-block" aria-labelledby="activityBlock-programmed">
     <%- include('cms-Activity-Q-block-header', { block: blocks.programmed, withFilter: true }) %>
 
-    <!-- Tabela Estilo Planilha / Painel de Vôo -->
-    <div class="activity-block__body activity-table-wrap">
-        <%# Sem cabeçalho visível (só os cartões, como nos blocos da direita) e sem Prazo Final %>
-        <%- include('cms-Activity-Q-table', { activities: blocks.programmed.activities, hideHeader: true, hideDeadline: true }) %>
+    <!-- Lista por dia, no visual da visão "Lista" do calendário -->
+    <div class="activity-block__body activity-block__body--daylist">
+        <%- include('cms-Activity-Q-daylist', { activities: blocks.programmed.activities }) %>
     </div>
 
     <div class="activity-block__footer">

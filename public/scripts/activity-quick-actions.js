@@ -41,8 +41,14 @@
             badge.className = "badge badge-danger";
             badge.textContent = "ATRASADO";
         }
-        // Sem a cor da Esfera da Vida, a linha atrasada fica vermelha (igual ao servidor)
-        if (!row.classList.contains("activity-row--sphere")) row.classList.add("table-danger");
+        // Sem a cor da Esfera da Vida, a linha atrasada fica vermelha (igual ao servidor).
+        // Na lista por dia (Programadas) só o farol muda, como no servidor.
+        if (
+            !row.classList.contains("activity-row--sphere") &&
+            !row.classList.contains("activity-daylist__event")
+        ) {
+            row.classList.add("table-danger");
+        }
     }
 
     function scheduleOverdue() {

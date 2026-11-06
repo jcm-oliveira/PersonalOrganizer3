@@ -231,11 +231,10 @@ describe("Recorrência de atividades (RRULE)", () => {
             const res = await request(app).get("/cms-Activity-Q").expect(200);
 
             assert.match(res.text, /title="Repete: Todo mês, no dia 15"/);
-            assert.match(res.text, /<span class="activity-th-label">Repetição<\/span>/);
-            assert.doesNotMatch(res.text, /activity-th-label">Periodicidade/);
+            assert.doesNotMatch(res.text, /Periodicidade/);
             assert.match(
                 res.text,
-                /<td class="c-recurrence align-middle text-center">\s*<span class="activity-subtext">Todo mês, no dia 15<\/span>\s*<\/td>/,
+                /<span class="activity-daylist__tag" title="Repete: Todo mês, no dia 15">[\s\S]*?fa-redo-alt[\s\S]*?Todo mês, no dia 15\s*<\/span>/,
             );
             assert.match(
                 res.text,

@@ -121,7 +121,7 @@ describe("Módulo Estudos", () => {
         assert.match(text, /href="\/cms-Study-U\/7"/);
         assert.match(text, /data-delete-action="\/cms-Study-D\/7"/);
         assert.match(text, /fa-paperclip" aria-hidden="true"><\/i>1/);
-        // Concluído: linha esmaecida, barra verde e datas
+        // Concluído: linha esmaecida, barra azul e datas
         assert.match(text, /study-row--finished/);
         assert.match(text, /class="study-progress__bar" data-bar-width="100"/);
         assert.match(text, /01\/05\/2026/);
@@ -137,6 +137,22 @@ describe("Módulo Estudos", () => {
         ]);
         const res = await request(app).get("/cms-Study-Q").expect(200);
         assert.doesNotMatch(res.text, /href="javascript:/);
+    });
+
+    it("por padrão lista só os estudos em andamento (< 100%), sem marcar filtro", async () => {
+        mockSuggestions();
+        mock.method(StudyModel, "count", async () => 0);
+        mock.method(StudyModel, "getSummary", async () => []);
+        const select = mock.method(StudyModel, "selectList", async () => []);
+
+        const res = await request(app).get("/cms-Study-Q").expect(200);
+        assert.equal(select.mock.calls[0].arguments[0].situation, "open");
+        assert.doesNotMatch(res.text, /Filtros aplicados/);
+        assert.match(res.text, /<option value="open" selected>/);
+
+        // "Todos" continua disponível e conta como filtro aplicado
+        await request(app).get("/cms-Study-Q?situation=all").expect(200);
+        assert.equal(select.mock.calls[1].arguments[0].situation, "all");
     });
 
     it("abre o formulário de inserção com anexos, anotações e sugestões", async () => {
@@ -430,7 +446,7 @@ describe("Módulo Estudos", () => {
             text,
             /data-bar-width="25"> <span class="study-area-bar__done" data-bar-width="100"/,
         );
-        assert.match(text, /href="\/cms-Study-Q\?area=Psicologia"/);
+        assert.match(text, /href="\/cms-Study-Q\?area=Psicologia&amp;situation=all"/);
         // Concluídos por mês: março = maior coluna
         assert.match(text, /title="Mar: 2 concluídos"[^]*?data-bar-height="100"/);
     });

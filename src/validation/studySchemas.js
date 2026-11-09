@@ -2,7 +2,7 @@ const { z } = require("zod");
 
 const PAGE_SIZES = [10, 25, 50, 100];
 const STUDY_TYPES = ["Leitura", "Curso"];
-// Situação do estudo: concluído = evolução de 100%
+// Situação do estudo: concluído = evolução de 100%. Padrão: só os em andamento (< 100%)
 const SITUATIONS = ["open", "finished", "all"];
 // Sugestões do campo "Fonte do material" (texto livre: aceita também um link)
 const MATERIAL_SOURCES = [
@@ -48,7 +48,7 @@ const optionalDate = (label) =>
         }, `Informe uma data de ${label} válida.`);
 
 const listQuerySchema = z.object({
-    situation: z.enum(SITUATIONS).catch("all"),
+    situation: z.enum(SITUATIONS).catch("open"),
     type: z.enum([...STUDY_TYPES, "all"]).catch("all"),
     search: z.string().trim().max(150).catch(""),
     area: z.string().trim().max(150).catch(""),

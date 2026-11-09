@@ -1,6 +1,6 @@
 <%- include('../parts/head') %>
 <%
-    const hasFilter = Boolean(filter.search || filter.area || filter.type !== 'all' || filter.situation !== 'all');
+    const hasFilter = Boolean(filter.search || filter.area || filter.type !== 'all' || filter.situation !== 'open');
     const situationLabels = { open: 'Em aberto', finished: 'Finalizados', all: 'Todos' };
     const listUrl = (params) => `/cms-Study-Q?${new URLSearchParams(params)}`;
 %>
@@ -168,8 +168,8 @@
                             <% if (s.stop_point) { %><span class="activity-subtext" title="Ponto de parada"><i class="fas fa-bookmark mr-1" aria-hidden="true"></i><%= s.stop_point %></span><% } %>
                         </td>
                         <td class="align-middle text-center d-none d-md-table-cell small text-nowrap">
-                            <%= s.startLabel || '-' %>
-                            <span class="d-block text-muted"><%= s.endLabel || '-' %></span>
+                            <span class="d-block study-date" title="Início"><%= s.startLabel || '-' %></span>
+                            <span class="d-block study-date text-muted" title="Término"><%= s.endLabel || '-' %></span>
                             <% if (s.durationLabel) { %><span class="d-block text-muted" title="Duração"><i class="fas fa-hourglass-half mr-1" aria-hidden="true"></i><%= s.durationLabel %></span><% } %>
                         </td>
                         <td class="align-middle text-center text-nowrap">
@@ -180,21 +180,31 @@
                                 <% if (Number(s.attachment_count) > 0) { %>
                                     <span class="study-indicator" title="<%= s.attachment_count %> anexo(s)"><i class="fas fa-paperclip" aria-hidden="true"></i><%= s.attachment_count %></span>
                                 <% } %>
-                                <a class="btn-icon" href="/cms-Study-V/<%= s.id %>" title="Visualizar estudo" aria-label="Visualizar estudo">
-                                    <i class="fas fa-eye" aria-hidden="true"></i>
-                                </a>
-                                <% if (can('studies', 'update')) { %>
-                                    <a class="btn-icon" href="/cms-Study-U/<%= s.id %>" title="Editar estudo" aria-label="Editar estudo">
-                                        <i class="fas fa-pen" aria-hidden="true"></i>
-                                    </a>
-                                <% } %>
-                                <% if (can('studies', 'delete')) { %>
-                                    <button type="button" class="btn-icon" data-toggle="modal" data-target="#confirmDeleteModal"
-                                        data-delete-action="/cms-Study-D/<%= s.id %>" data-delete-name="<%= s.name %>"
-                                        title="Excluir estudo" aria-label="Excluir estudo">
-                                        <i class="fas fa-trash-alt" aria-hidden="true"></i>
+                                <%# Menu "⋮" no mesmo padrão de Atividades (public/scripts/row-menu.js) %>
+                                <div class="row-menu">
+                                    <button type="button" class="btn-icon row-menu__toggle" aria-haspopup="true" aria-expanded="false"
+                                        title="Ações" aria-label="Ações do estudo <%= s.name %>">
+                                        <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
                                     </button>
-                                <% } %>
+                                    <div class="row-menu__list" role="menu" hidden>
+                                        <a class="row-menu__item" role="menuitem" href="/cms-Study-V/<%= s.id %>">
+                                            <i class="fas fa-search" aria-hidden="true"></i> Visualizar estudo
+                                        </a>
+                                        <% if (can('studies', 'update')) { %>
+                                            <a class="row-menu__item" role="menuitem" href="/cms-Study-U/<%= s.id %>">
+                                                <i class="fas fa-pen" aria-hidden="true"></i> Editar estudo
+                                            </a>
+                                        <% } %>
+                                        <% if (can('studies', 'delete')) { %>
+                                            <div class="row-menu__divider" role="separator"></div>
+                                            <button type="button" class="row-menu__item row-menu__item--danger" role="menuitem"
+                                                data-toggle="modal" data-target="#confirmDeleteModal"
+                                                data-delete-action="/cms-Study-D/<%= s.id %>" data-delete-name="<%= s.name %>">
+                                                <i class="fas fa-trash-alt" aria-hidden="true"></i> Excluir estudo
+                                            </button>
+                                        <% } %>
+                                    </div>
+                                </div>
                             </div>
                         </td>
                     </tr>
@@ -268,6 +278,7 @@
     <%- include('../parts/confirm-delete-modal', { entityLabel: 'o estudo' }) %>
 </main>
 
+<script src="/scripts/row-menu.js" defer></script>
 <script src="/scripts/confirm-delete.js" defer></script>
 <script src="/scripts/dashboard-charts.js" defer></script>
 

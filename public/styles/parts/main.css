@@ -710,6 +710,13 @@ h5,
     color: #28a745;
 }
 
+.row-menu__item--danger,
+.row-menu__item--danger i,
+.row-menu__item--danger:hover,
+.row-menu__item--danger:focus {
+    color: #dc3545;
+}
+
 .row-menu__item:disabled {
     opacity: 0.4;
     cursor: default;
@@ -2389,6 +2396,12 @@ fieldset:disabled .perm-check .custom-control-label::before {
     margin-right: 0.35rem;
     font-size: 0.8rem;
     color: #6c757d;
+}
+
+/* Datas de início/término na consulta: um pouco menores que a duração (célula .small) */
+.study-date {
+    font-size: 0.88em;
+    line-height: 1.3;
 }
 
 .study-progress-input {

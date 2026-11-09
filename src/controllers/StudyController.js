@@ -166,7 +166,7 @@ function buildStudyDashboard(data, year) {
                 width: Math.round((areaTotal / maxArea) * 1000) / 10,
                 finishedWidth:
                     areaTotal === 0 ? 0 : Math.round((a.finished / areaTotal) * 1000) / 10,
-                href: `${LIST_URL}?${new URLSearchParams({ area: a.label })}`,
+                href: `${LIST_URL}?${new URLSearchParams({ area: a.label, situation: "all" })}`,
             };
         }),
         byMonth: MONTH_LABELS.map((label, index) => {

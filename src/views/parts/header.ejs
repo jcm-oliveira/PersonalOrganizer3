@@ -44,6 +44,9 @@
             <% if (canView('calendar')) { %>
                 <li class="nav-item"><a class="nav-link" href="/cms-Calendar">Calendário</a></li>
             <% } %>
+            <% if (canView('studies')) { %>
+                <li class="nav-item"><a class="nav-link" href="/cms-Study-Q">Estudos</a></li>
+            <% } %>
         </ul>
 
         <!-- Todas as atividades (banco de dados), engrenagem (menu de cadastros) e usuário logado -->

@@ -27,6 +27,13 @@ const RESOURCES = [
         actions: ["view", "update"],
         hint: "Alterar permite remarcar arrastando a atividade.",
     },
+    {
+        key: "studies",
+        label: "Estudos",
+        group: "Gestão",
+        actions: ALL,
+        hint: "Visualizar inclui baixar os anexos e ver os indicadores de estudos no Dashboard.",
+    },
     { key: "life_sphere", label: "Esferas da Vida", group: "Cadastros", actions: ALL },
     { key: "activity_type", label: "Tipos de Atividade", group: "Cadastros", actions: ALL },
     { key: "day_period", label: "Períodos do Dia", group: "Cadastros", actions: ALL },

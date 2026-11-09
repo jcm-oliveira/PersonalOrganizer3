@@ -1,0 +1,184 @@
+<%# Campos do formulário de Estudo compartilhados por C (inserção) e U (alteração) %>
+<%
+    const removing = new Set([].concat(values.remove_attachments || []).map(String));
+    const attachments = (study && study.attachments) || [];
+    const progressValue = Number(values.progress) || 0;
+%>
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Identificação -->
+        <h5 class="text-primary border-bottom pb-2 mb-3">
+            <i class="fas fa-book text-primary mr-1" aria-hidden="true"></i> Identificação
+        </h5>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="knowledge_area">Área de conhecimento <span class="text-danger">*</span></label>
+                <input type="text" class="form-control <%= errors.knowledge_area ? 'is-invalid' : '' %>" id="knowledge_area" name="knowledge_area"
+                    value="<%= values.knowledge_area || '' %>" maxlength="150" required autocomplete="off" list="knowledgeAreaOptions"
+                    placeholder="Ex.: Psicologia">
+                <datalist id="knowledgeAreaOptions">
+                    <% suggestions.knowledgeAreas.forEach((area) => { %><option value="<%= area %>"><% }) %>
+                </datalist>
+                <% if (errors.knowledge_area) { %><div class="invalid-feedback"><%= errors.knowledge_area %></div><% } %>
+            </div>
+            <div class="form-group col-md-6">
+                <label for="subject">Assunto</label>
+                <input type="text" class="form-control <%= errors.subject ? 'is-invalid' : '' %>" id="subject" name="subject"
+                    value="<%= values.subject || '' %>" maxlength="150" autocomplete="off" list="subjectOptions"
+                    placeholder="Ex.: Gestão de Projetos">
+                <datalist id="subjectOptions">
+                    <% suggestions.subjects.forEach((subject) => { %><option value="<%= subject %>"><% }) %>
+                </datalist>
+                <% if (errors.subject) { %><div class="invalid-feedback"><%= errors.subject %></div><% } %>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="name">Nome da atividade (livro ou curso) <span class="text-danger">*</span></label>
+            <input type="text" class="form-control <%= errors.name ? 'is-invalid' : '' %>" id="name" name="name"
+                value="<%= values.name || '' %>" maxlength="255" required autocomplete="off">
+            <% if (errors.name) { %><div class="invalid-feedback"><%= errors.name %></div><% } %>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-8">
+                <label for="author">Instituição / Autor</label>
+                <input type="text" class="form-control <%= errors.author ? 'is-invalid' : '' %>" id="author" name="author"
+                    value="<%= values.author || '' %>" maxlength="255" autocomplete="off">
+                <% if (errors.author) { %><div class="invalid-feedback"><%= errors.author %></div><% } %>
+            </div>
+            <div class="form-group col-md-4">
+                <span class="d-block mb-2">Tipo <span class="text-danger">*</span></span>
+                <div class="btn-group btn-group-toggle w-100 <%= errors.study_type ? 'is-invalid' : '' %>" data-toggle="buttons" role="group" aria-label="Tipo">
+                    <% studyTypes.forEach((type) => { const checked = values.study_type === type; %>
+                        <label class="btn btn-outline-primary <%= checked ? 'active' : '' %>">
+                            <input type="radio" name="study_type" value="<%= type %>" autocomplete="off" <%= checked ? 'checked' : '' %>>
+                            <i class="fas <%= type === 'Curso' ? 'fa-chalkboard-teacher' : 'fa-book-open' %> mr-1" aria-hidden="true"></i><%= type %>
+                        </label>
+                    <% }) %>
+                </div>
+                <% if (errors.study_type) { %><div class="invalid-feedback d-block"><%= errors.study_type %></div><% } %>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-8">
+                <label for="material_source">Fonte do material</label>
+                <input type="text" class="form-control <%= errors.material_source ? 'is-invalid' : '' %>" id="material_source" name="material_source"
+                    value="<%= values.material_source || '' %>" maxlength="500" autocomplete="off" list="materialSourceOptions"
+                    placeholder="Livro físico, PDF, Curso em vídeo ou um link (https://...)">
+                <datalist id="materialSourceOptions">
+                    <% materialSources.forEach((source) => { %><option value="<%= source %>"><% }) %>
+                </datalist>
+                <% if (errors.material_source) { %><div class="invalid-feedback"><%= errors.material_source %></div><% } %>
+            </div>
+            <div class="form-group col-md-2 col-6">
+                <label for="hours">Horas</label>
+                <input type="text" inputmode="decimal" class="form-control <%= errors.hours ? 'is-invalid' : '' %>" id="hours" name="hours"
+                    value="<%= values.hours || '' %>" maxlength="8" autocomplete="off" placeholder="0">
+                <% if (errors.hours) { %><div class="invalid-feedback"><%= errors.hours %></div><% } %>
+            </div>
+            <div class="form-group col-md-2 col-6">
+                <span class="d-block mb-2">Certificado?</span>
+                <div class="custom-control custom-switch mt-2">
+                    <input type="checkbox" class="custom-control-input" id="has_certificate" name="has_certificate" value="1"
+                        <%= String(values.has_certificate) === '1' ? 'checked' : '' %>>
+                    <label class="custom-control-label" for="has_certificate">Sim</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acompanhamento -->
+        <h5 class="text-primary border-bottom pb-2 mb-3 mt-3">
+            <i class="fas fa-chart-line text-primary mr-1" aria-hidden="true"></i> Acompanhamento
+        </h5>
+        <div class="form-row">
+            <div class="form-group col-md-8">
+                <label for="progress">Evolução geral: <strong id="progressOutput"><%= progressValue %>%</strong></label>
+                <div class="d-flex align-items-center">
+                    <input type="range" class="custom-range flex-grow-1 mr-2" id="progressRange" min="0" max="100" step="1"
+                        value="<%= progressValue %>" aria-label="Evolução geral (controle deslizante)">
+                    <input type="number" class="form-control study-progress-input <%= errors.progress ? 'is-invalid' : '' %>" id="progress" name="progress"
+                        value="<%= values.progress ?? '0' %>" min="0" max="100" step="1" required>
+                </div>
+                <small class="form-text text-muted">100% marca o estudo como finalizado (sem data de término, considera hoje).</small>
+                <% if (errors.progress) { %><div class="invalid-feedback d-block"><%= errors.progress %></div><% } %>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="stop_point">Ponto de parada</label>
+                <input type="text" class="form-control <%= errors.stop_point ? 'is-invalid' : '' %>" id="stop_point" name="stop_point"
+                    value="<%= values.stop_point || '' %>" maxlength="255" autocomplete="off" placeholder="Ex.: Cap. 4, pág. 87 / Aula 12">
+                <% if (errors.stop_point) { %><div class="invalid-feedback"><%= errors.stop_point %></div><% } %>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-4 col-6">
+                <label for="start_date">Data início</label>
+                <input type="date" class="form-control <%= errors.start_date ? 'is-invalid' : '' %>" id="start_date" name="start_date"
+                    value="<%= values.start_date || '' %>">
+                <% if (errors.start_date) { %><div class="invalid-feedback"><%= errors.start_date %></div><% } %>
+            </div>
+            <div class="form-group col-md-4 col-6">
+                <label for="end_date">Data término</label>
+                <input type="date" class="form-control <%= errors.end_date ? 'is-invalid' : '' %>" id="end_date" name="end_date"
+                    value="<%= values.end_date || '' %>">
+                <% if (errors.end_date) { %><div class="invalid-feedback"><%= errors.end_date %></div><% } %>
+            </div>
+            <div class="form-group col-md-4">
+                <span class="d-block mb-2">Duração</span>
+                <span class="form-control-plaintext text-muted" id="durationPreview">-</span>
+            </div>
+        </div>
+
+        <!-- Anotações -->
+        <h5 class="text-primary border-bottom pb-2 mb-3 mt-3">
+            <i class="fas fa-sticky-note text-primary mr-1" aria-hidden="true"></i> Anotações
+        </h5>
+        <div class="form-group">
+            <label for="notes" class="sr-only">Anotações sobre o conteúdo</label>
+            <textarea class="form-control study-notes <%= errors.notes ? 'is-invalid' : '' %>" id="notes" name="notes" rows="12"
+                maxlength="100000" placeholder="Resumo, ideias principais, citações, dúvidas, aplicações práticas..."><%= values.notes || '' %></textarea>
+            <small class="form-text text-muted">Quebras de linha são mantidas na visualização.</small>
+            <% if (errors.notes) { %><div class="invalid-feedback"><%= errors.notes %></div><% } %>
+        </div>
+    </div>
+
+    <!-- Anexos -->
+    <div class="col-lg-4">
+        <h5 class="text-primary border-bottom pb-2 mb-3">
+            <i class="fas fa-paperclip text-primary mr-1" aria-hidden="true"></i> Anexos
+        </h5>
+
+        <% if (attachments.length > 0) { %>
+            <ul class="list-unstyled study-attachments mb-3">
+                <% attachments.forEach((a) => { %>
+                    <li class="study-attachment">
+                        <a class="study-attachment__name" href="<%= a.url %>" title="Baixar <%= a.original_name %>">
+                            <i class="fas fa-file-download mr-1" aria-hidden="true"></i><%= a.original_name %>
+                        </a>
+                        <span class="study-attachment__size"><%= a.sizeLabel %></span>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="remove_attachment_<%= a.id %>" name="remove_attachments"
+                                value="<%= a.id %>" <%= removing.has(String(a.id)) ? 'checked' : '' %>>
+                            <label class="custom-control-label small text-danger" for="remove_attachment_<%= a.id %>">Remover ao salvar</label>
+                        </div>
+                    </li>
+                <% }) %>
+            </ul>
+        <% } else if (!isCreate) { %>
+            <p class="small text-muted">Nenhum arquivo anexado.</p>
+        <% } %>
+
+        <div class="study-dropzone <%= errors.attachments ? 'study-dropzone--invalid' : '' %>">
+            <label class="btn btn-sm btn-outline-secondary mb-1" for="attachments">
+                <i class="fas fa-upload mr-1" aria-hidden="true"></i> Adicionar arquivos
+            </label>
+            <input type="file" class="sr-only" id="attachments" name="attachments" multiple accept="<%= upload.accept %>"
+                data-max-bytes="<%= upload.maxMb * 1024 * 1024 %>" data-max-files="<%= upload.maxFiles %>">
+            <small class="form-text text-muted">
+                <%= upload.extensions %>. Até <%= upload.maxMb %> MB por arquivo e <%= upload.maxFiles %> arquivos por vez.
+            </small>
+            <ul class="list-unstyled small mt-2 mb-0" id="attachmentsSelected" aria-live="polite"></ul>
+        </div>
+        <% if (errors.attachments) { %><div class="invalid-feedback d-block"><%= errors.attachments %></div><% } %>
+    </div>
+</div>
+
+<script src="/scripts/study-form.js" defer></script>

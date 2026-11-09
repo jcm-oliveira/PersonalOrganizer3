@@ -1,0 +1,274 @@
+<%- include('../parts/head') %>
+<%
+    const hasFilter = Boolean(filter.search || filter.area || filter.type !== 'all' || filter.situation !== 'all');
+    const situationLabels = { open: 'Em aberto', finished: 'Finalizados', all: 'Todos' };
+    const listUrl = (params) => `/cms-Study-Q?${new URLSearchParams(params)}`;
+%>
+
+<main class="container-fluid study-page py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start mb-3">
+        <div class="mb-2">
+            <h1 class="h3 mb-0 text-dark">Estudos</h1>
+            <p class="text-muted small mb-0">Livros e cursos: evolução, ponto de parada, anotações e anexos.</p>
+            <% if (hasFilter) { %>
+                <span class="badge badge-info mt-1">Filtros aplicados</span>
+                <a href="/cms-Study-Q" class="small text-danger ml-2">Limpar</a>
+            <% } %>
+        </div>
+
+        <div class="d-flex flex-wrap align-items-start">
+            <%# Quadro Em aberto × Finalizados (links para a consulta filtrada) %>
+            <table class="table table-sm study-summary mb-2 mr-3" aria-label="Resumo dos estudos">
+                <thead>
+                    <tr>
+                        <th scope="col"></th>
+                        <th scope="col" class="text-center">Em aberto</th>
+                        <th scope="col" class="text-center">Finalizados</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% summary.rows.forEach((row) => { %>
+                        <tr>
+                            <th scope="row"><%= row.type %></th>
+                            <td class="text-center"><a class="study-summary__open" href="<%= listUrl({ type: row.type, situation: 'open' }) %>"><%= row.open %></a></td>
+                            <td class="text-center"><a class="study-summary__finished" href="<%= listUrl({ type: row.type, situation: 'finished' }) %>"><%= row.finished %></a></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th scope="row" class="sr-only">Total</th>
+                        <td></td>
+                        <td class="text-center font-weight-bold"><a class="text-dark" href="<%= listUrl({ situation: 'open' }) %>"><%= summary.totalOpen %></a></td>
+                        <td class="text-center font-weight-bold"><a class="text-dark" href="<%= listUrl({ situation: 'finished' }) %>"><%= summary.totalFinished %></a></td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="d-flex align-items-center mb-2">
+                <button type="button" class="btn btn-sm <%= hasFilter ? 'btn-primary' : 'btn-outline-secondary' %> mr-1"
+                    data-toggle="modal" data-target="#filterModal" title="Filtrar" aria-label="Filtrar">
+                    <i class="fas fa-filter" aria-hidden="true"></i>
+                </button>
+                <% if (can('studies', 'create')) { %>
+                    <a class="btn btn-sm btn-outline-primary" href="/cms-Study-C" title="Novo Estudo" aria-label="Novo Estudo">
+                        <i class="fas fa-plus" aria-hidden="true"></i>
+                    </a>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <%- include('../parts/messages') %>
+
+    <div class="table-responsive shadow-sm bg-white rounded">
+        <table class="table table-sm table-hover table-activity table-study mb-0">
+            <thead>
+                <tr>
+                    <th class="text-center d-none d-md-table-cell">
+                        <span class="activity-th-content">
+                            <i class="fas fa-shapes activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Área / Assunto</span>
+                        </span>
+                    </th>
+                    <th class="text-center">
+                        <span class="activity-th-content">
+                            <i class="fas fa-book activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Atividade / Instituição ou Autor</span>
+                        </span>
+                    </th>
+                    <th class="text-center">
+                        <span class="activity-th-content">
+                            <i class="fas fa-tag activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Tipo</span>
+                        </span>
+                    </th>
+                    <th class="text-center d-none d-lg-table-cell">
+                        <span class="activity-th-content">
+                            <i class="far fa-clock activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Horas</span>
+                        </span>
+                    </th>
+                    <th class="text-center d-none d-lg-table-cell">
+                        <span class="activity-th-content">
+                            <i class="fas fa-certificate activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Certificado</span>
+                        </span>
+                    </th>
+                    <th class="text-center d-none d-xl-table-cell">
+                        <span class="activity-th-content">
+                            <i class="fas fa-photo-video activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Fonte do material</span>
+                        </span>
+                    </th>
+                    <th class="text-center">
+                        <span class="activity-th-content">
+                            <i class="fas fa-chart-line activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Evolução / Ponto de parada</span>
+                        </span>
+                    </th>
+                    <th class="text-center d-none d-md-table-cell">
+                        <span class="activity-th-content">
+                            <i class="far fa-calendar-alt activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Início / Término</span>
+                        </span>
+                    </th>
+                    <th class="text-center">
+                        <span class="activity-th-content">
+                            <i class="fas fa-tools activity-th-icon" aria-hidden="true"></i>
+                            <span class="activity-th-label">Ações</span>
+                        </span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (items.length === 0) { %>
+                    <tr>
+                        <td colspan="9" class="text-center py-4 text-muted">Nenhum estudo encontrado.</td>
+                    </tr>
+                <% } %>
+                <% items.forEach((s) => { %>
+                    <tr class="<%= s.isFinished ? 'study-row--finished' : '' %>">
+                        <td class="align-middle d-none d-md-table-cell">
+                            <span class="font-weight-bold"><%= s.knowledge_area %></span>
+                            <% if (s.subject) { %><span class="activity-subtext"><%= s.subject %></span><% } %>
+                        </td>
+                        <td class="align-middle">
+                            <a class="activity-desc-link" href="/cms-Study-V/<%= s.id %>"><%= s.name %></a>
+                            <% if (s.author) { %><span class="activity-subtext"><%= s.author %></span><% } %>
+                            <span class="activity-subtext d-md-none"><%= s.knowledge_area %></span>
+                        </td>
+                        <td class="align-middle text-center">
+                            <span class="badge study-type-badge study-type-badge--<%= s.study_type === 'Curso' ? 'course' : 'reading' %>"><%= s.study_type %></span>
+                        </td>
+                        <td class="align-middle text-center d-none d-lg-table-cell"><%= s.hoursLabel || '-' %></td>
+                        <td class="align-middle text-center d-none d-lg-table-cell">
+                            <% if (s.hasCertificate) { %>
+                                <i class="fas fa-check-circle text-success" aria-hidden="true"></i> <span class="small">Sim</span>
+                            <% } else { %>
+                                <span class="text-muted small">Não</span>
+                            <% } %>
+                        </td>
+                        <td class="align-middle d-none d-xl-table-cell study-source-cell">
+                            <% if (s.materialIsUrl) { %>
+                                <a href="<%= s.material_source %>" target="_blank" rel="noopener noreferrer" title="<%= s.material_source %>">
+                                    <i class="fas fa-external-link-alt mr-1" aria-hidden="true"></i>Link
+                                </a>
+                            <% } else { %>
+                                <%= s.material_source || '-' %>
+                            <% } %>
+                        </td>
+                        <td class="align-middle study-progress-cell">
+                            <div class="study-progress-line">
+                                <span class="study-progress" role="progressbar" aria-valuenow="<%= s.progress %>" aria-valuemin="0" aria-valuemax="100" aria-label="Evolução">
+                                    <span class="study-progress__bar" data-bar-width="<%= s.progress %>"></span>
+                                </span>
+                                <span class="study-progress__value"><%= s.progress %>%</span>
+                            </div>
+                            <% if (s.stop_point) { %><span class="activity-subtext" title="Ponto de parada"><i class="fas fa-bookmark mr-1" aria-hidden="true"></i><%= s.stop_point %></span><% } %>
+                        </td>
+                        <td class="align-middle text-center d-none d-md-table-cell small text-nowrap">
+                            <%= s.startLabel || '-' %>
+                            <span class="d-block text-muted"><%= s.endLabel || '-' %></span>
+                            <% if (s.durationLabel) { %><span class="d-block text-muted" title="Duração"><i class="fas fa-hourglass-half mr-1" aria-hidden="true"></i><%= s.durationLabel %></span><% } %>
+                        </td>
+                        <td class="align-middle text-center text-nowrap">
+                            <div class="row-actions">
+                                <% if (Number(s.has_notes) === 1) { %>
+                                    <span class="study-indicator" title="Possui anotações"><i class="fas fa-sticky-note" aria-hidden="true"></i><span class="sr-only">Possui anotações</span></span>
+                                <% } %>
+                                <% if (Number(s.attachment_count) > 0) { %>
+                                    <span class="study-indicator" title="<%= s.attachment_count %> anexo(s)"><i class="fas fa-paperclip" aria-hidden="true"></i><%= s.attachment_count %></span>
+                                <% } %>
+                                <a class="btn-icon" href="/cms-Study-V/<%= s.id %>" title="Visualizar estudo" aria-label="Visualizar estudo">
+                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                </a>
+                                <% if (can('studies', 'update')) { %>
+                                    <a class="btn-icon" href="/cms-Study-U/<%= s.id %>" title="Editar estudo" aria-label="Editar estudo">
+                                        <i class="fas fa-pen" aria-hidden="true"></i>
+                                    </a>
+                                <% } %>
+                                <% if (can('studies', 'delete')) { %>
+                                    <button type="button" class="btn-icon" data-toggle="modal" data-target="#confirmDeleteModal"
+                                        data-delete-action="/cms-Study-D/<%= s.id %>" data-delete-name="<%= s.name %>"
+                                        title="Excluir estudo" aria-label="Excluir estudo">
+                                        <i class="fas fa-trash-alt" aria-hidden="true"></i>
+                                    </button>
+                                <% } %>
+                            </div>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+
+    <%- include('../parts/list-pagination', { pagination }) %>
+
+    <!-- Filtros -->
+    <div class="modal fade" id="filterModal" tabindex="-1" role="dialog" aria-labelledby="filterModalTitle" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form class="modal-content" method="get" action="/cms-Study-Q">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalTitle">Filtrar estudos</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="filterSearch">Nome, instituição/autor, assunto ou área</label>
+                        <input type="text" class="form-control" id="filterSearch" name="search" maxlength="150" value="<%= filter.search %>">
+                    </div>
+                    <div class="form-group">
+                        <label for="filterArea">Área de conhecimento</label>
+                        <select class="form-control" id="filterArea" name="area">
+                            <option value="">Todas</option>
+                            <% knowledgeAreas.forEach((area) => { %>
+                                <option value="<%= area %>" <%= filter.area === area ? 'selected' : '' %>><%= area %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-sm-6">
+                            <label for="filterType">Tipo</label>
+                            <select class="form-control" id="filterType" name="type">
+                                <option value="all" <%= filter.type === 'all' ? 'selected' : '' %>>Todos</option>
+                                <% studyTypes.forEach((type) => { %>
+                                    <option value="<%= type %>" <%= filter.type === type ? 'selected' : '' %>><%= type %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+                        <div class="form-group col-sm-6">
+                            <label for="filterSituation">Situação</label>
+                            <select class="form-control" id="filterSituation" name="situation">
+                                <% Object.entries(situationLabels).forEach(([value, label]) => { %>
+                                    <option value="<%= value %>" <%= filter.situation === value ? 'selected' : '' %>><%= label %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="filterPerPage">Itens por página</label>
+                        <select class="form-control" id="filterPerPage" name="perPage">
+                            <% pageSizes.forEach((size) => { %>
+                                <option value="<%= size %>" <%= filter.perPage === size ? 'selected' : '' %>><%= size %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-link" href="/cms-Study-Q">Limpar</a>
+                    <button type="submit" class="btn btn-primary">Aplicar filtros</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <%- include('../parts/confirm-delete-modal', { entityLabel: 'o estudo' }) %>
+</main>
+
+<script src="/scripts/confirm-delete.js" defer></script>
+<script src="/scripts/dashboard-charts.js" defer></script>
+
+<%- include('../parts/footer') %>

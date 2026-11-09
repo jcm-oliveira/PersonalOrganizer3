@@ -2,6 +2,7 @@ const express = require("express");
 const activityRoutes = require("./routes/activityRoutes");
 const lookupRoutes = require("./routes/lookupRoutes");
 const accessRoutes = require("./routes/accessRoutes");
+const studyRoutes = require("./routes/studyRoutes");
 const { accountRoutes } = require("./routes/authRoutes");
 const ActivityController = require("./controllers/ActivityController");
 const { requireAuth, requirePermission } = require("./middlewares/auth");
@@ -28,6 +29,7 @@ routes.get(
 
 routes.use(accountRoutes);
 routes.use(activityRoutes);
+routes.use(studyRoutes);
 routes.use(lookupRoutes);
 routes.use(accessRoutes);
 

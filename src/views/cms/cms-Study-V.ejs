@@ -1,0 +1,122 @@
+<%- include('../parts/head') %>
+
+<main class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start mb-3">
+        <div class="mb-2 mr-3">
+            <span class="badge study-type-badge study-type-badge--<%= study.study_type === 'Curso' ? 'course' : 'reading' %> mb-1"><%= study.study_type %></span>
+            <% if (study.isFinished) { %><span class="badge badge-success mb-1">Finalizado</span><% } %>
+            <h1 class="h3 mb-0"><%= study.name %></h1>
+            <% if (study.author) { %><p class="text-muted mb-0"><%= study.author %></p><% } %>
+        </div>
+        <div class="d-flex flex-wrap align-items-center mb-2">
+            <% if (can('studies', 'delete')) { %>
+            <button type="button" class="btn btn-sm btn-outline-danger mr-1 mb-1" data-toggle="modal" data-target="#confirmDeleteModal"
+                data-delete-action="/cms-Study-D/<%= study.id %>" data-delete-name="<%= study.name %>"
+                title="Excluir estudo" aria-label="Excluir estudo">
+                <i class="fas fa-trash-alt mr-1" aria-hidden="true"></i> Excluir
+            </button>
+            <% } %>
+            <% if (can('studies', 'update')) { %>
+            <a class="btn btn-sm btn-outline-primary mr-1 mb-1" href="/cms-Study-U/<%= study.id %>"
+                title="Editar estudo" aria-label="Editar estudo">
+                <i class="fas fa-pen mr-1" aria-hidden="true"></i> Editar
+            </a>
+            <% } %>
+            <a class="btn btn-sm btn-outline-secondary mb-1" href="/cms-Study-Q"
+                title="Voltar à lista" aria-label="Voltar à lista">
+                <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Voltar
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <!-- Evolução -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-baseline mb-1">
+                        <span class="font-weight-bold">Evolução geral</span>
+                        <span class="h4 mb-0"><%= study.progress %>%</span>
+                    </div>
+                    <span class="study-progress study-progress--lg" role="progressbar" aria-valuenow="<%= study.progress %>" aria-valuemin="0" aria-valuemax="100" aria-label="Evolução geral">
+                        <span class="study-progress__bar" data-bar-width="<%= study.progress %>"></span>
+                    </span>
+                    <% if (study.stop_point) { %>
+                        <p class="mb-0 mt-2"><i class="fas fa-bookmark text-muted mr-1" aria-hidden="true"></i><span class="text-muted">Ponto de parada:</span> <%= study.stop_point %></p>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Anotações -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light font-weight-bold">
+                    <i class="fas fa-sticky-note text-primary mr-1" aria-hidden="true"></i> Anotações
+                </div>
+                <div class="card-body">
+                    <% if (study.notes) { %>
+                        <div class="study-notes-view"><%= study.notes %></div>
+                    <% } else { %>
+                        <p class="text-muted mb-0">Nenhuma anotação registrada.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Detalhes -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light font-weight-bold">
+                    <i class="fas fa-info-circle text-primary mr-1" aria-hidden="true"></i> Detalhes
+                </div>
+                <dl class="study-details card-body mb-0">
+                    <dt>Área de conhecimento</dt><dd><%= study.knowledge_area %></dd>
+                    <dt>Assunto</dt><dd><%= study.subject || '-' %></dd>
+                    <dt>Fonte do material</dt>
+                    <dd class="text-break">
+                        <% if (study.materialIsUrl) { %>
+                            <a href="<%= study.material_source %>" target="_blank" rel="noopener noreferrer"><%= study.material_source %></a>
+                        <% } else { %>
+                            <%= study.material_source || '-' %>
+                        <% } %>
+                    </dd>
+                    <dt>Horas</dt><dd><%= study.hoursLabel || '-' %></dd>
+                    <dt>Certificado</dt><dd><%= study.hasCertificate ? 'Sim' : 'Não' %></dd>
+                    <dt>Data início</dt><dd><%= study.startLabel || '-' %></dd>
+                    <dt>Data término</dt><dd><%= study.endLabel || '-' %></dd>
+                    <dt>Duração</dt><dd><%= study.durationLabel || '-' %></dd>
+                </dl>
+            </div>
+
+            <!-- Anexos -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light font-weight-bold">
+                    <i class="fas fa-paperclip text-primary mr-1" aria-hidden="true"></i> Anexos
+                    <span class="badge badge-light border ml-1"><%= study.attachments.length %></span>
+                </div>
+                <div class="card-body">
+                    <% if (study.attachments.length === 0) { %>
+                        <p class="text-muted small mb-0">Nenhum arquivo anexado.</p>
+                    <% } else { %>
+                        <ul class="list-unstyled study-attachments mb-0">
+                            <% study.attachments.forEach((a) => { %>
+                                <li class="study-attachment">
+                                    <a class="study-attachment__name" href="<%= a.url %>" title="Baixar <%= a.original_name %>">
+                                        <i class="fas fa-file-download mr-1" aria-hidden="true"></i><%= a.original_name %>
+                                    </a>
+                                    <span class="study-attachment__size"><%= a.sizeLabel %></span>
+                                </li>
+                            <% }) %>
+                        </ul>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include('../parts/confirm-delete-modal', { entityLabel: 'o estudo' }) %>
+</main>
+
+<script src="/scripts/confirm-delete.js" defer></script>
+<script src="/scripts/dashboard-charts.js" defer></script>
+
+<%- include('../parts/footer') %>

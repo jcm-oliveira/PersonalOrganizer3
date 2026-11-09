@@ -2275,3 +2275,335 @@ fieldset:disabled .perm-check .custom-control-label::before {
     margin-top: 0.5rem;
     font-size: 0.875rem;
 }
+
+/* ---------- Estudos (cms-Study-*) ---------- */
+
+/* Quadro "Em aberto × Finalizados" (como na planilha) */
+.study-summary {
+    width: auto;
+    font-size: 0.85rem;
+    background-color: #fff;
+}
+
+.study-summary th,
+.study-summary td {
+    padding: 0.2rem 0.75rem;
+    border-top: 0;
+}
+
+.study-summary thead th {
+    border-bottom: 1px solid #343a40;
+    font-weight: 600;
+}
+
+.study-summary tfoot td,
+.study-summary tfoot th {
+    border-top: 1px solid #343a40;
+}
+
+.study-summary--wide {
+    width: 100%;
+}
+
+.study-summary__open {
+    color: #d9480f;
+}
+
+.study-summary__finished {
+    color: #2b8a3e;
+}
+
+.study-type-badge {
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.3em 0.6em;
+}
+
+.study-type-badge--reading {
+    color: #1864ab;
+    background-color: #e7f1fb;
+}
+
+.study-type-badge--course {
+    color: #5f3dc4;
+    background-color: #f0ebff;
+}
+
+.table-study tbody tr.study-row--finished > td {
+    color: #6c757d;
+}
+
+.study-source-cell {
+    max-width: 180px;
+    overflow-wrap: anywhere;
+}
+
+.study-progress-cell {
+    min-width: 150px;
+}
+
+.study-progress-line {
+    display: flex;
+    align-items: center;
+}
+
+/* Barra de evolução (largura aplicada por dashboard-charts.js via data-bar-width) */
+.study-progress {
+    position: relative;
+    display: block;
+    flex: 1 1 auto;
+    min-width: 70px;
+    height: 8px;
+    overflow: hidden;
+    border-radius: 4px;
+    background-color: #e9ecef;
+}
+
+.study-progress--lg {
+    height: 12px;
+    border-radius: 6px;
+}
+
+.study-progress__bar {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background-color: #007bff;
+    transition: width 0.4s ease-out;
+}
+
+.study-progress__value {
+    min-width: 2.75rem;
+    margin-left: 0.5rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.study-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    margin-right: 0.35rem;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.study-progress-input {
+    width: 5.5rem;
+}
+
+.study-notes {
+    font-family: "Inter", sans-serif;
+    line-height: 1.5;
+}
+
+/* Anotações na visualização: mantém as quebras de linha */
+.study-notes-view {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 1.6;
+}
+
+.study-details {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 1rem;
+    row-gap: 0.4rem;
+    font-size: 0.9rem;
+}
+
+.study-details dt {
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.study-details dd {
+    margin: 0;
+}
+
+.study-attachments {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.study-attachment {
+    padding: 0.5rem 0.65rem;
+    border: 1px solid #e9ecef;
+    border-radius: 0.35rem;
+    background-color: #fff;
+}
+
+.study-attachment__name {
+    display: block;
+    overflow-wrap: anywhere;
+    font-size: 0.9rem;
+}
+
+.study-attachment__size {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.study-dropzone {
+    padding: 0.85rem;
+    border: 1px dashed #adb5bd;
+    border-radius: 0.35rem;
+    background-color: #f8f9fa;
+}
+
+.study-dropzone--invalid {
+    border-color: #dc3545;
+}
+
+/* Dashboard: indicadores de Estudos */
+.study-kpi {
+    color: #343a40;
+    text-decoration: none;
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+}
+
+a.study-kpi:hover,
+a.study-kpi:focus {
+    color: #343a40;
+    text-decoration: none;
+    border-color: #007bff;
+}
+
+.study-kpi .card-body {
+    padding: 0.85rem;
+}
+
+.study-kpi__label {
+    display: block;
+    font-size: 0.78rem;
+    color: #6c757d;
+    line-height: 1.2;
+}
+
+.study-kpi__value {
+    display: block;
+    margin-top: 0.25rem;
+    font-family: "IBM Plex Sans", "Inter", sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.study-kpi__hint {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 0.72rem;
+    color: #868e96;
+}
+
+.study-evolution {
+    display: grid;
+    gap: 0.7rem;
+}
+
+.study-evolution__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(80px, 35%) auto;
+    align-items: center;
+    column-gap: 0.75rem;
+}
+
+.study-evolution__name {
+    min-width: 0;
+    font-size: 0.85rem;
+    color: #343a40;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.study-evolution__meta {
+    display: block;
+    font-size: 0.72rem;
+    color: #868e96;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Área de conhecimento: barra total (em aberto) com a parte finalizada dentro */
+.study-area-bar {
+    display: block;
+    width: 0;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 0 4px 4px 0;
+    background-color: #ffd8a8;
+    transition: width 0.4s ease-out;
+}
+
+.study-area-bar__done {
+    display: block;
+    width: 0;
+    height: 100%;
+    background-color: #28a745;
+}
+
+.study-legend {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    vertical-align: middle;
+}
+
+.study-legend--done {
+    background-color: #28a745;
+}
+
+.study-legend--open {
+    background-color: #ffd8a8;
+}
+
+/* Concluídos por mês: colunas verticais (altura via data-bar-height) */
+.study-months {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 0.25rem;
+    align-items: end;
+}
+
+.study-months__col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.study-months__value {
+    min-height: 1rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.study-months__track {
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+    max-width: 22px;
+    height: 70px;
+    border-bottom: 1px solid #ced4da;
+}
+
+.study-months__bar {
+    display: block;
+    width: 100%;
+    height: 0;
+    border-radius: 3px 3px 0 0;
+    background-color: #28a745;
+    transition: height 0.4s ease-out;
+}
+
+.study-months__label {
+    margin-top: 0.2rem;
+    font-size: 0.68rem;
+    color: #6c757d;
+}

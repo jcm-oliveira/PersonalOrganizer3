@@ -6,10 +6,27 @@ const assert = require("node:assert/strict");
 const request = require("supertest");
 const Activity = require("../src/model/ActivityModel");
 const Lookups = require("../src/model/LookupModels");
+const StudyModel = require("../src/model/StudyModel");
 const { createApp } = require("../src/app");
 const { TEST_ADMIN } = require("./helpers");
 
 const app = createApp({ currentUser: TEST_ADMIN, csrf: false });
+
+// Indicadores de Estudos do Dashboard (o administrador de teste pode ver Estudos)
+function mockStudyDashboard() {
+    return mock.method(StudyModel, "getDashboardData", async () => ({
+        summary: [],
+        avgOpenProgress: null,
+        startedCount: 0,
+        finishedYear: 0,
+        hoursYear: 0,
+        hoursTotal: 0,
+        certificates: 0,
+        inProgress: [],
+        byArea: [],
+        finishedByMonth: [],
+    }));
+}
 
 describe("Módulo Activity (Painel de Vôo)", () => {
     afterEach(() => mock.restoreAll());
@@ -96,6 +113,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
     });
 
     it("renderiza a tela de dashboard com o quadrante de status das atividades", async () => {
+        mockStudyDashboard();
         mock.method(Activity, "getActivityStats", async () => ({
             prazoFinal7Dias: 2,
             vencidas: 9,
@@ -139,6 +157,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
     });
 
     it("renderiza os gráficos de balanceamento no dashboard", async () => {
+        mockStudyDashboard();
         mockLookupsWithStatuses();
         mock.method(Lookups.LifeSphereModel, "selectActiveOptionsWithColor", async () => [
             { id: 1, name: "Profissão e Carreira", color_code: "#007bff" },

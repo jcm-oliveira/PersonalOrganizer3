@@ -1,0 +1,170 @@
+<%#
+    Indicadores de Estudos no Dashboard (evolução e conclusão).
+    Espera: studies (StudyController.buildStudyDashboard). Larguras/alturas vêm de
+    data-bar-width / data-bar-height, aplicadas por /scripts/dashboard-charts.js.
+%>
+<%
+    const listUrl = (params) => `/cms-Study-Q?${new URLSearchParams(params)}`;
+    const kpis = [
+        { label: 'Em aberto', value: studies.table.totalOpen, icon: 'fa-book-open', tone: 'warning', href: listUrl({ situation: 'open' }) },
+        { label: 'Finalizados', value: studies.table.totalFinished, icon: 'fa-check-circle', tone: 'success', href: listUrl({ situation: 'finished' }) },
+        { label: 'Taxa de conclusão', value: `${studies.completionRate}%`, icon: 'fa-flag-checkered', tone: 'primary', hint: `${studies.table.totalFinished} de ${studies.total} estudos` },
+        { label: 'Evolução média (em aberto)', value: studies.avgOpenProgress === null ? '-' : `${studies.avgOpenProgress}%`, icon: 'fa-chart-line', tone: 'info', hint: `${studies.startedCount} em andamento (acima de 0%)` },
+        { label: `Concluídos em ${studies.year}`, value: studies.finishedYear, icon: 'fa-trophy', tone: 'success', hint: `${studies.certificates} com certificado (total)` },
+        { label: `Horas concluídas em ${studies.year}`, value: studies.hoursYearLabel, icon: 'fa-clock', tone: 'secondary', hint: `${studies.hoursTotalLabel} h no total` },
+    ];
+%>
+<section aria-labelledby="studiesTitle" class="mt-2">
+    <div class="d-flex justify-content-between align-items-center">
+        <h2 class="dashboard-section-title" id="studiesTitle">Estudos: evolução e conclusão</h2>
+        <div class="d-flex align-items-center mb-2">
+            <a class="btn btn-sm btn-outline-secondary mr-1" href="/cms-Study-Q" title="Gerenciar Estudos" aria-label="Gerenciar Estudos">
+                <i class="fas fa-book-reader" aria-hidden="true"></i>
+            </a>
+            <% if (can('studies', 'create')) { %>
+                <a class="btn btn-sm btn-outline-primary" href="/cms-Study-C" title="Novo Estudo" aria-label="Novo Estudo">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                </a>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Indicadores -->
+    <div class="row">
+        <% kpis.forEach((kpi) => { %>
+            <div class="col-xl-2 col-md-4 col-6 mb-3">
+                <% if (kpi.href) { %><a class="card study-kpi h-100" href="<%= kpi.href %>"><% } else { %><div class="card study-kpi h-100"><% } %>
+                    <div class="card-body">
+                        <span class="study-kpi__label"><i class="fas <%= kpi.icon %> text-<%= kpi.tone %> mr-1" aria-hidden="true"></i><%= kpi.label %></span>
+                        <span class="study-kpi__value"><%= kpi.value %></span>
+                        <% if (kpi.hint) { %><span class="study-kpi__hint"><%= kpi.hint %></span><% } %>
+                    </div>
+                <% if (kpi.href) { %></a><% } else { %></div><% } %>
+            </div>
+        <% }) %>
+    </div>
+
+    <div class="row">
+        <!-- Evolução dos estudos em aberto -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light d-flex justify-content-between align-items-start">
+                    <div>
+                        <h3 class="hbar-chart-title mb-0"><i class="fas fa-chart-line text-muted mr-1" aria-hidden="true"></i> Evolução dos estudos em aberto</h3>
+                        <span class="small text-muted">Maior evolução primeiro</span>
+                    </div>
+                    <a href="<%= listUrl({ situation: 'open' }) %>" class="small text-primary text-nowrap ml-2">Ver todos</a>
+                </div>
+                <div class="card-body">
+                    <% if (studies.inProgress.length === 0) { %>
+                        <p class="text-muted small mb-0">Nenhum estudo em aberto.</p>
+                    <% } else { %>
+                        <ul class="list-unstyled study-evolution mb-0">
+                            <% studies.inProgress.forEach((s) => { %>
+                                <li class="study-evolution__row">
+                                    <a class="study-evolution__name" href="/cms-Study-V/<%= s.id %>" title="<%= s.name %>">
+                                        <i class="fas <%= s.study_type === 'Curso' ? 'fa-chalkboard-teacher' : 'fa-book-open' %> text-muted mr-1" aria-hidden="true"></i><%= s.name %>
+                                        <span class="study-evolution__meta"><%= s.knowledge_area %><% if (s.stop_point) { %> · <%= s.stop_point %><% } %></span>
+                                    </a>
+                                    <span class="study-progress" role="progressbar" aria-valuenow="<%= s.progress %>" aria-valuemin="0" aria-valuemax="100" aria-label="Evolução de <%= s.name %>">
+                                        <span class="study-progress__bar" data-bar-width="<%= s.progress %>"></span>
+                                    </span>
+                                    <span class="study-progress__value"><%= s.progress %>%</span>
+                                </li>
+                            <% }) %>
+                        </ul>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quadro por tipo + conclusões por mês -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h3 class="hbar-chart-title mb-0"><i class="fas fa-table text-muted mr-1" aria-hidden="true"></i> Leitura e Curso</h3>
+                    <span class="small text-muted">Em aberto × Finalizados</span>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm study-summary study-summary--wide mb-4">
+                        <thead>
+                            <tr>
+                                <th scope="col"></th>
+                                <th scope="col" class="text-center">Em aberto</th>
+                                <th scope="col" class="text-center">Finalizados</th>
+                                <th scope="col" class="text-center">Conclusão</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% studies.table.rows.forEach((row) => { const rowTotal = row.open + row.finished; %>
+                                <tr>
+                                    <th scope="row"><%= row.type %></th>
+                                    <td class="text-center"><a class="study-summary__open" href="<%= listUrl({ type: row.type, situation: 'open' }) %>"><%= row.open %></a></td>
+                                    <td class="text-center"><a class="study-summary__finished" href="<%= listUrl({ type: row.type, situation: 'finished' }) %>"><%= row.finished %></a></td>
+                                    <td class="text-center text-muted"><%= rowTotal === 0 ? '-' : `${Math.round((row.finished / rowTotal) * 100)}%` %></td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th scope="row">Total</th>
+                                <td class="text-center font-weight-bold"><%= studies.table.totalOpen %></td>
+                                <td class="text-center font-weight-bold"><%= studies.table.totalFinished %></td>
+                                <td class="text-center font-weight-bold"><%= studies.total === 0 ? '-' : `${studies.completionRate}%` %></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <h4 class="small font-weight-bold text-muted mb-2">Concluídos por mês em <%= studies.year %></h4>
+                    <ol class="study-months list-unstyled mb-0" aria-label="Estudos concluídos por mês em <%= studies.year %>">
+                        <% studies.byMonth.forEach((m) => { %>
+                            <li class="study-months__col" title="<%= m.label %>: <%= m.total %> <%= m.total === 1 ? 'concluído' : 'concluídos' %>">
+                                <span class="study-months__value"><%= m.total > 0 ? m.total : '' %></span>
+                                <span class="study-months__track" aria-hidden="true"><span class="study-months__bar" data-bar-height="<%= m.height %>"></span></span>
+                                <span class="study-months__label"><%= m.label %></span>
+                                <span class="sr-only"><%= m.total %></span>
+                            </li>
+                        <% }) %>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conclusão por área de conhecimento -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-start">
+            <div>
+                <h3 class="hbar-chart-title mb-0"><i class="fas fa-shapes text-muted mr-1" aria-hidden="true"></i> Conclusão por área de conhecimento</h3>
+                <span class="small text-muted">
+                    <span class="study-legend study-legend--done" aria-hidden="true"></span> Finalizados
+                    <span class="study-legend study-legend--open ml-2" aria-hidden="true"></span> Em aberto
+                </span>
+            </div>
+        </div>
+        <div class="card-body">
+            <% if (studies.byArea.length === 0) { %>
+                <p class="text-muted small mb-0">Nenhum estudo cadastrado.</p>
+            <% } else { %>
+                <ul class="hbar-chart list-unstyled mb-0">
+                    <% studies.byArea.forEach((a) => {
+                        const description = `${a.label}: ${a.finished} de ${a.total} finalizados (${a.percent}%)`;
+                    %>
+                        <li class="hbar-row" title="<%= description %>">
+                            <a class="hbar-label" href="<%= a.href %>"><%= a.label %></a>
+                            <span class="hbar-track" aria-hidden="true">
+                                <span class="study-area-bar" data-bar-width="<%= a.width %>">
+                                    <span class="study-area-bar__done" data-bar-width="<%= a.finishedWidth %>"></span>
+                                </span>
+                            </span>
+                            <span class="hbar-value">
+                                <span class="sr-only"><%= description %></span>
+                                <span aria-hidden="true"><%= a.finished %>/<%= a.total %> <span class="hbar-percent">(<%= a.percent %>%)</span></span>
+                            </span>
+                        </li>
+                    <% }) %>
+                </ul>
+            <% } %>
+        </div>
+    </div>
+</section>

@@ -603,6 +603,7 @@ module.exports = {
     toFieldErrors,
     calculateDaysDiff,
     toDateOnlyString,
+    formatDateBr,
     formatDuration,
     addDurationToDateTime,
     getOverdueReference,

@@ -1,4 +1,6 @@
 const Activity = require("../model/ActivityModel");
+const StudyModel = require("../model/StudyModel");
+const { buildStudyDashboard } = require("./StudyController");
 const {
     LifeSphereModel,
     ActivityTypeModel,
@@ -901,16 +903,21 @@ module.exports = {
     async loadDashboardPage(req, res) {
         // Atrasada: data anterior a hoje ou, hoje, início + 5 min já passado
         const { todayStr, overdueTime } = getOverdueReference();
-        const [stats, distribution, lookups] = await Promise.all([
+        // Indicadores de Estudos: só para quem pode visualizar Estudos
+        const year = new Date().getFullYear();
+        const showStudies = can(req.user, "studies", "view");
+        const [stats, distribution, lookups, studyData] = await Promise.all([
             Activity.getActivityStats(todayStr, overdueTime),
             Activity.getActivityDistribution(todayStr, overdueTime),
             loadLookupOptions(),
+            showStudies ? StudyModel.getDashboardData({ year }) : null,
         ]);
 
         return res.render("dashboard", {
             title: "Dashboard",
             stats,
             charts: buildDashboardCharts(distribution, lookups),
+            studies: studyData ? buildStudyDashboard(studyData, year) : null,
         });
     },
 

@@ -74,6 +74,25 @@ Implementado cobrindo inserção, edição, visualização e exclusão com indic
 | `POST /cms-Activity-U/:id`                             | `updateActivityPage` | redirect 303 → lista                   |
 | `POST /cms-Activity-D/:id`                             | `deleteActivityPage` | redirect 303 → lista                   |
 
+## Módulo de Estudos (`Study`)
+
+Controle dos livros (**Leitura**) e cursos (**Curso**): área de conhecimento, assunto, instituição/autor, horas, certificado, fonte do material (texto ou link), ponto de parada, evolução geral (0–100%), datas de início e término, duração calculada, **anotações** e **arquivos anexos**. Tabelas `study` e `study_attachment` (migração `015`). Tela `studies` nos perfis de acesso.
+
+- **Finalizado** = evolução de 100%. Ao salvar com 100% sem data de término, considera-se hoje.
+- **Anexos**: PDF, EPUB, DOC/DOCX, XLSX, PPTX, TXT, MD, JPG, PNG e WebP, até 20 MB por arquivo e 10 por envio. Ficam em `uploads/studies/` (fora de `public/`, fora do Git), com nome gerado pelo sistema e assinatura do conteúdo conferida. O download exige a permissão de visualizar Estudos e é sempre entregue como anexo.
+- **Dashboard**: quem pode visualizar Estudos vê os indicadores de evolução e conclusão (em aberto × finalizados por tipo, taxa de conclusão, evolução média, concluídos e horas no ano, estudos em andamento, conclusão por área e por mês).
+
+| Rota                                     | Controller           | View                            |
+| ---------------------------------------- | -------------------- | ------------------------------- |
+| `GET /cms-Study-Q?situation=&type=&...`  | `loadShowPage`       | `cms-Study-Q`                   |
+| `GET /cms-Study-C`                       | `loadInsertPage`     | `cms-Study-C` (+ campos `-I`)   |
+| `POST /cms-Study-C` (multipart)          | `insertPage`         | redirect 303 → lista            |
+| `GET /cms-Study-V/:id`                   | `loadViewPage`       | `cms-Study-V`                   |
+| `GET /cms-Study-U/:id`                   | `loadUpdatePage`     | `cms-Study-U` (+ campos `-I`)   |
+| `POST /cms-Study-U/:id` (multipart)      | `updatePage`         | redirect 303 → lista            |
+| `POST /cms-Study-D/:id`                  | `deletePage`         | redirect 303 → lista            |
+| `GET /cms-Study/:id/anexo/:attachmentId` | `downloadAttachment` | arquivo (download)              |
+
 ## Menu Cadastros (CRUDs de Apoio)
 
 Cadastros auxiliares alimentados dinamicamente nos formulários e filtros de Atividades:

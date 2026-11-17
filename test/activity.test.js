@@ -91,7 +91,16 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.doesNotMatch(res.text, /table-danger/);
         assert.match(
             res.text,
-            /class="badge activity-status-badge" title="Status" style="background-color: #28a745; color: #212529;"/,
+            /class="badge activity-status-badge activity-status-badge--inline" title="Status" style="background-color: #28a745; color: #212529;"/,
+        );
+        // Status ao lado do Tipo de Ação, não na coluna do farol
+        assert.match(
+            res.text,
+            /<span class="activity-daylist__type-status">[\s\S]*?activity-status-badge--inline/,
+        );
+        assert.doesNotMatch(
+            res.text,
+            /<td class="activity-daylist__badges">(?:(?!<\/td>)[\s\S])*activity-status-badge/,
         );
         // Editar leva a consulta de origem: salvar volta para ela
         // (sem filtros: a consulta volta sem parâmetros)
@@ -106,7 +115,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         const titleCell = res.text.match(/<td class="activity-daylist__title">([\s\S]*?)<\/td>/)[1];
         assert.match(
             titleCell,
-            /Reunião de Governança[\s\S]*<span class="activity-daylist__meta"><span title="Esfera da Vida">[\s\S]*Profissão e Carreira<\/span><span aria-hidden="true"> · <\/span><span title="Tipo de Ação">[\s\S]*Compromisso<\/span><\/span>/,
+            /Reunião de Governança[\s\S]*<span class="activity-daylist__meta"><span title="Esfera da Vida">[\s\S]*Profissão e Carreira<\/span><span aria-hidden="true"> · <\/span><span class="activity-daylist__type-status"><span title="Tipo de Ação">[\s\S]*Compromisso<\/span><span class="badge activity-status-badge activity-status-badge--inline"[^>]*><span class="sr-only">Status: <\/span>Ativo<\/span>/,
         );
         assert.match(titleCell, /fa-flag-checkered[\s\S]*15\/10\/2026 \(há \d+ dias\)/);
         assert.doesNotMatch(titleCell, /Prioridade/);
@@ -1839,12 +1848,12 @@ describe("Módulo Activity (Painel de Vôo)", () => {
 
         const res = await request(app).get("/cms-Activity-Q?pageShopping=1").expect(200);
 
-        // Layout: 2/3 à esquerda e 1/3 à direita; blocos com moldura e área de rolagem
+        // Layout: 7/12 à esquerda e 5/12 à direita; blocos com moldura e área de rolagem
         assert.match(
             res.text,
-            /<div class="col-lg-8 activity-blocks__main">\s*<section class="activity-block" aria-labelledby="activityBlock-programmed">/,
+            /<div class="col-lg-7 activity-blocks__main">\s*<section class="activity-block" aria-labelledby="activityBlock-programmed">/,
         );
-        assert.match(res.text, /<div class="col-lg-4 activity-blocks__side">/);
+        assert.match(res.text, /<div class="col-lg-5 activity-blocks__side">/);
         assert.equal(res.text.match(/class="activity-block__body/g).length, 3);
         // Atividades Programadas: lista por dia, no visual da "Lista" do calendário
         assert.match(
@@ -1858,7 +1867,7 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         );
         assert.match(
             res.text,
-            /<i class="fas fa-wrench activity-block__icon" aria-hidden="true"><\/i> Ordens de Serviço <span class="activity-block__count">120<\/span>/,
+            /<i class="fas fa-clipboard-list activity-block__icon" aria-hidden="true"><\/i> Atividades Pendentes <span class="activity-block__count">120<\/span>/,
         );
         assert.match(
             res.text,

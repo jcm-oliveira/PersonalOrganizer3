@@ -150,8 +150,8 @@ const LIST_BLOCKS = [
     },
     {
         key: "service",
-        title: "Ordens de Serviço",
-        icon: "fas fa-wrench",
+        title: "Atividades Pendentes", // Tipo de Atividade "Ordem de Serviço"
+        icon: "fas fa-clipboard-list",
         filterPrefix: "service",
         // Sequência manual (setas para subir/descer)
         criteria: { activityTypeIn: [ACTIVITY_TYPE_SERVICE_ORDER], manualOrder: true },

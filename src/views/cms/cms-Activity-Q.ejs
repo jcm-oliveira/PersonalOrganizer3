@@ -24,10 +24,10 @@
 
 
     <!-- Blocos por Tipo de Atividade, com contorno e altura fixa (rolagem interna):
-         Atividades Programadas (2/3 à esquerda, altura da tela); Ordens de Serviço e
-         Lista de Compras (1/3 à direita, meia altura cada). No celular, um abaixo do outro. -->
+         Atividades Programadas (7/12 à esquerda, altura da tela); Atividades Pendentes e
+         Lista de Compras (5/12 à direita, meia altura cada). No celular, um abaixo do outro. -->
     <div class="row activity-blocks">
-    <div class="col-lg-8 activity-blocks__main">
+    <div class="col-lg-7 activity-blocks__main">
     <section class="activity-block" aria-labelledby="activityBlock-programmed">
     <%- include('cms-Activity-Q-block-header', { block: blocks.programmed, withFilter: true }) %>
 
@@ -42,7 +42,7 @@
     </section>
     </div>
 
-    <div class="col-lg-4 activity-blocks__side">
+    <div class="col-lg-5 activity-blocks__side">
         <%- include('cms-Activity-Q-compact', { block: blocks.service }) %>
         <%- include('cms-Activity-Q-compact', { block: blocks.shopping }) %>
     </div>
@@ -58,7 +58,7 @@
         preserve: blocks.programmed.preserve,
         clearUrl: blocks.programmed.clearUrl,
     }) %>
-    <%# Ordens de Serviço e Lista de Compras: sem farol, com Organização por Tema %>
+    <%# Atividades Pendentes (Ordens de Serviço) e Lista de Compras: sem farol, com Organização por Tema %>
     <%- include('cms-Activity-F-block', { block: blocks.service }) %>
     <%- include('cms-Activity-F-block', { block: blocks.shopping }) %>
 

@@ -2,7 +2,7 @@
     Bloco Atividades Programadas da consulta: lista agrupada por dia, no mesmo visual da
     visão "Lista" do calendário (cabeçalho do dia com "Hoje", "Amanhã", "em N dias"...;
     horário, ponto com a cor da Esfera da Vida e nome). Além do que o calendário mostra,
-    cada linha traz o farol, o status, a Esfera da Vida e o Tipo de Ação, a repetição, o
+    cada linha traz o farol, a Esfera da Vida, o Tipo de Ação com o status ao lado, a repetição, o
     prazo final e o menu de ações. Atividades sem data ficam no fim, em "Sem data".
     Recebe: activities (já na ordem da próxima atividade e do horário).
 %>
@@ -44,7 +44,7 @@
             <th scope="col">Horário</th>
             <th scope="col">Esfera da Vida</th>
             <th scope="col">Nome</th>
-            <th scope="col">Farol e Status</th>
+            <th scope="col">Farol</th>
             <th scope="col">Ações</th>
         </tr>
     </thead>
@@ -108,9 +108,8 @@
                         <a href="/cms-Activity-V/<%= act.id %>" class="activity-desc-link" data-activity-view="<%= act.id %>">
                             <%= act.description %>
                         </a>
-                        <% if (act.life_sphere || act.action_type) { %>
-                            <span class="activity-daylist__meta"><% if (act.life_sphere) { %><span title="Esfera da Vida"><span class="sr-only">Esfera da Vida: </span><%= act.life_sphere %></span><% } %><% if (act.life_sphere && act.action_type) { %><span aria-hidden="true"> · </span><% } %><% if (act.action_type) { %><span title="Tipo de Ação"><span class="sr-only">Tipo de Ação: </span><%= act.action_type %></span><% } %></span>
-                        <% } %>
+                        <%# Esfera da Vida · Tipo de Ação e, ao lado, o Status (ex.: "Compromisso Pendente") %>
+                        <span class="activity-daylist__meta"><% if (act.life_sphere) { %><span title="Esfera da Vida"><span class="sr-only">Esfera da Vida: </span><%= act.life_sphere %></span><span aria-hidden="true"> · </span><% } %><span class="activity-daylist__type-status"><% if (act.action_type) { %><span title="Tipo de Ação"><span class="sr-only">Tipo de Ação: </span><%= act.action_type %></span><% } %><span class="badge activity-status-badge activity-status-badge--inline" title="Status" style="background-color: <%= act.status_color_code %>; color: <%= act.status_text_color %>;"><span class="sr-only">Status: </span><%= statusName %></span></span></span>
                         <% if (act.recurrence_description || act.final_deadline_br) { %>
                             <span class="activity-daylist__meta">
                                 <% if (act.recurrence_description) { %>
@@ -129,15 +128,12 @@
                         <% } %>
                     </td>
 
-                    <!-- Farol (ATRASADO, HOJE, AMANHÃ, dia da semana...) e Status -->
+                    <!-- Farol (ATRASADO, HOJE, AMANHÃ, dia da semana...); o Status fica ao lado do Tipo de Ação -->
                     <td class="activity-daylist__badges">
                         <span class="c-dayprox" title="Farol">
                             <span class="badge <%= act.traffic_light_class %>">
                                 <%= act.next_activity_day_label %>
                             </span>
-                        </span>
-                        <span class="badge activity-status-badge" title="Status" style="background-color: <%= act.status_color_code %>; color: <%= act.status_text_color %>;">
-                            <%= statusName %>
                         </span>
                     </td>
 

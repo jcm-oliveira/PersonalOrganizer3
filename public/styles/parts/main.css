@@ -95,8 +95,8 @@ h5,
 }
 
 /* ---------- Consulta: blocos por Tipo de Atividade ---------- */
-/* Atividades Programadas (2/3 à esquerda, altura da tela); Ordens de Serviço e Lista de
-   Compras (1/3 à direita, meia altura cada). Cada bloco tem contorno e altura fixa, com
+/* Atividades Programadas (7/12 à esquerda, altura da tela); Atividades Pendentes e Lista de
+   Compras (5/12 à direita, meia altura cada). Cada bloco tem contorno e altura fixa, com
    rolagem interna; a altura acompanha a janela do navegador (vh/dvh). */
 
 .activity-blocks {
@@ -362,9 +362,20 @@ h5,
     text-align: center;
 }
 
-.activity-daylist__badges .activity-status-badge {
-    min-width: 6.5rem;
-    text-align: center;
+/* Status ao lado do Tipo de Ação (ex.: "Compromisso Pendente"), selo pequeno com as
+   cores do cadastro de Status de Atividade */
+.activity-daylist__type-status {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.activity-status-badge--inline {
+    padding: 0.1em 0.45em;
+    font-size: inherit; /* mesmo tamanho do Tipo de Ação e da Esfera da Vida */
+    font-weight: inherit;
+    line-height: inherit;
 }
 
 .activity-daylist__actions {

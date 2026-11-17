@@ -34,6 +34,17 @@
             data-status="<%= act.status %>">
             <i class="fas fa-sync-alt" aria-hidden="true"></i> Status da atividade
         </button>
+        <%# Atalho para o status "Concluído" do cadastro (some se a atividade já está concluída) %>
+        <% if (locals.completedStatusId && Number(act.status) !== Number(completedStatusId)) { %>
+            <button type="button" class="row-menu__item row-menu__item--success" role="menuitem"
+                data-toggle="modal" data-target="#completeModal"
+                data-activity-id="<%= act.id %>"
+                data-activity-description="<%= act.description %>"
+                data-status-name="<%= act.status_name || '' %>"
+                data-recurrence="<%= act.recurrence_description || '' %>">
+                <i class="fas fa-check-double" aria-hidden="true"></i> Concluir atividade
+            </button>
+        <% } %>
         <% if (act.recurrence_description) { %>
             <button type="button" class="row-menu__item row-menu__item--success" role="menuitem"
                 data-toggle="modal" data-target="#occurrenceModal"

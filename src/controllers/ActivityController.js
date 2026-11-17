@@ -44,6 +44,7 @@ const {
     toFieldErrors,
     enrichActivity,
     applyInProgressLight,
+    isCompletedStatus,
     getContrastTextColor,
     toDateOnlyString,
     addDurationToDateTime,
@@ -90,7 +91,17 @@ const MESSAGES = {
         alertType: "alert-danger",
         text: "Status inválido. Selecione um status do cadastro de Status de Atividade.",
     },
+    completed: { alertType: "alert-success", text: "Atividade concluída com sucesso." },
+    noCompletedStatus: {
+        alertType: "alert-danger",
+        text: 'Não há um status "Concluído" ativo no cadastro de Status de Atividade.',
+    },
 };
+
+// Status "Concluído" do cadastro (pelo nome); null se não houver um ativo
+function findCompletedStatus(statuses) {
+    return (statuses || []).find((s) => isCompletedStatus(s.name)) || null;
+}
 
 function messageFor(code) {
     return Object.hasOwn(MESSAGES, code) ? MESSAGES[code] : null;
@@ -671,6 +682,7 @@ module.exports = {
             actionTypes: lookups.actionTypes,
             themeOrganizations: lookups.themeOrganizations,
             activityStatuses: lookups.activityStatuses,
+            completedStatusId: findCompletedStatus(lookups.activityStatuses)?.id ?? null,
             returnTo: listUrl(filters),
             message: messageFor(req.query.msg),
         });
@@ -719,6 +731,7 @@ module.exports = {
             actionTypes: lookups.actionTypes,
             themeOrganizations: lookups.themeOrganizations,
             activityStatuses: lookups.activityStatuses,
+            completedStatusId: findCompletedStatus(lookups.activityStatuses)?.id ?? null,
             returnTo: allListUrl(filter, page),
             block: {
                 title: "Todas as Atividades",
@@ -1183,6 +1196,24 @@ module.exports = {
             throw new HttpError(404, "Atividade não encontrada.");
         }
         return res.redirect(303, returnToListUrl(returnTo, "statusChanged"));
+    },
+
+    // Opção "Concluir atividade" do menu ⋮: muda o status para o "Concluído" do cadastro
+    // (escolhido no servidor, pelo nome; não depende de id enviado pela tela)
+    async completeActivityPage(req, res) {
+        const id = parseId(req.params.id);
+        const returnTo = req.body?.returnTo;
+        const lookups = await loadLookupOptions();
+        const completed = findCompletedStatus(lookups.activityStatuses);
+        if (!completed) {
+            return res.redirect(303, returnToListUrl(returnTo, "noCompletedStatus"));
+        }
+
+        const affectedRows = await Activity.updateActivityStatus(id, completed.id);
+        if (affectedRows === 0) {
+            throw new HttpError(404, "Atividade não encontrada.");
+        }
+        return res.redirect(303, returnToListUrl(returnTo, "completed"));
     },
 
     //------------------------------------------------

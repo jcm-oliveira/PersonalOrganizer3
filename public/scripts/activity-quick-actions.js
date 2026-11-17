@@ -3,7 +3,12 @@
 (function () {
     function fillCommonFields(form, button) {
         const id = button.getAttribute("data-activity-id");
-        form.setAttribute("action", form.getAttribute("data-action-prefix") + id);
+        form.setAttribute(
+            "action",
+            form.getAttribute("data-action-prefix") +
+                id +
+                (form.getAttribute("data-action-suffix") || ""),
+        );
         form.querySelector('[data-field="activity-id"]').textContent = id;
         form.querySelector('[data-field="activity-description"]').textContent =
             button.getAttribute("data-activity-description") || "";
@@ -146,6 +151,14 @@
 
         onModalShow("statusModal", (form, button) => {
             form.querySelector('[name="status"]').value = button.getAttribute("data-status") || "";
+        });
+
+        onModalShow("completeModal", (form, button) => {
+            form.querySelector('[data-field="status-name"]').textContent =
+                button.getAttribute("data-status-name") || "-";
+            const recurrence = button.getAttribute("data-recurrence") || "";
+            form.querySelector('[data-field="recurrence"]').textContent = recurrence;
+            form.querySelector('[data-field="recurring-warning"]').hidden = !recurrence;
         });
     }
 

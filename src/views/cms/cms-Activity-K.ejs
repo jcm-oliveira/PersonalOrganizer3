@@ -1,0 +1,40 @@
+<!-- Pop-up "Concluir atividade": muda o status para "Concluído" do cadastro de Status de Atividade (preenchido por /scripts/activity-quick-actions.js) -->
+<div class="modal fade" id="completeModal" tabindex="-1" role="dialog" aria-labelledby="completeModalTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form class="modal-content" method="post" action="" data-action-prefix="/cms-Activity-S/" data-action-suffix="/concluir">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+            <div class="modal-header">
+                <h5 class="modal-title" id="completeModalTitle">
+                    <i class="fas fa-check-double text-muted mr-1" aria-hidden="true"></i> Concluir atividade
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">
+                    Atividade nº <strong data-field="activity-id"></strong> –
+                    <span data-field="activity-description"></span>
+                </p>
+                <dl class="row mb-0 small">
+                    <dt class="col-5 text-muted font-weight-normal">Status atual</dt>
+                    <dd class="col-7" data-field="status-name"></dd>
+                    <dt class="col-5 text-muted font-weight-normal">Novo status</dt>
+                    <dd class="col-7 font-weight-bold mb-0">Concluído</dd>
+                </dl>
+                <%# Atividade recorrente: concluir encerra a série (para só a ocorrência, há outra opção) %>
+                <div class="alert alert-warning small mt-3 mb-0" data-field="recurring-warning" hidden>
+                    <i class="fas fa-exclamation-triangle mr-1" aria-hidden="true"></i>
+                    Esta atividade se repete (<span data-field="recurrence"></span>). Ao concluí-la, ela sai da
+                    rotina com todas as próximas ocorrências. Para concluir só a ocorrência atual, use
+                    <strong>Concluir ocorrência</strong>.
+                </div>
+                <input type="hidden" name="returnTo" value="<%= returnTo %>">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success">Concluir atividade</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -32,6 +32,8 @@ routes.post("/cms-Activity-U/:id", update, ActivityController.updateActivityPage
 routes.post("/cms-Activity-R/:id", update, ActivityController.rescheduleActivityPage);
 routes.post("/cms-Activity-O/:id", update, ActivityController.completeOccurrencePage);
 routes.post("/cms-Activity-S/:id", update, ActivityController.changeActivityStatusPage);
+// Menu ⋮ "Concluir atividade": status "Concluído" do cadastro
+routes.post("/cms-Activity-S/:id/concluir", update, ActivityController.completeActivityPage);
 // Setas dos blocos OS e Compras: muda a sequência de apresentação
 routes.post("/cms-Activity-M/:id", update, ActivityController.moveActivityPage);
 routes.post("/cms-Activity-D/:id", remove, ActivityController.deleteActivityPage);

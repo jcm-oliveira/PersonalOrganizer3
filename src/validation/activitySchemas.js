@@ -461,14 +461,24 @@ function getNextActivityDayLabel(daysNext, referenceDate = new Date()) {
 // diferenciar maiúsculas nem acentos): o farol mostra AGORA, no lugar de hoje/atrasada
 const IN_PROGRESS_STATUS_NAME = "em andamento";
 
+function normalizeStatusName(statusName) {
+    return String(statusName || "")
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .trim()
+        .toLowerCase();
+}
+
 function isInProgressStatus(statusName) {
-    return (
-        String(statusName || "")
-            .normalize("NFD")
-            .replace(/[̀-ͯ]/g, "")
-            .trim()
-            .toLowerCase() === IN_PROGRESS_STATUS_NAME
-    );
+    return normalizeStatusName(statusName) === IN_PROGRESS_STATUS_NAME;
+}
+
+// Status "Concluído" (ou "Concluída"), também reconhecido pelo nome: usado pela opção
+// "Concluir atividade" do menu ⋮, sem depender do id do registro no cadastro
+const COMPLETED_STATUS_NAMES = ["concluido", "concluida"];
+
+function isCompletedStatus(statusName) {
+    return COMPLETED_STATUS_NAMES.includes(normalizeStatusName(statusName));
 }
 
 /**
@@ -609,6 +619,7 @@ module.exports = {
     getOverdueReference,
     enrichActivity,
     isInProgressStatus,
+    isCompletedStatus,
     applyInProgressLight,
     getNextActivityDayLabel,
     getContrastTextColor,

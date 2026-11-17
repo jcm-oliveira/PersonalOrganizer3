@@ -1210,6 +1210,86 @@ describe("Módulo Activity (Painel de Vôo)", () => {
         assert.equal(res.headers.location, "/cms-Activity-Q?msg=statusChanged");
     });
 
+    function mockStatusesWithCompleted() {
+        mockLookupsWithStatuses();
+        mock.method(Lookups.ActivityStatusModel, "selectActiveOptionsWithStyle", async () => [
+            { id: 2, name: "Em andamento", visibility: 1, color_code: "#007bff" },
+            { id: 3, name: "CONCLUÍDO", visibility: 0, color_code: "#6c757d" },
+            { id: 1, name: "Pendente", visibility: 1, color_code: "#28a745" },
+        ]);
+    }
+
+    it("menu ⋮ tem a opção Concluir atividade, exceto para a atividade já concluída", async () => {
+        mockStatusesWithCompleted();
+        mock.method(Activity, "countActivities", async () => 2);
+        const base = {
+            life_sphere: "Profissão e Carreira",
+            activity_type: "Normal",
+            next_activity_date: "2026-10-20",
+            final_deadline: null,
+        };
+        mock.method(Activity, "selectActivities", async () => [
+            { ...base, id: 5, description: "Revisar contrato", status: 2 },
+            { ...base, id: 6, description: "Enviar relatório", status: 3 },
+        ]);
+
+        const res = await request(app).get("/cms-Activity-Q?status=all").expect(200);
+
+        assert.match(
+            res.text,
+            /data-target="#completeModal"\s*data-activity-id="5"[\s\S]*?data-status-name="Em andamento"/,
+        );
+        assert.doesNotMatch(res.text, /data-target="#completeModal"\s*data-activity-id="6"/);
+        assert.match(res.text, /<\/i> Concluir atividade\s*<\/button>/);
+        assert.match(res.text, /id="completeModal"/);
+        assert.match(
+            res.text,
+            /data-action-prefix="\/cms-Activity-S\/" data-action-suffix="\/concluir"/,
+        );
+
+        // Também na tela com todas as atividades
+        const all = await request(app).get("/cms-Activity-L").expect(200);
+        assert.match(all.text, /id="completeModal"/);
+    });
+
+    it("Concluir atividade grava o status Concluído do cadastro", async () => {
+        mockStatusesWithCompleted();
+        const update = mock.method(Activity, "updateActivityStatus", async () => 1);
+
+        const res = await request(app)
+            .post("/cms-Activity-S/5/concluir")
+            .type("form")
+            .send({ status: "1", returnTo: "/cms-Activity-Q?status=all" })
+            .expect(303);
+
+        // O status vem do cadastro (pelo nome), não do formulário
+        assert.deepEqual(update.mock.calls[0].arguments, [5, 3]);
+        assert.equal(res.headers.location, "/cms-Activity-Q?status=all&msg=completed");
+    });
+
+    it("Concluir atividade sem status Concluído no cadastro não altera nada", async () => {
+        mockLookupsWithStatuses();
+        const update = mock.method(Activity, "updateActivityStatus", async () => 1);
+
+        const res = await request(app).post("/cms-Activity-S/5/concluir").expect(303);
+        assert.equal(update.mock.callCount(), 0);
+        assert.equal(res.headers.location, "/cms-Activity-Q?msg=noCompletedStatus");
+
+        // Sem o status no cadastro, o menu não mostra a opção
+        mock.method(Activity, "countActivities", async () => 1);
+        mock.method(Activity, "selectActivities", async () => [
+            { id: 5, description: "Revisar", next_activity_date: "2026-10-20", status: 2 },
+        ]);
+        const list = await request(app).get("/cms-Activity-Q?status=all").expect(200);
+        assert.doesNotMatch(list.text, /data-target="#completeModal"/);
+    });
+
+    it("retorna 404 ao concluir atividade inexistente", async () => {
+        mockStatusesWithCompleted();
+        mock.method(Activity, "updateActivityStatus", async () => 0);
+        await request(app).post("/cms-Activity-S/999/concluir").expect(404);
+    });
+
     it("não altera o status para um status inexistente no cadastro", async () => {
         mockLookupsWithStatuses();
         const update = mock.method(Activity, "updateActivityStatus", async () => 1);
